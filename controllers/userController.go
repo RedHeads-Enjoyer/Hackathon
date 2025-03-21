@@ -2,46 +2,42 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/go-playground/validator/v10"
 	"hackathon/initializers"
 	"hackathon/models"
 	"net/http"
 )
 
 func Signup(c *gin.Context) {
-	var body struct {
-		Email  string
-		Passwd string
-	}
+	// Получаем данные из запроса
+	var user models.User
+	var err error
+	validate := validator.New()
 
-	if c.Bind(&body) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to read body",
-		})
-
+	// Парсим JSON-запрос в структуру user
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Passwd), bcrypt.DefaultCost)
-
+	// Проверяем, что email и password не пустые
+	err = validate.Struct(user)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to hash password",
-		})
-
+		c.JSON(http.StatusOK, gin.H{"error": "Validation errors:" + err.Error()})
 		return
 	}
 
-	user := models.User{Email: body.Email, Password: string(hash)}
-	result := initializers.DB.Create(&user)
+	query := `
+		INSERT INTO users (email, password)
+		VALUES ($1, $2)
+	`
 
-	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to create user",
-		})
-
+	_, err = initializers.DB.Exec(query, user.Email, user.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	// Возвращаем успешный ответ
+	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }

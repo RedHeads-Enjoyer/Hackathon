@@ -1,9 +1,6 @@
 package models
 
-import "gorm.io/gorm"
-
 type User struct {
-	gorm.Model
-	Email    string `gorm:"type:varchar(100);unique"`
-	Password string `gorm:"type:varchar(255)"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8"`
 }

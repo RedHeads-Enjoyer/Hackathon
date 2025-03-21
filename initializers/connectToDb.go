@@ -1,14 +1,13 @@
 package initializers
 
 import (
+	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 	"os"
 )
 
-var DB *gorm.DB
+var DB *sql.DB
 
 func ConnectToDb() {
 	var err error
@@ -22,11 +21,16 @@ func ConnectToDb() {
 		os.Getenv("DB_NAME"),
 	)
 
-	fmt.Println(psql)
-
-	DB, err = gorm.Open(postgres.Open(psql), &gorm.Config{})
-
+	DB, err = sql.Open("postgres", psql)
 	if err != nil {
-		panic("failed to connect to database")
+		panic(fmt.Sprintf("failed to connect to database: %v", err))
 	}
+
+	// Проверяем соединение с базой данных
+	err = DB.Ping()
+	if err != nil {
+		panic(fmt.Sprintf("failed to ping database: %v", err))
+	}
+
+	fmt.Println("Successfully connected to the database!")
 }
