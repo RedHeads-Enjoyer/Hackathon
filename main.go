@@ -1,22 +1,19 @@
 package main
 
 import (
-	"hackathon/initializers"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"hackathon/controllers"
+	"hackathon/initializers"
 )
 
 func init() {
 	initializers.LoadEnvVariables()
+	initializers.ConnectToDb()
+	initializers.SyncDatabase()
 }
 
 func main() {
 	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "posn",
-		})
-	})
+	r.POST("/signup", controllers.Signup)
 	r.Run()
 }

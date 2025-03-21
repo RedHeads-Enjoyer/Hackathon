@@ -6,5 +6,6 @@
   include_ext = ["go"]
   exclude_dir = ["vendor"]
   run_after_build = "chmod +x main"
+  tmp_dir = "air"
 [log]
   level = "debug"
