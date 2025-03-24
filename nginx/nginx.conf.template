@@ -1,0 +1,21 @@
+upstream client {
+    server client:${CLIENT_PORT};
+}
+
+upstream server {
+    server server:${SERVER_PORT};
+}
+
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://client;
+        proxy_set_header Host $host;
+    }
+
+    location /api/ {
+        proxy_pass http://server/;
+        proxy_set_header Host $host;
+    }
+}

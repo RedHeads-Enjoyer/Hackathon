@@ -27,7 +27,7 @@ services:
       - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
       - ./server:/app
-      - ./.env:/app/.env:ro
+      - ./.env:/app/.env
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -38,19 +38,36 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
       - SERVER_PORT=${SERVER_PORT}
-#
-#  # Клиент (React/Vue/другое)
-#  client:
-#    container_name: client
-#    build:
-#      context: ./client
-#      dockerfile: Dockerfile
-#    ports:
-#      - "${CLIENT_PORT}:3000"  # Стандартный порт для фронта
-#    volumes:
-#      - ./client:/app
-#    depends_on:
-#      - server
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    depends_on:
+      - server
+    environment:
+      - CHOKIDAR_USEPOLLING=true # Важно для HMR в Docker
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./.env:/app/.env
+      - ./client:/app # Монтируем код для hot-reload
+      - /app/node_modules # Исключаем перезапись node_modules
+    ports:
+      - "${CLIENT_PORT}:${CLIENT_PORT}"
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - SERVER_PORT=${SERVER_PORT}
+      - CLIENT_PORT=${CLIENT_PORT}
+    depends_on:
+      - server
+      - client
+
 
 volumes:
   postgres-data:
