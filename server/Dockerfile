@@ -8,7 +8,7 @@ COPY go.* ./
 
 RUN go mod download
 
-COPY . .
+COPY .. .
 
 EXPOSE 8080
 

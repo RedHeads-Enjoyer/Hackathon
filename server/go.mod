@@ -1,4 +1,4 @@
-module hackathon
+module server
 
 go 1.24
 

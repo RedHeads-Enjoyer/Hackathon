@@ -3,9 +3,9 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"hackathon/initializers"
-	"hackathon/models"
 	"net/http"
+	"server/initializers"
+	"server/models"
 )
 
 func Signup(c *gin.Context) {

@@ -1,58 +1,56 @@
 services:
-  app:
-    container_name: go-app
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "${PORT}:${PORT}"
-    volumes:
-      - .:/app
-    depends_on:
-      - db
-      - migrate
-    environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-
-  db:
-    container_name: postgres-db
+  postgres-db:
     image: postgres:latest
+    container_name: postgres-db
     restart: always
     environment:
-      POSTGRES_USER: "${DB_USER}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD}"
-      POSTGRES_DB: "${DB_NAME}"
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "${DB_PORT}:${DB_PORT}"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - ./postgres_db/data:/var/lib/postgresql/data
+      - ./postgres_db/migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  migrate:
-    image: migrate/migrate:latest
+  server:
+    container_name: server
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
-      - ./migrations:/migrations
+      - ./server:/app
+      - ./.env:/app/.env:ro
+    depends_on:
+      postgres-db:
+        condition: service_healthy
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
-    command:
-      - "-path=/migrations"
-      - "-database=postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable"
-      - "up"
-    depends_on:
-      db:
-        condition: service_healthy
+      - SERVER_PORT=${SERVER_PORT}
+#
+#  # Клиент (React/Vue/другое)
+#  client:
+#    container_name: client
+#    build:
+#      context: ./client
+#      dockerfile: Dockerfile
+#    ports:
+#      - "${CLIENT_PORT}:3000"  # Стандартный порт для фронта
+#    volumes:
+#      - ./client:/app
+#    depends_on:
+#      - server
 
 volumes:
   postgres-data:

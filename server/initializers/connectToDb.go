@@ -21,6 +21,8 @@ func ConnectToDb() {
 		os.Getenv("DB_NAME"),
 	)
 
+	fmt.Println(psql)
+
 	DB, err = sql.Open("postgres", psql)
 	if err != nil {
 		panic(fmt.Sprintf("failed to connect to database: %v", err))
