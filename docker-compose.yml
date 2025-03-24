@@ -27,7 +27,6 @@ services:
       - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
       - ./server:/app
-      - ./.env:/app/.env
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -49,7 +48,6 @@ services:
       - CHOKIDAR_USEPOLLING=true # Важно для HMR в Docker
       - WATCHPACK_POLLING=true
     volumes:
-      - ./.env:/app/.env
       - ./client:/app # Монтируем код для hot-reload
       - /app/node_modules # Исключаем перезапись node_modules
     ports:

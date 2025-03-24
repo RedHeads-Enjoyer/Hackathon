@@ -8,7 +8,6 @@ import (
 )
 
 func init() {
-	initializers2.LoadEnvVariables()
 	initializers2.ConnectToDb()
 }
 
