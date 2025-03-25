@@ -8,10 +8,9 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "${DB_PORT}:${DB_PORT}"
+      - "${DB_PORT}:5432"
     volumes:
-      - ./postgres_db/data:/var/lib/postgresql/data
-      - ./postgres_db/migrations:/docker-entrypoint-initdb.d
+      - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
       interval: 5s
@@ -24,7 +23,7 @@ services:
       context: ./server
       dockerfile: Dockerfile
     ports:
-      - "${SERVER_PORT}:${SERVER_PORT}"
+      - "${SERVER_PORT}:8080"
     volumes:
       - ./server:/app
     depends_on:
@@ -37,6 +36,10 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
       - SERVER_PORT=${SERVER_PORT}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - ACCESS_TOKEN_EXPIRE=${ACCESS_TOKEN_EXPIRE}
+      - REFRESH_TOKEN_EXPIRE=${REFRESH_TOKEN_EXPIRE}
 
   client:
     build:
@@ -45,26 +48,40 @@ services:
     depends_on:
       - server
     environment:
-      - CHOKIDAR_USEPOLLING=true # Важно для HMR в Docker
+      - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
     volumes:
-      - ./client:/app # Монтируем код для hot-reload
-      - /app/node_modules # Исключаем перезапись node_modules
+      - ./client:/app
+      - /app/node_modules
     ports:
-      - "${CLIENT_PORT}:${CLIENT_PORT}"
+      - "${CLIENT_PORT}:3000"
 
   nginx:
     build:
-      context: ./nginx
+      context: reverse_proxy
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "${REVERSE_PROXY_PORT}:80"
     environment:
       - SERVER_PORT=${SERVER_PORT}
       - CLIENT_PORT=${CLIENT_PORT}
     depends_on:
       - server
       - client
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "${CACHE_PORT}:6379"
+    volumes:
+      - ./data/cache:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 
 volumes:

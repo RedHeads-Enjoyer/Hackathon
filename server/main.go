@@ -3,12 +3,14 @@ package main
 import (
 	"log"
 	"os"
-	initializers2 "server/initializers"
+	"server/initializers"
 	"server/routers"
 )
 
 func init() {
-	initializers2.ConnectToDb()
+	initializers.ConnectToDb()
+	initializers.ConnectToCache()
+	initializers.SyncDatabase()
 }
 
 func main() {

@@ -1,19 +1,24 @@
 package initializers
 
 import (
-	"database/sql"
 	"fmt"
-	_ "github.com/lib/pq"
+	"log"
 	"os"
+	"time"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-var DB *sql.DB
+var DB *gorm.DB
 
 func ConnectToDb() {
 	var err error
 
-	// Формируем строку подключения
-	psql := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+	// Формируем DSN строку для GORM
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_USER"),
@@ -21,18 +26,32 @@ func ConnectToDb() {
 		os.Getenv("DB_NAME"),
 	)
 
-	fmt.Println(psql)
-
-	DB, err = sql.Open("postgres", psql)
-	if err != nil {
-		panic(fmt.Sprintf("failed to connect to database: %v", err))
+	// Настройка логгера GORM
+	gormConfig := &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
 	}
 
-	// Проверяем соединение с базой данных
-	err = DB.Ping()
+	// Подключаемся к БД
+	DB, err = gorm.Open(postgres.Open(dsn), gormConfig)
 	if err != nil {
-		panic(fmt.Sprintf("failed to ping database: %v", err))
+		log.Fatal("Failed to connect to database: ", err)
 	}
 
-	fmt.Println("Successfully connected to the database!")
+	// Проверяем соединение
+	sqlDB, err := DB.DB()
+	if err != nil {
+		log.Fatal("Failed to get generic database object: ", err)
+	}
+
+	err = sqlDB.Ping()
+	if err != nil {
+		log.Fatal("Failed to ping database: ", err)
+	}
+
+	// Настройка пула соединений
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	log.Println("Successfully connected to database with GORM!")
 }
