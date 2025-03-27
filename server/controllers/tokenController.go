@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"net/http"
 	"os"
 	"server/initializers"
 	"time"
@@ -20,7 +19,7 @@ var (
 )
 
 type Claims struct {
-	UserID string `json:"user_id"`
+	UserID uint   `json:"id"`
 	Email  string `json:"email"`
 	jwt.RegisteredClaims
 }
@@ -41,7 +40,7 @@ func getRequiredEnv(key string) string {
 	return value
 }
 
-func GenerateTokens(userID, email string) (string, string, error) {
+func GenerateTokens(userID uint, email string) (string, string, error) {
 	// Access Token
 	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
 		UserID: userID,
@@ -70,45 +69,6 @@ func GenerateTokens(userID, email string) (string, string, error) {
 	return accessToken, refreshToken, err
 }
 
-func RefreshTokenHandler(c *gin.Context) {
-	refreshToken, err := getRefreshToken(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	claims, err := validateRefreshToken(refreshToken)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
-
-	newAccess, newRefresh, err := GenerateTokens(claims.UserID, claims.Email)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
-		return
-	}
-
-	setRefreshCookie(c, newRefresh)
-	c.JSON(http.StatusOK, gin.H{"access_token": newAccess})
-}
-
-func LogoutHandler(c *gin.Context) {
-	claims, ok := c.Get("user_claims")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not authenticated"})
-		return
-	}
-
-	if err := invalidateToken(claims.(*Claims).ID, claims.(*Claims).ExpiresAt.Time); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
-		return
-	}
-
-	clearRefreshCookie(c)
-	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
-}
-
 // Вспомогательные функции
 func getRefreshToken(c *gin.Context) (string, error) {
 	if refreshToken, err := c.Cookie("refresh_token"); err == nil {
@@ -135,7 +95,7 @@ func validateRefreshToken(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
-func setRefreshCookie(c *gin.Context, token string) {
+func SetRefreshTokenCookie(c *gin.Context, token string) {
 	c.SetCookie(
 		"refresh_token",
 		token,
@@ -147,7 +107,7 @@ func setRefreshCookie(c *gin.Context, token string) {
 	)
 }
 
-func clearRefreshCookie(c *gin.Context) {
+func ClearRefreshTokenCookie(c *gin.Context) {
 	c.SetCookie(
 		"refresh_token",
 		"",
@@ -159,7 +119,7 @@ func clearRefreshCookie(c *gin.Context) {
 	)
 }
 
-func invalidateToken(tokenID string, expiresAt time.Time) error {
+func InvalidateToken(tokenID string, expiresAt time.Time) error {
 	ctx := context.Background()
 	return initializers.Cache.Set(ctx, "blacklist:"+tokenID, "1", time.Until(expiresAt)).Err()
 }

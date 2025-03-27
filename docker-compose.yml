@@ -22,8 +22,8 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-    ports:
-      - "${SERVER_PORT}:8080"
+#    ports:
+#      - "${SERVER_PORT}:8080"
     volumes:
       - ./server:/app
     depends_on:
@@ -53,8 +53,8 @@ services:
     volumes:
       - ./client:/app
       - /app/node_modules
-    ports:
-      - "${CLIENT_PORT}:3000"
+#    ports:
+#      - "${CLIENT_PORT}:3000"
 
   nginx:
     build:
@@ -69,12 +69,13 @@ services:
       - server
       - client
 
+
   redis:
     image: redis:latest
     container_name: redis
     restart: always
-    ports:
-      - "${CACHE_PORT}:6379"
+#    ports:
+#      - "${CACHE_PORT}:6379"
     volumes:
       - ./data/cache:/data
     healthcheck:
@@ -86,3 +87,4 @@ services:
 
 volumes:
   postgres-data:
+
