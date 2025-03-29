@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"os"
 	"server/initializers"
+	"server/types"
 	"time"
 )
 
@@ -17,12 +18,6 @@ var (
 	AccessTokenSecret  = getRequiredEnv("ACCESS_TOKEN_SECRET")
 	RefreshTokenSecret = getRequiredEnv("REFRESH_TOKEN_SECRET")
 )
-
-type Claims struct {
-	UserID uint   `json:"id"`
-	Email  string `json:"email"`
-	jwt.RegisteredClaims
-}
 
 // Вспомогательные функции для обработки переменных окружения
 func getDurationEnv(key string, defaultValue time.Duration) time.Duration {
@@ -42,10 +37,10 @@ func getRequiredEnv(key string) string {
 
 func GenerateTokens(userID uint, email string) (string, string, error) {
 	// Access Token
-	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
+	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, &types.Claims{
 		UserID: userID,
 		Email:  email,
-		RegisteredClaims: jwt.RegisteredClaims{
+		RegisteredClaims: &jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenExpire)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ID:        uuid.NewString(),
@@ -57,9 +52,9 @@ func GenerateTokens(userID uint, email string) (string, string, error) {
 	}
 
 	// Refresh Token
-	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
+	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, &types.Claims{
 		UserID: userID,
-		RegisteredClaims: jwt.RegisteredClaims{
+		RegisteredClaims: &jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(RefreshTokenExpire)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ID:        uuid.NewString(),
@@ -82,8 +77,8 @@ func getRefreshToken(c *gin.Context) (string, error) {
 	return req.RefreshToken, nil
 }
 
-func validateRefreshToken(tokenString string) (*Claims, error) {
-	claims := &Claims{}
+func validateRefreshToken(tokenString string) (*types.Claims, error) {
+	claims := &types.Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(RefreshTokenSecret), nil
 	})

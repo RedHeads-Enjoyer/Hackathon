@@ -6,8 +6,15 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"os"
+	"server/types"
 	"strings"
 )
+
+type Claims struct {
+	UserID uint   `json:"user_id"`
+	Email  string `json:"email"`
+	*jwt.RegisteredClaims
+}
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -42,8 +49,8 @@ func extractToken(c *gin.Context) (string, error) {
 	return parts[1], nil
 }
 
-func parseToken(tokenString string) (*jwt.RegisteredClaims, error) {
-	claims := &jwt.RegisteredClaims{}
+func parseToken(tokenString string) (*types.Claims, error) {
+	claims := &types.Claims{}
 	_, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("ACCESS_TOKEN_SECRET")), nil
 	})

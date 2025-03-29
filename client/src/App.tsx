@@ -1,37 +1,29 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import {useEffect} from "react";
+import Register from './modules/register/Register.tsx';
+import Header from "./components/header/Header.tsx";
+import Login from "./modules/login/Login.tsx";
+import Logout from "./modules/logout/logout.tsx";
+import HackathonList from "./modules/hackathonList/HackathonList.tsx";
 
 function App() {
-    useEffect(() => {
-        console.log("asdasd")
-    }, [])
     return (
         <Router>
+            <Header/>
             <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                {/* Добавьте другие маршруты по необходимости */}
-                <Route path="*" element={<NotFoundPage />} /> {/* Для 404 страницы */}
+                <Route path="/" element={<HackathonList />} /> {/* Добавьте главную страницу */}
+                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/logout" element={<Logout />} />
+                <Route path="*" element={<NotFoundPage />} /> {/* Для 404 */}
             </Routes>
         </Router>
+
     );
 }
 
-function HomePage() {
-    return <>Главная страница -123 фывфывфы</>;
-}
-
-function AboutPage() {
-    return <>О нас</>;
-}
-
-function ContactPage() {
-    return <>Контакты</>;
-}
-
 function NotFoundPage() {
-    return <>404 - Страница не найдена</>;
+    return <div>Страница не найдена</div>;
 }
+
 
 export default App;

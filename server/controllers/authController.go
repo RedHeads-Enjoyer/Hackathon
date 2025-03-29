@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 	"server/models"
+	"server/types"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -21,6 +22,7 @@ func NewAuthController(db *gorm.DB) *AuthController {
 func (ac *AuthController) RegisterHandler(c *gin.Context) {
 	var input struct {
 		Email    string `json:"email" binding:"required,email"`
+		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required,min=8"`
 	}
 
@@ -30,30 +32,42 @@ func (ac *AuthController) RegisterHandler(c *gin.Context) {
 	}
 
 	var existingUser models.User
-	if err := ac.DB.Where("email = ?", input.Email).First(&existingUser).Error; err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "Email already registered"})
+	if err := ac.DB.Where("email = ? OR username = ?", input.Email, input.Username).
+		First(&existingUser).Error; err == nil {
+
+		var message string
+		if existingUser.Email == input.Email {
+			message = "Пользователь с таким email уже зарегистрирован"
+		} else {
+			message = "Этот username уже занят"
+		}
+
+		c.JSON(http.StatusConflict, gin.H{
+			"error": message,
+		})
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Password hashing failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка хеширования пароля"})
 		return
 	}
 
 	user := models.User{
 		Email:    input.Email,
+		Username: input.Username,
 		Password: string(hashedPassword),
 	}
 
 	if err := ac.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "User creation failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания пользователя"})
 		return
 	}
 
 	accessToken, refreshToken, err := GenerateTokens(user.ID, user.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Token generation failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации токена"})
 		return
 	}
 
@@ -110,7 +124,7 @@ func (ac *AuthController) LoginHandler(c *gin.Context) {
 
 // CurrentUserHandler возвращает данные текущего пользователя
 func (ac *AuthController) CurrentUserHandler(c *gin.Context) {
-	claims := c.MustGet("user_claims").(*Claims)
+	claims := c.MustGet("user_claims").(*types.Claims)
 
 	var user models.User
 	if err := ac.DB.First(&user, "id = ?", claims.UserID).Error; err != nil {
@@ -126,7 +140,7 @@ func (ac *AuthController) CurrentUserHandler(c *gin.Context) {
 
 // LogoutHandler выполняет выход пользователя
 func (ac *AuthController) LogoutHandler(c *gin.Context) {
-	claims := c.MustGet("user_claims").(*Claims)
+	claims := c.MustGet("user_claims").(*types.Claims)
 
 	if err := InvalidateToken(claims.ID, claims.ExpiresAt.Time); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Logout failed"})
