@@ -1,7 +1,7 @@
 import React, { useState, FormEvent } from "react";
 import { Form, Button, Card, Alert, Container } from "react-bootstrap";
 import {Link, useNavigate} from "react-router-dom";
-import {registerAPI} from "./registerAPI.ts";
+import {authAPI} from "./authAPI.ts";
 
 type RegisterFormData = {
     email: string,
@@ -59,7 +59,7 @@ const Register: React.FC = () => {
         try {
             setLoading(true);
 
-            const result = await registerAPI.register(formData);
+            const result = await authAPI.register(formData);
             localStorage.setItem('access_token', result.access_token)
             navigate('/')
         } catch (err) {

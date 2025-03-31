@@ -1,5 +1,6 @@
 // src/api/axiosInstance.ts
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import {authAPI} from "./modules/auth/authAPI.ts";
 
 // Создаем кастомный экземпляр Axios
 const api: AxiosInstance = axios.create({
@@ -10,19 +11,31 @@ const api: AxiosInstance = axios.create({
     },
 });
 
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    console.log(config)
-    return config;
-}, (error) => {
-    return Promise.reject(error);
-});
+// axiosInstance.ts
+api.interceptors.response.use(
+    response => response,
+    async error => {
+        const originalRequest = error.config;
 
-// Обертка для всех запросов с автоматической обработкой ошибок
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+                const response = await authAPI.refresh();
+                localStorage.setItem('access_token', response.access_token);
+                api.defaults.headers.common['Authorization'] = `Bearer ${response.access_token}`;
+                return api(originalRequest);
+            } catch (refreshError) {
+                localStorage.removeItem('access_token');
+                window.location.href = '/login';
+                return Promise.reject(refreshError);
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);
+
 export const request = async <T = any>(
     config: AxiosRequestConfig
 ): Promise<T> => {

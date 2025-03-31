@@ -20,7 +20,7 @@ func AuthRouter(router *gin.Engine, db *gorm.DB) {
 	protected := router.Group("/auth")
 	protected.Use(middlewares.Auth())
 	{
-		protected.GET("/me", authController.CurrentUserHandler)
+		protected.GET("/verify", authController.CurrentUserHandler)
 		protected.POST("/logout", authController.LogoutHandler)
 	}
 }

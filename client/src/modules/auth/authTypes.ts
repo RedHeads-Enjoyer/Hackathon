@@ -4,6 +4,11 @@ export type RegisterData = {
     password: string
 }
 
+export type LoginFormData = {
+    email: string,
+    password: string,
+}
+
 export interface AuthResponse {
     access_token: string;
     user: {
@@ -11,4 +16,10 @@ export interface AuthResponse {
         email: string;
         username: string;
     };
+}
+
+export interface User {
+    id: string;
+    username: string;
+    role: string;
 }

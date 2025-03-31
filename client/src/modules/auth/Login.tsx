@@ -1,17 +1,20 @@
-import React, { useState, FormEvent } from "react";
+import React, {useState, FormEvent} from "react";
 import { Form, Button, Card, Alert, Container } from "react-bootstrap";
 import {Link, useNavigate} from "react-router-dom";
-import {LoginFormData} from "./loginTypes.ts";
-import {loginAPI} from "./loginAPI.ts";
+import {LoginFormData} from "./authTypes.ts";
+import {authAPI} from "./authAPI.ts";
+import {loginStart, loginSuccess} from "./store/authSlice.ts";
+import {useAppDispatch, useAppSelector} from "../../store/hooks.ts";
 
 const Login: React.FC = () => {
     const [formData, setFormData] = useState<LoginFormData>({
         email: "",
         password: "",
     });
-    const [error, setError] = useState<string>("");
-    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<String | null>(null)
+    const dispatch = useAppDispatch();
     const navigate = useNavigate()
+    const { loading } = useAppSelector((state) => state.auth);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -23,23 +26,22 @@ const Login: React.FC = () => {
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        setError("");
+        dispatch(loginStart());
 
         if (!formData.email || !formData.password) {
-            return setError("Заполните все поля");
+            setError("Заполните все поля");
         }
 
         try {
-            setLoading(true);
+            const result = await authAPI.login(formData);
+            localStorage.setItem('access_token', result.access_token);
 
-            const result = await loginAPI.login(formData);
-            console.log(result)
-            localStorage.setItem('access_token', result.access_token)
+            const userData = await authAPI.verify();
+            dispatch(loginSuccess(userData));
             navigate('/')
         } catch (err) {
-            setError("Ошибка регистрации: " + (err as Error).message);
-        } finally {
-            setLoading(false);
+            const errorMessage = (err as Error).message || "Ошибка входа";
+            setError(errorMessage);
         }
     };
 
@@ -49,7 +51,7 @@ const Login: React.FC = () => {
                 <Card>
                     <Card.Body>
                         <h2 className="text-center mb-4">Вход</h2>
-                        {error && <Alert variant="danger">{error}</Alert>}
+                        {error  && <Alert variant="danger">{error }</Alert>}
 
                         <Form onSubmit={handleSubmit}>
                             <Form.Group className="mb-3" controlId="formEmail">
