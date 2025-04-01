@@ -11,14 +11,21 @@ const api: AxiosInstance = axios.create({
     },
 });
 
-// axiosInstance.ts
 api.interceptors.response.use(
     response => response,
     async error => {
         const originalRequest = error.config;
 
+        console.log(originalRequest)
+
+        if (originalRequest.url.includes('/auth/login') ||
+            originalRequest.url.includes('/auth/refresh')) {
+            return Promise.reject(error);
+        }
+
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
+
 
             try {
                 const response = await authAPI.refresh();

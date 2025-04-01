@@ -11,5 +11,7 @@ export const authAPI = {
     refresh: async () =>
         request<AuthResponse>({ method: 'POST', url: '/auth/refresh' }),
     verify: async () =>
-        request<User>({ method: 'GET', url: '/auth/verify' })
+        request<User>({ method: 'GET', url: '/auth/verify' }),
+    ping: async () =>
+        request<any>({ method: 'GET', url: '/auth/ping' })
 };

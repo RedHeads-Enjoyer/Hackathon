@@ -5,11 +5,11 @@ import Register from "./modules/auth/Register";
 import Login from "./modules/auth/Login";
 import Logout from "./modules/auth/Logout";
 import ProtectedRoute from "./components/protectedRoute/ProtectedRoute";
-import {loginFailure, loginStart, loginSuccess} from "./modules/auth/store/authSlice.ts";
+import {loginSuccess} from "./modules/auth/store/authSlice.ts";
 import {authAPI} from "./modules/auth/authAPI.ts";
 import {useEffect} from "react";
 import {useAppDispatch} from "./store/hooks.ts";
-// import StoreDebugger from "./components/storeDebugger/StoreDebugger.tsx";
+import StoreDebugger from "./components/storeDebugger/StoreDebugger.tsx";
 import NotFound from "./modules/auth/NotFound.tsx";
 import PermissionDenied from "./modules/auth/PermissionDenied.tsx";
 import CreateHackathonItem from "./modules/hackathonItem/CreateHackathonPage.tsx";
@@ -19,7 +19,6 @@ function App() {
 
     useEffect(() => {
         const checkAuth = async () => {
-            dispatch(loginStart());
             const token = localStorage.getItem('access_token');
 
             if (token) {
@@ -28,10 +27,7 @@ function App() {
                     dispatch(loginSuccess(userData));
                 } catch (error) {
                     localStorage.removeItem('access_token');
-                    dispatch(loginFailure());
                 }
-            } else {
-                dispatch(loginFailure());
             }
         };
 
@@ -63,7 +59,7 @@ function App() {
                 <Route path="/permission-denied" element={<PermissionDenied/>}/>
                 <Route path="*" element={<NotFound />} />
             </Routes>
-            {/*<StoreDebugger />*/}
+            <StoreDebugger />
         </Router>
     );
 }

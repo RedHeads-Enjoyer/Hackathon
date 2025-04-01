@@ -97,18 +97,18 @@ func (ac *AuthController) LoginHandler(c *gin.Context) {
 
 	var user models.User
 	if err := ac.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверные данные"})
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверные данные"})
 		return
 	}
 
 	accessToken, refreshToken, err := GenerateTokens(user.ID, user.Email, user.Role)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Token generation failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации токена"})
 		return
 	}
 
@@ -129,7 +129,7 @@ func (ac *AuthController) CurrentUserHandler(c *gin.Context) {
 
 	var user models.User
 	if err := ac.DB.First(&user, "id = ?", claims.UserID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
 		return
 	}
 
@@ -151,7 +151,7 @@ func (ac *AuthController) LogoutHandler(c *gin.Context) {
 
 	ClearRefreshTokenCookie(c)
 
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
+	c.JSON(http.StatusOK, gin.H{"message": "Выход успешен"})
 }
 
 func (ac *AuthController) RefreshTokenHandler(c *gin.Context) {
@@ -169,7 +169,7 @@ func (ac *AuthController) RefreshTokenHandler(c *gin.Context) {
 
 	newAccess, newRefresh, err := GenerateTokens(claims.UserID, claims.Email, claims.Role)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при генерации токена"})
 		return
 	}
 

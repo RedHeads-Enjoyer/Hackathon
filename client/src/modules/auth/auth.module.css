@@ -1,4 +1,4 @@
-.login_container {
+.app_container {
     height: 100%;
     background-color: var(--default-backgroud-color);
     display: flex;
@@ -7,7 +7,7 @@
 }
 
 .form_container {
-    min-width: 320px;
+    width: 320px;
     height: fit-content;
 
     display: flex;

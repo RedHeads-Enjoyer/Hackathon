@@ -1,27 +1,27 @@
 import {useAppSelector} from "../../store/hooks.ts";
 import {Link} from "react-router-dom";
-import styles from './header.module.css'
+import classes from './header.module.css'
+import {AuthState} from "../../modules/auth/store/authSlice.ts";
 
 function Header() {
-    const authState = useAppSelector(state => state.auth);
+    const authState: AuthState = useAppSelector(state => state.auth);
     return (
-        <header className={styles.header}>
-            <h3 className={styles.logo}>
-                <Link to={'/'}>ХАКАНТОН</Link>
-            </h3>
-            <nav className={styles.nav}>
-                {authState.user == null ?
-                    <>
-                        <Link to={'/login'}>Вход</Link>
-                        <Link to={'/register'}>Регистрация</Link>
-                    </>
-                    :
-                    <>
+        <header className={classes.header}>
+            {authState.user == null ?
+                <h3 className={classes.logo_unauthorized}>
+                    ХАКАНТОН
+                </h3>
+                :
+                <>
+                    <h3 className={classes.logo}>
+                        <Link to={'/'}>ХАКАНТОН</Link>
+                    </h3>
+                    <nav className={classes.nav}>
                         <Link to={'/logout'}>Выход</Link>
-                    </>
-                }
-
-            </nav>
+                        <p>{authState?.user.email}</p>
+                    </nav>
+                </>
+            }
         </header>
 
     );

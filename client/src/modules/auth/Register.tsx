@@ -1,9 +1,13 @@
 import React, { useState, FormEvent } from "react";
-import { Form, Button, Card, Alert, Container } from "react-bootstrap";
 import {Link, useNavigate} from "react-router-dom";
 import {authAPI} from "./authAPI.ts";
 import {useAppDispatch} from "../../store/hooks.ts";
 import {loginSuccess} from "./store/authSlice.ts";
+import classes from "./auth.module.css";
+import PageLabel from "../../components/pageLabel/PageLabel.tsx";
+import Input from "../../components/input/Input.tsx";
+import Error from "../../components/error/Error.tsx";
+import Button from "../../components/button/Button.tsx";
 
 type RegisterFormData = {
     email: string,
@@ -20,8 +24,7 @@ const Register: React.FC = () => {
         confirmPassword: ""
     });
 
-    const [error, setError] = useState<string>("");
-    const [success, setSuccess] = useState<string>("");
+    const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const dispatch = useAppDispatch();
 
@@ -37,30 +40,26 @@ const Register: React.FC = () => {
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        setError("");
-        setSuccess("");
-
-        // Валидация
-        if (!formData.email || !formData.username || !formData.password) {
-            return setError("Все поля обязательны для заполнения");
-        }
-
-        if (formData.password !== formData.confirmPassword) {
-            return setError("Пароли не совпадают");
-        }
-
-        if (formData.password.length < 8) {
-            return setError("Пароль должен содержать минимум 8 символов");
-        }
-
-        // Проверка email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData.email)) {
-            return setError("Введите корректный email");
-        }
+        setLoading(true)
+        setError(null);
 
         try {
-            setLoading(true);
+            if (!formData.email || !formData.username || !formData.password) {
+                return setError("Все поля обязательны для заполнения");
+            }
+
+            if (formData.password !== formData.confirmPassword) {
+                return setError("Пароли не совпадают");
+            }
+
+            if (formData.password.length < 8) {
+                return setError("Пароль должен содержать минимум 8 символов");
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                return setError("Введите корректный email");
+            }
 
             const result = await authAPI.register(formData);
             localStorage.setItem('access_token', result.access_token)
@@ -75,80 +74,58 @@ const Register: React.FC = () => {
     };
 
     return (
-        <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: "100vh" }}>
-            <div className="w-100" style={{ maxWidth: "500px" }}>
-                <Card>
-                    <Card.Body>
-                        <h2 className="text-center mb-4">Регистрация</h2>
-                        {error && <Alert variant="danger">{error}</Alert>}
-                        {success && <Alert variant="success">{success}</Alert>}
+        <div className={classes.app_container}>
+            <div className={classes.form_container}>
+                <PageLabel text="Вход"/>
+                <Input
+                    type={"email"}
+                    name={"email"}
+                    value={formData.email}
+                    onChange={handleChange}
+                    label={"Email"}
+                    placeholder={"example@mail.ru"}
+                />
+                <Input
+                    type={"text"}
+                    name={"username"}
+                    value={formData.username}
+                    onChange={handleChange}
+                    label={"Имя пользователя"}
+                    placeholder={"Крутой парень"}
+                />
+                <Input
+                    type={"password"}
+                    name={"password"}
+                    value={formData.password}
+                    onChange={handleChange}
+                    label={"Пароль"}
+                    placeholder={"examplePassword"}
+                />
+                <Input
+                    type={"password"}
+                    name={"confirmPassword"}
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    label={"Повторите пароль"}
+                    placeholder={"examplePassword"}
+                />
+                <Button
+                    onClick={handleSubmit}
+                    loading={loading}
+                >
+                    Зарегистрироваться
+                </Button>
 
-                        <Form onSubmit={handleSubmit}>
-                            <Form.Group className="mb-3" controlId="formEmail">
-                                <Form.Label>Email</Form.Label>
-                                <Form.Control
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    placeholder="example@mail.com"
-                                    required
-                                />
-                            </Form.Group>
+                {error != null && <Error><p>{error}</p></Error>}
 
-                            <Form.Group className="mb-3" controlId="formUsername">
-                                <Form.Label>Никнейм</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="username"
-                                    value={formData.username}
-                                    onChange={handleChange}
-                                    placeholder="cool_nickname"
-                                    required
-                                />
-                            </Form.Group>
 
-                            <Form.Group className="mb-3" controlId="formPassword">
-                                <Form.Label>Пароль</Form.Label>
-                                <Form.Control
-                                    type="password"
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    placeholder="Не менее 6 символов"
-                                    required
-                                />
-                            </Form.Group>
+                <span className={classes.info}>
+                    <p>Есть аккаунт? </p>
+                    <Link to={"/login"}>Войти</Link>
+                </span>
 
-                            <Form.Group className="mb-3" controlId="formConfirmPassword">
-                                <Form.Label>Подтвердите пароль</Form.Label>
-                                <Form.Control
-                                    type="password"
-                                    name="confirmPassword"
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
-                                    placeholder="Повторите пароль"
-                                    required
-                                />
-                            </Form.Group>
-
-                            <Button
-                                disabled={loading}
-                                className="w-100 mt-3"
-                                type="submit"
-                                variant="primary"
-                            >
-                                {loading ? "Регистрация..." : "Зарегистрироваться"}
-                            </Button>
-                        </Form>
-
-                        <div className="w-100 text-center mt-3">
-                            Уже есть аккаунт? <Link to="/login">Войти</Link>
-                        </div>
-                    </Card.Body>
-                </Card>
             </div>
-        </Container>
+        </div>
     );
 };
 

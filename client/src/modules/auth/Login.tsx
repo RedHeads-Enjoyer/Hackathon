@@ -31,6 +31,7 @@ const Login: React.FC = () => {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setLoading(true)
+        setError(null)
         dispatch(loginStart());
 
         if (!formData.email || !formData.password) {
@@ -56,7 +57,7 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className={classes.login_container}>
+        <div className={classes.app_container}>
             <div className={classes.form_container}>
                 <PageLabel text="Вход"/>
                 <Input
@@ -75,12 +76,6 @@ const Login: React.FC = () => {
                     label={"Пароль"}
                     placeholder={"examplePassword"}
                 />
-                <Button
-                    onClick={handleSubmit}
-                    loading={!loading}
-                >
-                    Войти
-                </Button>
                 <Button
                     onClick={handleSubmit}
                     loading={loading}

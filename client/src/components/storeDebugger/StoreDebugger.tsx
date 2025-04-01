@@ -21,7 +21,6 @@ const StoreDebugger = () => {
             <h4>Current Auth State:</h4>
             <pre>{JSON.stringify({
                 user: authState.user,
-                loading: authState.loading,
             }, null, 2)}</pre>
         </div>
     );
