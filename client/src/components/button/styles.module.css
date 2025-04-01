@@ -1,0 +1,16 @@
+.button {
+    background-color: var(--accent-color);
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: var(--accent-dark-color);
+}
+
+.children {
+    color: var(--default-backgroud-color);
+    font-weight: var(--font-weight-weight);
+    margin: 0;
+}

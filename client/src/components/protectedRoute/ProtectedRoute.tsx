@@ -4,7 +4,7 @@ import {JSX} from "react";
 
 type ProtectedRoutePropsType = {
     roles?: string[];
-    children: JSX.Element;
+    children: JSX.Element | JSX.Element[];
 }
 
 const ProtectedRoute = ({ roles, children }: ProtectedRoutePropsType) => {
@@ -16,7 +16,7 @@ const ProtectedRoute = ({ roles, children }: ProtectedRoutePropsType) => {
 
 
     if (!user || roles && !roles.includes(user.role)) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/permission-denied" replace />;
     }
 
     return children;

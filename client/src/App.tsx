@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import {BrowserRouter as Router, Routes, Route, Outlet} from 'react-router-dom';
 import Header from "./components/header/Header.tsx";
 import HackathonList from "./modules/hackathonList/HackathonList.tsx";
 import Register from "./modules/auth/Register";
@@ -9,7 +9,10 @@ import {loginFailure, loginStart, loginSuccess} from "./modules/auth/store/authS
 import {authAPI} from "./modules/auth/authAPI.ts";
 import {useEffect} from "react";
 import {useAppDispatch} from "./store/hooks.ts";
-import StoreDebugger from "./components/storeDebugger/StoreDebugger.tsx";
+// import StoreDebugger from "./components/storeDebugger/StoreDebugger.tsx";
+import NotFound from "./modules/auth/NotFound.tsx";
+import PermissionDenied from "./modules/auth/PermissionDenied.tsx";
+import CreateHackathonItem from "./modules/hackathonItem/CreateHackathonPage.tsx";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -45,28 +48,24 @@ function App() {
                     </ProtectedRoute>
                 } />
 
-                <Route path="/admin" element={
-                    <ProtectedRoute roles={["admin"]}>
-                        <HackathonList />
-                    </ProtectedRoute>
-                } />
-                <Route path="/user" element={
-                    <ProtectedRoute roles={["User"]}>
-                        <HackathonList />
-                    </ProtectedRoute>
-                } />
+                <Route element={<ProtectedRoute roles={["User"]}><Outlet /></ProtectedRoute>}>
+                    <Route path="/hackathon/create" element={<CreateHackathonItem />} />
+                    <Route path="/user1" element={<HackathonList />} />
+                    <Route path="/user2" element={<HackathonList />} />
+                </Route>
+
+                {/* Авторизация */}
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/logout" element={<Logout />} />
-                <Route path="*" element={<NotFoundPage />} />
+
+                {/* Служебные пути */}
+                <Route path="/permission-denied" element={<PermissionDenied/>}/>
+                <Route path="*" element={<NotFound />} />
             </Routes>
-            <StoreDebugger />
+            {/*<StoreDebugger />*/}
         </Router>
     );
-}
-
-function NotFoundPage() {
-    return <div>Страница не найдена</div>;
 }
 
 

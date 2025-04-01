@@ -1,0 +1,25 @@
+.input_container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.input_container label {
+    color: var(--default-text-color);
+    position: absolute;
+    background-color: var(--default-backgroud-color);
+    left: 8px;
+    top: -16px;
+    padding: 4px;
+
+}
+
+.input_container input {
+    padding: 8px;
+    background-color: transparent;
+    outline: none;
+    box-sizing: border-box;
+    border: 2px solid var(--accent-color);
+    color: var(--default-text-color)
+}

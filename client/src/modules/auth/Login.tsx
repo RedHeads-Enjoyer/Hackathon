@@ -1,10 +1,14 @@
 import React, {useState, FormEvent} from "react";
-import { Form, Button, Card, Alert, Container } from "react-bootstrap";
+import classes from './auth.module.css'
 import {Link, useNavigate} from "react-router-dom";
 import {LoginFormData} from "./authTypes.ts";
 import {authAPI} from "./authAPI.ts";
-import {loginStart, loginSuccess} from "./store/authSlice.ts";
-import {useAppDispatch, useAppSelector} from "../../store/hooks.ts";
+import {loginFailure, loginStart, loginSuccess} from "./store/authSlice.ts";
+import {useAppDispatch} from "../../store/hooks.ts";
+import PageLabel from "../../components/pageLabel/PageLabel.tsx";
+import Input from "../../components/input/Input.tsx";
+import Button from "../../components/button/Button.tsx";
+import Error from "../../components/error/Error.tsx";
 
 const Login: React.FC = () => {
     const [formData, setFormData] = useState<LoginFormData>({
@@ -12,9 +16,9 @@ const Login: React.FC = () => {
         password: "",
     });
     const [error, setError] = useState<String | null>(null)
+    const [loading, setLoading] = useState<boolean>(false)
     const dispatch = useAppDispatch();
     const navigate = useNavigate()
-    const { loading } = useAppSelector((state) => state.auth);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -26,10 +30,14 @@ const Login: React.FC = () => {
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        setLoading(true)
         dispatch(loginStart());
 
         if (!formData.email || !formData.password) {
             setError("Заполните все поля");
+            setLoading(false)
+            dispatch(loginFailure())
+            return
         }
 
         try {
@@ -42,62 +50,54 @@ const Login: React.FC = () => {
         } catch (err) {
             const errorMessage = (err as Error).message || "Ошибка входа";
             setError(errorMessage);
+        } finally {
+            setLoading(false)
         }
     };
 
     return (
-        <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: "100vh" }}>
-            <div className="w-100" style={{ maxWidth: "400px" }}>
-                <Card>
-                    <Card.Body>
-                        <h2 className="text-center mb-4">Вход</h2>
-                        {error  && <Alert variant="danger">{error }</Alert>}
+        <div className={classes.login_container}>
+            <div className={classes.form_container}>
+                <PageLabel text="Вход"/>
+                <Input
+                    type={"email"}
+                    name={"email"}
+                    value={formData.email}
+                    onChange={handleChange}
+                    label={"Email"}
+                    placeholder={"example@mail.ru"}
+                />
+                <Input
+                    type={"password"}
+                    name={"password"}
+                    value={formData.password}
+                    onChange={handleChange}
+                    label={"Пароль"}
+                    placeholder={"examplePassword"}
+                />
+                <Button
+                    onClick={handleSubmit}
+                    loading={!loading}
+                >
+                    Войти
+                </Button>
+                <Button
+                    onClick={handleSubmit}
+                    loading={loading}
+                >
+                    Войти
+                </Button>
 
-                        <Form onSubmit={handleSubmit}>
-                            <Form.Group className="mb-3" controlId="formEmail">
-                                <Form.Label>Email</Form.Label>
-                                <Form.Control
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    placeholder="example@mail.com"
-                                    required
-                                />
-                            </Form.Group>
+                {error != null && <Error><p>{error}</p></Error>}
 
-                            <Form.Group className="mb-3" controlId="formPassword">
-                                <Form.Label>Пароль</Form.Label>
-                                <Form.Control
-                                    type="password"
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    placeholder="Пароль"
-                                    required
-                                />
-                            </Form.Group>
 
-                            <Button
-                                disabled={loading}
-                                className="w-100 mt-3"
-                                type="submit"
-                            >
-                                {loading ? "Вход..." : "Войти"}
-                            </Button>
-                        </Form>
+                <span className={classes.info}>
+                    <p>Нет аккаунта? </p>
+                    <Link to={"/register"}>Зарегистрироваться</Link>
+                </span>
 
-                        <div className="w-100 text-center mt-3">
-                            <Link to="/forgot-password">Забыли пароль?</Link>
-                        </div>
-                    </Card.Body>
-                </Card>
-
-                <div className="w-100 text-center mt-2">
-                    Нет аккаунта? <Link to="/register">Зарегистрируйтесь</Link>
-                </div>
             </div>
-        </Container>
+        </div>
     );
 };
 

@@ -1,0 +1,21 @@
+.login_container {
+    height: 100%;
+    background-color: var(--default-backgroud-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.form_container {
+    min-width: 320px;
+    height: fit-content;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.info {
+    display: flex;
+    justify-content: space-between;
+}

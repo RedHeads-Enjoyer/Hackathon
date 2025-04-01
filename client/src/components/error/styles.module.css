@@ -1,0 +1,10 @@
+.error_container {
+    border: 2px solid var(--error-border-color);
+    background-color: var(--error-content-color);
+    color: var(--error-border-color);
+    padding: 4px 8px;
+}
+
+.error_container * {
+    color: var(--error-border-color)
+}
