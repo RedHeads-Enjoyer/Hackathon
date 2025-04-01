@@ -2,17 +2,20 @@ import { Navigate } from 'react-router-dom';
 import { useAppSelector } from '../../store/hooks.ts';
 import {JSX} from "react";
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+type ProtectedRoutePropsType = {
+    roles?: string[];
+    children: JSX.Element;
+}
+
+const ProtectedRoute = ({ roles, children }: ProtectedRoutePropsType) => {
     const { user, loading } = useAppSelector((state) => state.auth);
 
     if (loading) {
-        console.log("asdasd")
         return <div>Загрузка...</div>;
     }
 
 
-    if (!user) {
-        console.log("qweqwe")
+    if (!user || roles && !roles.includes(user.role)) {
         return <Navigate to="/login" replace />;
     }
 

@@ -58,6 +58,7 @@ func (ac *AuthController) RegisterHandler(c *gin.Context) {
 		Email:    input.Email,
 		Username: input.Username,
 		Password: string(hashedPassword),
+		Role:     "admin",
 	}
 
 	if err := ac.DB.Create(&user).Error; err != nil {
@@ -65,7 +66,7 @@ func (ac *AuthController) RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := GenerateTokens(user.ID, user.Email)
+	accessToken, refreshToken, err := GenerateTokens(user.ID, user.Email, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации токена"})
 		return
@@ -105,7 +106,7 @@ func (ac *AuthController) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := GenerateTokens(user.ID, user.Email)
+	accessToken, refreshToken, err := GenerateTokens(user.ID, user.Email, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Token generation failed"})
 		return
@@ -135,6 +136,7 @@ func (ac *AuthController) CurrentUserHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"id":    user.ID,
 		"email": user.Email,
+		"role":  user.Role,
 	})
 }
 
@@ -165,7 +167,7 @@ func (ac *AuthController) RefreshTokenHandler(c *gin.Context) {
 		return
 	}
 
-	newAccess, newRefresh, err := GenerateTokens(claims.UserID, claims.Email)
+	newAccess, newRefresh, err := GenerateTokens(claims.UserID, claims.Email, claims.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
 		return

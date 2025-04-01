@@ -9,14 +9,14 @@ import {loginFailure, loginStart, loginSuccess} from "./modules/auth/store/authS
 import {authAPI} from "./modules/auth/authAPI.ts";
 import {useEffect} from "react";
 import {useAppDispatch} from "./store/hooks.ts";
-import StoreDebugger from "./components/StoreDebugger.tsx";
+import StoreDebugger from "./components/storeDebugger/StoreDebugger.tsx";
 
 function App() {
     const dispatch = useAppDispatch();
 
     useEffect(() => {
         const checkAuth = async () => {
-            dispatch(loginStart()); // Устанавливаем loading = true
+            dispatch(loginStart());
             const token = localStorage.getItem('access_token');
 
             if (token) {
@@ -41,6 +41,17 @@ function App() {
             <Routes>
                 <Route path="/" element={
                     <ProtectedRoute>
+                        <HackathonList />
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/admin" element={
+                    <ProtectedRoute roles={["admin"]}>
+                        <HackathonList />
+                    </ProtectedRoute>
+                } />
+                <Route path="/user" element={
+                    <ProtectedRoute roles={["User"]}>
                         <HackathonList />
                     </ProtectedRoute>
                 } />

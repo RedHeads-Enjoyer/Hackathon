@@ -94,7 +94,7 @@ const Login: React.FC = () => {
                 </Card>
 
                 <div className="w-100 text-center mt-2">
-                    Нет аккаунта? <Link to="/signup">Зарегистрируйтесь</Link>
+                    Нет аккаунта? <Link to="/register">Зарегистрируйтесь</Link>
                 </div>
             </div>
         </Container>

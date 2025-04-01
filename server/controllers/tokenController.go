@@ -35,11 +35,12 @@ func getRequiredEnv(key string) string {
 	return value
 }
 
-func GenerateTokens(userID uint, email string) (string, string, error) {
+func GenerateTokens(userID uint, email string, role string) (string, string, error) {
 	// Access Token
 	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, &types.Claims{
 		UserID: userID,
 		Email:  email,
+		Role:   role,
 		RegisteredClaims: &jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenExpire)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

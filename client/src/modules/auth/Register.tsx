@@ -2,6 +2,8 @@ import React, { useState, FormEvent } from "react";
 import { Form, Button, Card, Alert, Container } from "react-bootstrap";
 import {Link, useNavigate} from "react-router-dom";
 import {authAPI} from "./authAPI.ts";
+import {useAppDispatch} from "../../store/hooks.ts";
+import {loginSuccess} from "./store/authSlice.ts";
 
 type RegisterFormData = {
     email: string,
@@ -21,6 +23,7 @@ const Register: React.FC = () => {
     const [error, setError] = useState<string>("");
     const [success, setSuccess] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
+    const dispatch = useAppDispatch();
 
     const navigate = useNavigate()
 
@@ -61,6 +64,8 @@ const Register: React.FC = () => {
 
             const result = await authAPI.register(formData);
             localStorage.setItem('access_token', result.access_token)
+            const userData = await authAPI.verify();
+            dispatch(loginSuccess(userData));
             navigate('/')
         } catch (err) {
             setError("Ошибка регистрации: " + (err as Error).message);
@@ -138,7 +143,7 @@ const Register: React.FC = () => {
                         </Form>
 
                         <div className="w-100 text-center mt-3">
-                            Уже есть аккаунт? <Link to="/signin">Войти</Link>
+                            Уже есть аккаунт? <Link to="/login">Войти</Link>
                         </div>
                     </Card.Body>
                 </Card>

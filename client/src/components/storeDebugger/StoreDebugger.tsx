@@ -1,4 +1,4 @@
-import { useAppSelector } from '../store/hooks';
+import { useAppSelector } from '../../store/hooks.ts';
 
 const StoreDebugger = () => {
     // Явно выбираем только нужные части состояния
@@ -21,7 +21,7 @@ const StoreDebugger = () => {
             <h4>Current Auth State:</h4>
             <pre>{JSON.stringify({
                 user: authState.user,
-                loading: authState.loading
+                loading: authState.loading,
             }, null, 2)}</pre>
         </div>
     );
