@@ -18,6 +18,8 @@
   --default-text-color: white;
   --error-border-color: #ef0000;
   --error-content-color: #ffefef;
+  --default-placeholedr-color: #aaa;
+  --default-font-size: 14px;
 }
 
 a {
@@ -25,8 +27,9 @@ a {
   color: var(--accent-color);
 }
 
-p {
+p, label, input, input::placeholder {
   color: var(--default-text-color);
+  font-size: var(--default-font-size);
   margin: 0;
 }
 

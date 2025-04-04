@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { Container, Button, Form, Card, Image, Modal, Row, Col, ListGroup } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import Cropper from 'react-cropper';
-import 'cropperjs/dist/cropper.css';
+import React, { useState } from 'react';
+import classes from  './hackathon.module.css';
+import PageLabel from "../../components/pageLabel/PageLabel.tsx";
+import Input from "../../components/input/Input.tsx";
+import TextArea from "../../components/textArea/TextArea.tsx";
 
 interface Stage {
     id: string;
@@ -31,12 +31,9 @@ interface Sponsor {
     website: string;
 }
 
-const CreateHackathonPage: React.FC = () => {
-    const navigate = useNavigate();
-    const cropperRef = useRef<Cropper>(null);
-    const [showCropModal, setShowCropModal] = useState(false);
-    const [cropSquare, setCropSquare] = useState(true);
 
+
+const CreateHackathonPage: React.FC = () => {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -54,175 +51,69 @@ const CreateHackathonPage: React.FC = () => {
         currentTechnology: '',
     });
 
-    // Обработка загрузки и обрезки изображения
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file && file.type.match('image.*')) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setFormData(prev => ({ ...prev, coverImage: reader.result as string }));
-                setShowCropModal(true);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+        const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
 
-    const handleCrop = () => {
-        if (cropperRef.current) {
-            const croppedCanvas = cropperRef.current.getCroppedCanvas({
-                aspectRatio: cropSquare ? 1 : NaN
-            });
-            setFormData(prev => ({ ...prev, croppedImage: croppedCanvas.toDataURL() }));
-            setShowCropModal(false);
-        }
-    };
+        setFormData(prev => {
+            // Обработка простых текстовых полей и чисел
+            if (name in prev && !Array.isArray(prev[name as keyof typeof prev])) {
+                return {
+                    ...prev,
+                    [name]: type === 'number' ? Number(value) :
+                        type === 'checkbox' ? checked :
+                            value
+                };
+            }
 
-    // Управление целями
-    const handleGoalChange = (index: number, value: string) => {
-        const newGoals = [...formData.goals];
-        newGoals[index] = value;
-        setFormData(prev => ({ ...prev, goals: newGoals }));
-    };
+            // Обработка массивов technologies (если у вас есть чекбоксы для технологий)
+            if (name === 'technologies') {
+                return {
+                    ...prev,
+                    technologies: checked
+                        ? [...prev.technologies, value]
+                        : prev.technologies.filter(tech => tech !== value)
+                };
+            }
 
-    const addGoal = () => {
-        setFormData(prev => ({ ...prev, goals: [...prev.goals, ''] }));
-    };
+            // Обработка вложенных объектов (если есть)
+            if (name.includes('.')) {
+                const [parentKey, childKey] = name.split('.');
+                return {
+                    ...prev,
+                    [parentKey]: {
+                        ...(prev[parentKey as keyof typeof prev] as object),
+                        [childKey]: value
+                    }
+                };
+            }
 
-    const removeGoal = (index: number) => {
-        const newGoals = formData.goals.filter((_, i) => i !== index);
-        setFormData(prev => ({ ...prev, goals: newGoals }));
+            return prev;
+        });
     };
-
-    // Управление этапами
-    const addStage = () => {
-        const newStage: Stage = {
-            id: Date.now().toString(),
-            name: '',
-            description: '',
-            startDate: '',
-            endDate: ''
-        };
-        setFormData(prev => ({ ...prev, stages: [...prev.stages, newStage] }));
-    };
-
-    const updateStage = (id: string, field: keyof Stage, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            stages: prev.stages.map(stage =>
-                stage.id === id ? { ...stage, [field]: value } : stage
-            )
-        }));
-    };
-
-    const removeStage = (id: string) => {
-        setFormData(prev => ({
-            ...prev,
-            stages: prev.stages.filter(stage => stage.id !== id)
-        }));
-    };
-
-    // Управление критериями оценки
-    const addCriteria = () => {
-        const newCriteria: Criteria = {
-            id: Date.now().toString(),
-            name: '',
-            minScore: 0,
-            maxScore: 10
-        };
-        setFormData(prev => ({ ...prev, criteria: [...prev.criteria, newCriteria] }));
-    };
-
-    const updateCriteria = (id: string, field: keyof Criteria, value: string | number) => {
-        setFormData(prev => ({
-            ...prev,
-            criteria: prev.criteria.map(criteria =>
-                criteria.id === id ? { ...criteria, [field]: value } : criteria
-            )
-        }));
-    };
-
-    const removeCriteria = (id: string) => {
-        setFormData(prev => ({
-            ...prev,
-            criteria: prev.criteria.filter(criteria => criteria.id !== id)
-        }));
-    };
-
-    // Управление технологиями
-    const addTechnology = () => {
-        if (formData.currentTechnology.trim()) {
-            setFormData(prev => ({
-                ...prev,
-                technologies: [...prev.technologies, prev.currentTechnology.trim()],
-                currentTechnology: ''
-            }));
-        }
-    };
-
-    const removeTechnology = (index: number) => {
-        setFormData(prev => ({
-            ...prev,
-            technologies: prev.technologies.filter((_, i) => i !== index)
-        }));
-    };
-
-    // Управление наградами
-    const addPrize = () => {
-        const newPrize: Prize = {
-            id: Date.now().toString(),
-            place: formData.prizes.length + 1,
-            reward: ''
-        };
-        setFormData(prev => ({ ...prev, prizes: [...prev.prizes, newPrize] }));
-    };
-
-    const updatePrize = (id: string, field: keyof Prize, value: string | number) => {
-        setFormData(prev => ({
-            ...prev,
-            prizes: prev.prizes.map(prize =>
-                prize.id === id ? { ...prize, [field]: value } : prize
-            )
-        }));
-    };
-
-    const removePrize = (id: string) => {
-        setFormData(prev => ({
-            ...prev,
-            prizes: prev.prizes.filter(prize => prize.id !== id)
-        }));
-    };
-
-    // Управление спонсорами
-    const addSponsor = () => {
-        const newSponsor: Sponsor = {
-            id: Date.now().toString(),
-            name: '',
-            website: ''
-        };
-        setFormData(prev => ({ ...prev, sponsors: [...prev.sponsors, newSponsor] }));
-    };
-
-    const updateSponsor = (id: string, field: keyof Sponsor, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            sponsors: prev.sponsors.map(sponsor =>
-                sponsor.id === id ? { ...sponsor, [field]: value } : sponsor
-            )
-        }));
-    };
-
-    const removeSponsor = (id: string) => {
-        setFormData(prev => ({
-            ...prev,
-            sponsors: prev.sponsors.filter(sponsor => sponsor.id !== id)
-        }));
-    };
-
 
     return (
-        <Container className="py-4">
-            <h1 className="mb-4">Создать новый хакатон</h1>
-        </Container>
+    <div className={classes.page_wrapper}>
+        <PageLabel size={'h3'}>Создание хакатона</PageLabel>
+        <Input
+            label={"Название хакатона"}
+            type={"text"}
+            value={formData.name}
+            onChange={handleChange}
+            name={'name'}
+            placeholder={'Лучший хакатон'}
+        />
+        <TextArea
+            label="Описание хакатона"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Самый лучший хакатон"
+            minRows={5}
+            maxRows={10}
+        />
+
+    </div>
     );
 };
 

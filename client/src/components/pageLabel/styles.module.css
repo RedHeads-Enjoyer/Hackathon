@@ -1,5 +1,49 @@
+/* Базовые стили для всех заголовков */
 .label {
-    text-align: center;
-    color: var(--default-text-color);
     text-transform: uppercase;
+    text-align: center;
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--default-text-color, #212529);
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+/* Размеры аналогичные HTML h1-h6 / Bootstrap .h1-.h6 */
+.h1 {
+    font-size: calc(1.375rem + 1.5vw);
+}
+.h2 {
+    font-size: calc(1.325rem + 0.9vw);
+}
+.h3 {
+    font-size: calc(1.3rem + 0.6vw);
+}
+.h4 {
+    font-size: calc(1.275rem + 0.3vw);
+}
+.h5 {
+    font-size: 1.25rem;
+}
+.h6 {
+    font-size: 1rem;
+}
+
+/* Фиксированные размеры на больших экранах */
+@media (min-width: 1200px) {
+    .h1 { font-size: 2.5rem; }
+    .h2 { font-size: 2rem; }
+    .h3 { font-size: 1.75rem; }
+    .h4 { font-size: 1.5rem; }
+    .h5 { font-size: 1.25rem; }
+    .h6 { font-size: 1rem; }
+}
+
+/* Дополнительные модификаторы (опционально) */
+.label.uppercase {
+    text-transform: uppercase;
+}
+.label.center {
+    text-align: center;
 }

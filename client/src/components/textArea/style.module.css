@@ -1,0 +1,36 @@
+.textAreaContainer {
+    position: relative;
+    width: 100%;
+    border: 2px solid var(--accent-color);
+    transition: border-color 0.3s ease;
+    padding: 8px;
+    /*background-color: #fff;*/
+}
+
+.textAreaContainer.disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.textArea {
+    width: 100%;
+    min-height: 60px;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+    font-size: var(--default-font-size);
+    line-height: 1.5;
+    color: var(--default-text-color);
+    background: transparent;
+    overflow-y: auto;
+}
+
+.textArea:disabled {
+    color: #999;
+    cursor: not-allowed;
+}
+
+.textArea::placeholder {
+    color: var(--default-placeholedr-color);
+}

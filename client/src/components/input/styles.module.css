@@ -7,12 +7,7 @@
 
 .input_container label {
     color: var(--default-text-color);
-    position: absolute;
-    background-color: var(--default-backgroud-color);
-    left: 8px;
-    top: -16px;
-    padding: 4px;
-
+    font-size: var(--default-font-size);
 }
 
 .input_container input {
@@ -21,5 +16,11 @@
     outline: none;
     box-sizing: border-box;
     border: 2px solid var(--accent-color);
-    color: var(--default-text-color)
+    color: var(--default-text-color);
+    font-size: var(--default-font-size);
+}
+
+.input_container input::placeholder {
+    font-size: var(--default-font-size);
+    color: var(--default-placeholedr-color);
 }
