@@ -3,6 +3,7 @@ import classes from  './hackathon.module.css';
 import PageLabel from "../../components/pageLabel/PageLabel.tsx";
 import Input from "../../components/input/Input.tsx";
 import TextArea from "../../components/textArea/TextArea.tsx";
+import ImageUploader from "../../components/imageUploader/ImageUploader.tsx";
 
 interface Stage {
     id: string;
@@ -92,6 +93,15 @@ const CreateHackathonPage: React.FC = () => {
         });
     };
 
+    const handleImageCrop = (croppedImage: string) => {
+        console.log('Cropped image:', croppedImage); // Добавьте эту строку
+        setFormData(prev => ({
+            ...prev,
+            croppedImage,
+            coverImage: croppedImage
+        }));
+    };
+
     return (
     <div className={classes.page_wrapper}>
         <PageLabel size={'h3'}>Создание хакатона</PageLabel>
@@ -111,6 +121,10 @@ const CreateHackathonPage: React.FC = () => {
             placeholder="Самый лучший хакатон"
             minRows={5}
             maxRows={10}
+        />
+        <ImageUploader
+            onImageChange={handleImageCrop}
+            initialImage={formData.coverImage}
         />
 
     </div>
