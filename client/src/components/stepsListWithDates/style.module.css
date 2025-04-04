@@ -1,0 +1,84 @@
+.container {
+    width: 100%;
+}
+
+.title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.stageCard {
+    /*background: #fff;*/
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.stageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.stageNumber {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #1890ff;
+}
+
+
+.removeButton:hover {
+    background: #ff7875;
+}
+
+.formGroup {
+    margin-bottom: 15px;
+}
+
+.formGroup label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+}
+
+.formGroup input[type="text"],
+.formGroup input[type="date"],
+.formGroup textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.formGroup textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.dateRow {
+    display: flex;
+    gap: 20px;
+}
+
+.dateRow .formGroup {
+    flex: 1;
+}
+
+.addButton {
+    background: #1890ff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.addButton:hover {
+    background: #40a9ff;
+}

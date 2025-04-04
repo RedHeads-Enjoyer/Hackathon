@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, {useEffect, useId, useRef} from 'react';
 import classes from './style.module.css';
 
 interface TextAreaProps {
@@ -11,6 +11,7 @@ interface TextAreaProps {
     maxRows?: number;
     disabled?: boolean;
     className?: string;
+    error?: string;
 }
 
 const TextArea: React.FC<TextAreaProps> = ({
@@ -19,49 +20,58 @@ const TextArea: React.FC<TextAreaProps> = ({
                                                value,
                                                onChange,
                                                placeholder = '',
-                                               minRows = 2,
-                                               maxRows = 6,
+                                               minRows = 3,
+                                               maxRows = 8,
                                                disabled = false,
                                                className = '',
+                                               error = '',
                                            }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const labelRef = useRef<HTMLLabelElement>(null);
+    const id = useId();
 
-    // Автоматическое изменение высоты
     useEffect(() => {
         if (textareaRef.current) {
-            textareaRef.current.style.height = 'auto';
-            const lineHeight = parseInt(getComputedStyle(textareaRef.current).lineHeight) || 20;
+            // Рассчитываем высоту на основе line-height
+            const lineHeight = parseInt(getComputedStyle(textareaRef.current).lineHeight) || 24;
+            const minHeight = lineHeight * minRows;
             const maxHeight = lineHeight * maxRows;
+
+            textareaRef.current.style.height = 'auto';
             const newHeight = Math.min(textareaRef.current.scrollHeight, maxHeight);
-            textareaRef.current.style.height = `${Math.max(newHeight, lineHeight * minRows)}px`;
+            textareaRef.current.style.height = `${Math.max(newHeight, minHeight)}px`;
         }
     }, [value, minRows, maxRows]);
 
     return (
         <div className={`${classes.textAreaWrapper} ${className}`}>
             <label
-                ref={labelRef}
-                htmlFor={name}
+                htmlFor={id}
                 className={`${classes.label} ${disabled ? classes.labelDisabled : ''}`}
             >
                 {label}
             </label>
 
-            <div className={`${classes.textAreaContainer} ${disabled ? classes.disabled : ''}`}>
-        <textarea
-            ref={textareaRef}
-            id={name}
-            name={name}
-            className={classes.textArea}
-            value={value}
-            placeholder={placeholder}
-            disabled={disabled}
-            onChange={onChange}
-            rows={minRows}
-            aria-labelledby={labelRef.current?.id}
-        />
+            <div className={`${classes.textAreaContainer} ${disabled ? classes.disabled : ''} ${error ? classes.error : ''}`}>
+                <textarea
+                    ref={textareaRef}
+                    id={id}
+                    name={name}
+                    className={classes.textArea}
+                    value={value}
+                    placeholder={placeholder}
+                    disabled={disabled}
+                    onChange={onChange}
+                    rows={minRows}
+                    aria-invalid={!!error}
+                    aria-describedby={error ? `${id}-error` : undefined}
+                />
             </div>
+
+            {error && (
+                <div id={`${id}-error`} className={classes.errorMessage}>
+                    {error}
+                </div>
+            )}
         </div>
     );
 };

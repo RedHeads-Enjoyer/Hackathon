@@ -4,14 +4,8 @@ import PageLabel from "../../components/pageLabel/PageLabel.tsx";
 import Input from "../../components/input/Input.tsx";
 import TextArea from "../../components/textArea/TextArea.tsx";
 import ImageUploader from "../../components/imageUploader/ImageUploader.tsx";
-
-interface Stage {
-    id: string;
-    name: string;
-    description: string;
-    startDate: string;
-    endDate: string;
-}
+import StepsListWithDates from "../../components/stepsListWithDates/StepsListWithDates.tsx";
+import {Stage} from "../../components/stepsListWithDates/types.ts";
 
 interface Criteria {
     id: string;
@@ -105,28 +99,43 @@ const CreateHackathonPage: React.FC = () => {
     return (
     <div className={classes.page_wrapper}>
         <PageLabel size={'h3'}>Создание хакатона</PageLabel>
-        <Input
-            label={"Название хакатона"}
-            type={"text"}
-            value={formData.name}
-            onChange={handleChange}
-            name={'name'}
-            placeholder={'Лучший хакатон'}
-        />
-        <TextArea
-            label="Описание хакатона"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Самый лучший хакатон"
-            minRows={5}
-            maxRows={10}
-        />
-        <ImageUploader
-            onImageChange={handleImageCrop}
-            initialImage={formData.coverImage}
-        />
+        <div className={classes.create_container}>
+            <div className={classes.hackathon_name}>
+                <Input
+                    label={"Название хакатона"}
+                    type={"text"}
+                    value={formData.name}
+                    onChange={handleChange}
+                    name={'name'}
+                    placeholder={'Лучший хакатон'}
+                />
+            </div>
+            <div className={classes.hackathon_description}>
+                <TextArea
+                    label="Описание хакатона"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    placeholder="Самый лучший хакатон"
+                    minRows={5}
+                    maxRows={10}
+                />
+            </div>
+            <div className={classes.hackathon_image}>
+                <ImageUploader
+                    onImageChange={handleImageCrop}
+                    initialImage={formData.coverImage}
+                />
+            </div>
+            <div className={classes.hackathon_steps}>
+                <StepsListWithDates
+                    initialStages={formData.stages}
+                    onChange={(stages) => setFormData({...formData, stages})}
+                />
+            </div>
 
+
+        </div>
     </div>
     );
 };

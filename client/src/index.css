@@ -20,10 +20,47 @@
   --error-content-color: #ffefef;
   --default-placeholedr-color: #aaa;
   --default-font-size: 14px;
+  --dark-bg-color: #121212;
+  --card-bg-color: #1e1e1e;
+  --input-bg-color: #2a2a2a;
+  --input-border-color: #3d3d3d;
+
+  --accent-color: #ffc107;
+  --accent-light-color: #ffd54f;
+  --accent-dark-color: #ffa000;
+  --accent-shadow-color: rgba(255, 193, 7, 0.2);
+
+  --light-text-color: #f5f5f5;
+  --muted-text-color: #b0b0b0;
+  --placeholder-color: #8a8a8a;
+
+  --error-border-color: #f44336;
+  --error-text-color: #ff6b6b;
+  --error-bg-color: rgba(244, 67, 54, 0.1);
+
+  --success-color: #4caf50;
+
+  /* Размеры */
+  --default-font-size: 14px;
+  --border-radius: 6px;
+  --transition-duration: 0.3s;
+
+  --disabled-bg-color: #2a2a2a;
+  --scrollbar-thumb-color: rgba(255, 193, 7, 0.5);
+
+  --border-radius: 8px;
+  --card-bg-color: #1e1e1e;
+  --input-bg-color: #2a2a2a;
+  --input-border-color: #3d3d3d;
+
+  --border-radius: 6px;
+  --disabled-bg-color: #3a3a3a;
+  --button-active-shadow: 0 0 0 3px rgba(255, 193, 7, 0.3);
 }
 
 a {
   text-decoration: none;
+  font-size: var(--default-font-size);
   color: var(--accent-color);
 }
 

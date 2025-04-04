@@ -8,15 +8,12 @@ type InputPropsType = {
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     name: string;
     placeholder?: string;
-    disabled?: boolean;
-    required?: boolean;
     label?: string;
     error?: string;
-    id?: string;
 }
 
 const Input = (props: InputPropsType) => {
-    const inputId = props.id || useId();
+    const inputId = useId();
 
     return (
         <div className={classes.input_container}>

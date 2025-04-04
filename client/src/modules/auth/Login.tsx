@@ -59,7 +59,7 @@ const Login: React.FC = () => {
     return (
         <div className={classes.app_container}>
             <div className={classes.form_container}>
-                <PageLabel text="Вход"/>
+                <PageLabel>Вход</PageLabel>
                 <Input
                     type={"email"}
                     name={"email"}

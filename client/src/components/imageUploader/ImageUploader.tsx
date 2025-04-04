@@ -3,6 +3,8 @@ import classes from './style.module.css';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from './imageUtils';
 import Modal from '../../components/modal/Modal.tsx';
+import Button from "../button/Button.tsx";
+import PageLabel from "../pageLabel/PageLabel.tsx";
 
 interface ImageUploaderProps {
     onImageChange: (croppedImage: string) => void;
@@ -41,7 +43,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageChange, initialIma
         setZoom(1);
     };
 
-    const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+    const onCropComplete = (_croppedArea: any, croppedAreaPixels: any) => {
         setCroppedAreaPixels(croppedAreaPixels);
     };
 
@@ -92,9 +94,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageChange, initialIma
                 </div>
             )}
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+            <Modal isOpen={isModalOpen}>
                 <div className={classes.modalContent}>
-                    <h3>Обрежьте изображение</h3>
+                    <PageLabel>Обрежьте изображение</PageLabel>
                     <div className={classes.cropContainer}>
                         {originalImage && (
                             <Cropper
@@ -109,20 +111,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageChange, initialIma
                         )}
                     </div>
                     <div className={classes.modalControls}>
-                        <button
-                            type="button"
+                        <Button
                             onClick={() => setIsModalOpen(false)}
-                            className={classes.cancelButton}
                         >
                             Отмена
-                        </button>
-                        <button
-                            type="button"
+                        </Button>
+                        <Button
                             onClick={handleSave}
-                            className={classes.saveButton}
                         >
                             Сохранить
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </Modal>
