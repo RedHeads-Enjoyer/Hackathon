@@ -80,7 +80,7 @@ const CriteriaEditor: React.FC<{
         <div className={classes.container}>
             <h3 className={classes.title}>Критерии оценки</h3>
 
-            <div className={classes.form}>
+            <div className={criteria.length !== 0 ? classes.form : ""}>
                 <div className={classes.input_container}>
                     <label className={classes.label}>Название критерия</label>
                     <input
@@ -93,10 +93,9 @@ const CriteriaEditor: React.FC<{
 
                 <div className={classes.scores}>
                     <div className={classes.input_container}>
-                        <label className={classes.label}>Минимальный балл</label>
-                        <input
+                        <Input
+                            label={"Минимальный балл"}
                             type="number"
-                            className={classes.input}
                             value={formData.minScore}
                             onChange={(e) => handleChange('minScore', Number(e.target.value))}
                             min={0}
@@ -104,8 +103,8 @@ const CriteriaEditor: React.FC<{
                         />
                     </div>
                     <div className={classes.input_container}>
-                        <label className={classes.label}>Максимальный балл</label>
-                        <input
+                        <Input
+                            label={"Максимальный балл"}
                             type="number"
                             className={classes.input}
                             value={formData.maxScore}
@@ -128,14 +127,12 @@ const CriteriaEditor: React.FC<{
                     {editingId && (
                         <>
                             <Button
-                                variant="outline"
                                 onClick={resetForm}
                                 className={classes.secondaryButton}
                             >
                                 Отмена
                             </Button>
                             <Button
-                                variant="danger"
                                 onClick={confirmDelete}
                                 className={classes.secondaryButton}
                             >
@@ -167,11 +164,10 @@ const CriteriaEditor: React.FC<{
                 isOpen={deleteConfirm.show}
                 onClose={() => setDeleteConfirm({ show: false, criterionId: null })}
             >
-                <div className={classes.confirmationModal}>
-                    <h4>Удалить критерий?</h4>
-                    <p>
-                        Вы уверены, что хотите удалить этот критерий? Это действие нельзя
-                        отменить.
+                <div className={classes.modalContent}>
+                    <h4 className={classes.modalTitle}>Удалить критерий?</h4>
+                    <p className={classes.modalText}>
+                        Вы уверены, что хотите удалить этот критерий? Это действие нельзя отменить.
                     </p>
                     <div className={classes.modalActions}>
                         <Button variant="danger" onClick={deleteCriterion}>
@@ -179,9 +175,7 @@ const CriteriaEditor: React.FC<{
                         </Button>
                         <Button
                             variant="outline"
-                            onClick={() =>
-                                setDeleteConfirm({ show: false, criterionId: null })
-                            }
+                            onClick={() => setDeleteConfirm({ show: false, criterionId: null })}
                         >
                             Отмена
                         </Button>

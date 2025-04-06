@@ -10,7 +10,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-
 }
 
 .header {
@@ -27,49 +26,96 @@
 .stagesList {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
 }
 
 .stageCard {
     background-color: var(--input-bg-color);
     border-radius: var(--border-radius);
-    padding: 20px;
+    padding: 12px 16px;
     border: 1px solid var(--input-border-color);
     transition: all 0.2s ease;
 }
 
 .stageCard:hover {
     border-color: var(--accent-color);
-    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.1);
 }
 
 .stageHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    cursor: pointer;
+    padding: 4px 0;
+    gap: 12px;
+}
+
+.stageSummary {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    min-width: 0;
+    gap: 12px;
 }
 
 .stageBadge {
     background-color: var(--accent-color);
     color: var(--dark-text-color);
-    padding: 4px 12px;
+    padding: 4px 10px;
     border-radius: 20px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
+    flex-shrink: 0;
+}
+
+.stageTitle {
+    display: inline;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stageNameText {
+    color: var(--light-text-color);
+    font-weight: 500;
+}
+
+.stageDatesText {
+    color: var(--secondary-text-color);
+    font-weight: 400;
 }
 
 .stageContent {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    padding-top: 16px;
+    margin-top: 8px;
 }
 
 .datesContainer {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
-    margin-top: 8px;
+}
+
+.modalContent {
+    padding: 20px;
+    max-width: 400px;
+}
+
+.modalTitle {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 18px;
+    color: var(--light-text-color);
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
 }
 
 @media (max-width: 768px) {
@@ -83,7 +129,15 @@
         gap: 12px;
     }
 
-    .stageCard {
-        padding: 16px;
+    .stageHeader {
+        flex-wrap: wrap;
+    }
+
+    .stageSummary {
+        width: 100%;
+    }
+
+    .stageTitle {
+        white-space: normal;
     }
 }

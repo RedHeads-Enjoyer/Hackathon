@@ -79,6 +79,8 @@
   --input-border-color: #3d3d3d;
   --light-text-color: #f5f5f5;
   --dark-text-color: #121212;
+  --secondary-text-color: #6c757d; /* Серый для дат */
+  --border-color: #dee2e6; /* Светло-серый для границ */
 }
 
 a {
