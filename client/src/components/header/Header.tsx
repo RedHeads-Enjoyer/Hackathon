@@ -8,9 +8,16 @@ function Header() {
     return (
         <header className={classes.header}>
             {authState.user == null ?
-                <h3 className={classes.logo_unauthorized}>
-                    ХАКАНТОН
-                </h3>
+                <>
+                    <h3 className={classes.logo}>
+                        <Link to={'/'}>ХАКАНТОН</Link>
+                    </h3>
+                        <nav className={classes.nav}>
+                            <Link to={'/login'}>Вход</Link>
+                            <Link to={'/register'}>регистрация</Link>
+                        </nav>
+
+                </>
                 :
                 <>
                     <h3 className={classes.logo}>

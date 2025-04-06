@@ -56,12 +56,105 @@
   --border-radius: 6px;
   --disabled-bg-color: #3a3a3a;
   --button-active-shadow: 0 0 0 3px rgba(255, 193, 7, 0.3);
+
+  --dark-bg-color: #121212;
+  --card-bg-color: #1e1e1e;
+  --input-border-color: #333;
+  --error-bg-color: rgba(244, 67, 54, 0.1);
+  --error-text-color: #ff6b6b;
+  --muted-text-color: #aaa;
+  --header-bg-color: #1a1a1a;
+  --header-border-color: #2a2a2a;
+  --light-text-color: #f5f5f5;
+  --input-bg-color: #2a2a2a;
+  --input-border-color: #3d3d3d;
+  --light-text-color: #f5f5f5;
+  --muted-text-color: #888;
+  --accent-color: #ffc107;
+  --border-radius: 6px;
+  --border-radius: 8px;
+  --border-radius-lg: 12px;
+  --card-bg-color: #1e1e1e;
+  --input-bg-color: #2a2a2a;
+  --input-border-color: #3d3d3d;
+  --light-text-color: #f5f5f5;
+  --dark-text-color: #121212;
 }
 
 a {
+  position: relative;
   text-decoration: none;
   font-size: var(--default-font-size);
   color: var(--accent-color);
+  font-weight: 500;
+  transition: all 0.3s ease;
+  padding-bottom: 2px;
+}
+
+/* Подчеркивание при наведении */
+a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--accent-light-color);
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+a:hover {
+  color: var(--accent-light-color);
+}
+
+a:hover::after {
+  width: 100%;
+  background-color: var(--accent-color);
+}
+
+/* Активное состояние */
+a:active {
+  color: var(--accent-dark-color);
+  transform: translateY(1px);
+}
+
+a:active::after {
+  background-color: var(--accent-dark-color);
+}
+
+/* Фокус для доступности */
+a:focus-visible {
+  outline: 2px solid var(--accent-light-color);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Вариант для кнопок-ссылок */
+a.button-style {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: var(--accent-color);
+  color: var(--dark-bg-color);
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+a.button-style:hover {
+  background-color: var(--accent-light-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  color: var(--dark-bg-color);
+}
+
+a.button-style:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+a.button-style::after {
+  display: none;
 }
 
 p, label, input, input::placeholder {

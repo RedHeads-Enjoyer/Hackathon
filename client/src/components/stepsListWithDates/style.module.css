@@ -1,84 +1,89 @@
 .container {
     width: 100%;
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius-lg);
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.header, .headerNull {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+.header {
+    margin-bottom: 24px;
 }
 
 .title {
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-    color: #333;
+    color: var(--light-text-color);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.stagesList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .stageCard {
-    /*background: #fff;*/
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+    background-color: var(--input-bg-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    border: 1px solid var(--input-border-color);
+    transition: all 0.2s ease;
+}
+
+.stageCard:hover {
+    border-color: var(--accent-color);
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.1);
 }
 
 .stageHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
 }
 
-.stageNumber {
+.stageBadge {
+    background-color: var(--accent-color);
+    color: var(--dark-text-color);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
     font-weight: 600;
-    font-size: 1.1rem;
-    color: #1890ff;
 }
 
-
-.removeButton:hover {
-    background: #ff7875;
-}
-
-.formGroup {
-    margin-bottom: 15px;
-}
-
-.formGroup label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: #555;
-}
-
-.formGroup input[type="text"],
-.formGroup input[type="date"],
-.formGroup textarea {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #d9d9d9;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.formGroup textarea {
-    resize: vertical;
-    min-height: 60px;
-}
-
-.dateRow {
+.stageContent {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    gap: 16px;
 }
 
-.dateRow .formGroup {
-    flex: 1;
+.datesContainer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 8px;
 }
 
-.addButton {
-    background: #1890ff;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s;
-}
+@media (max-width: 768px) {
+    .datesContainer {
+        grid-template-columns: 1fr;
+    }
 
-.addButton:hover {
-    background: #40a9ff;
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .stageCard {
+        padding: 16px;
+    }
 }

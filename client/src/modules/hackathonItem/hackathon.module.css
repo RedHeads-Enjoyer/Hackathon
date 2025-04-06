@@ -1,6 +1,7 @@
 .page_wrapper {
     background-color: var(--default-backgroud-color);
     height: 100%;
+    overflow-y: auto;
 }
 
 /*.descriptionTextArea {*/
@@ -18,7 +19,8 @@
     grid-template-areas:
     "name image"
     "description image"
-    "steps steps";
+    "steps steps"
+"criteria criteria";
 }
 
 .hackathon_name {
@@ -40,4 +42,8 @@
 
 .hackathon_steps {
     grid-area: steps;
+}
+
+.hackathon_criteria {
+    grid-area: criteria;
 }

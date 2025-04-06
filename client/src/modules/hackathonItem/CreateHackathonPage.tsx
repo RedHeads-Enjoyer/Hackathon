@@ -6,6 +6,8 @@ import TextArea from "../../components/textArea/TextArea.tsx";
 import ImageUploader from "../../components/imageUploader/ImageUploader.tsx";
 import StepsListWithDates from "../../components/stepsListWithDates/StepsListWithDates.tsx";
 import {Stage} from "../../components/stepsListWithDates/types.ts";
+import TechnologyStackInput from "../../components/technologyStackInput/TechnologyStackInput.tsx";
+import CriteriaEditor from "../../components/criteriaEditor/CriteriaEditor.tsx";
 
 interface Criteria {
     id: string;
@@ -71,6 +73,8 @@ const CreateHackathonPage: React.FC = () => {
                 };
             }
 
+
+
             // Обработка вложенных объектов (если есть)
             if (name.includes('.')) {
                 const [parentKey, childKey] = name.split('.');
@@ -85,6 +89,13 @@ const CreateHackathonPage: React.FC = () => {
 
             return prev;
         });
+    };
+
+    const handleCriteriaChange = (criteria: Criteria[]) => {
+        setFormData(prev => ({
+            ...prev,
+            criteria
+        }));
     };
 
     const handleImageCrop = (croppedImage: string) => {
@@ -131,6 +142,18 @@ const CreateHackathonPage: React.FC = () => {
                 <StepsListWithDates
                     initialStages={formData.stages}
                     onChange={(stages) => setFormData({...formData, stages})}
+                />
+            </div>
+            <div className={classes.hackathon_criteria}>
+                <CriteriaEditor
+                    initialCriteria={formData.criteria}
+                    onChange={handleCriteriaChange}
+                />
+            </div>
+            <div>
+                <TechnologyStackInput
+                    initialTechnologies={formData.technologies}
+                    onChange={(techs) => setFormData({...formData, technologies: techs})}
                 />
             </div>
 

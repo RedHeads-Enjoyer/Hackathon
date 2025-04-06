@@ -79,6 +79,7 @@ const Login: React.FC = () => {
                 <Button
                     onClick={handleSubmit}
                     loading={loading}
+                    className={classes.button}
                 >
                     Войти
                 </Button>

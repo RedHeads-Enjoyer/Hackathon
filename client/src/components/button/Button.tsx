@@ -23,6 +23,7 @@ const Button: React.FC<ButtonPropsType> = ({
                                            }) => {
     const buttonClasses = [
         classes.button,
+        fullWidth ? classes.fullWidth : '',
         loading ? classes.loading : '',
         className
     ].filter(Boolean).join(' ');
@@ -33,10 +34,12 @@ const Button: React.FC<ButtonPropsType> = ({
             className={buttonClasses}
             disabled={disabled || loading}
             type={type}
-            style={{ width: fullWidth ? '100%' : 'auto' }}
         >
-            <span className={classes.children}>{children}</span>
-            {loading && <Loader/>}
+            {loading ?
+                <Loader size="small" color="dark" />
+                :
+                <span className={classes.children}>{children}</span>
+            }
         </button>
     );
 };

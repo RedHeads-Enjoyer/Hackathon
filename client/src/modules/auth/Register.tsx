@@ -112,6 +112,7 @@ const Register: React.FC = () => {
                 <Button
                     onClick={handleSubmit}
                     loading={loading}
+                    className={classes.button}
                 >
                     Зарегистрироваться
                 </Button>

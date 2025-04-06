@@ -2,16 +2,17 @@ import React, { useState, useId } from 'react';
 import classes from './style.module.css';
 import { HackathonStagesProps, Stage } from "./types.ts";
 import Button from "../button/Button.tsx";
-import Input from "../input/Input.tsx"
+import Input from "../input/Input.tsx";
 import TextArea from "../textArea/TextArea.tsx";
+import DatePicker from "../datePicker/DatePicker.tsx";
 
 const StepsListWithDates: React.FC<HackathonStagesProps> = ({ initialStages = [], onChange }) => {
     const [stages, setStages] = useState<Stage[]>(initialStages);
-    const idGenerator = useId(); // Выносим хук на верхний уровень компонента
+    const idGenerator = useId();
 
     const addStage = () => {
         const newStage: Stage = {
-            id: `${idGenerator}-${stages.length}`, // Используем генератор ID
+            id: `${idGenerator}-${stages.length}`,
             order: stages.length + 1,
             name: '',
             description: '',
@@ -43,69 +44,68 @@ const StepsListWithDates: React.FC<HackathonStagesProps> = ({ initialStages = []
 
     return (
         <div className={classes.container}>
-            <h3 className={classes.title}>Этапы хакатона</h3>
+            <div className={stages.length === 0 ? classes.headerNull : classes.header}>
+                <h3 className={classes.title}>Этапы хакатона</h3>
+                <Button
+                    onClick={addStage}
+                >
+                    Добавить этап
+                </Button>
+            </div>
 
-            {stages.map((stage) => (
-                <div key={stage.id} className={classes.stageCard}>
-                    <div className={classes.stageHeader}>
-                        <span className={classes.stageNumber}>Этап {stage.order}</span>
-                        <Button
-                            onClick={() => removeStage(stage.id)}
-                        >
-                            Удалить
-                        </Button>
-                    </div>
-
-                    <div >
-                        <Input
-                            label={"Название этапа"}
-                            name={"name"}
-                            type="text"
-                            value={stage.name}
-                            onChange={(e) => updateStage(stage.id, 'name', e.target.value)}
-                            placeholder="Например, Регистрация"
-                        />
-                    </div>
-
-                    <div>
-                        <TextArea
-                            label={"Описание этапа"}
-                            value={stage.description}
-                            onChange={(e) => updateStage(stage.id, 'description', e.target.value)}
-                            placeholder="Описание этапа"
-                        />
-                    </div>
-
-                    <div className={classes.dateRow}>
-                        <div className={classes.formGroup}>
-                            <label>Дата начала</label>
-                            <input
-                                type="date"
-                                value={stage.startDate}
-                                onChange={(e) => updateStage(stage.id, 'startDate', e.target.value)}
-                            />
+            <div className={classes.stagesList}>
+                {stages.map((stage) => (
+                    <div key={stage.id} className={classes.stageCard}>
+                        <div className={classes.stageHeader}>
+                            <div className={classes.stageBadge}>Этап {stage.order}</div>
+                            <Button
+                                onClick={() => removeStage(stage.id)}
+                            >
+                                Удалить
+                            </Button>
                         </div>
 
-                        <div className={classes.formGroup}>
-                            <label>Дата окончания</label>
-                            <input
-                                type="date"
-                                value={stage.endDate}
-                                onChange={(e) => updateStage(stage.id, 'endDate', e.target.value)}
-                                min={stage.startDate}
+                        <div className={classes.stageContent}>
+                            <Input
+                                label="Название этапа"
+                                name="name"
+                                type="text"
+                                value={stage.name}
+                                onChange={(e) => updateStage(stage.id, 'name', e.target.value)}
+                                placeholder="Например, Регистрация"
                             />
+
+                            <TextArea
+                                label="Описание этапа"
+                                value={stage.description}
+                                onChange={(e) => updateStage(stage.id, 'description', e.target.value)}
+                                placeholder="Описание этапа"
+                                minRows={3}
+                            />
+
+                            <div className={classes.datesContainer}>
+                                <DatePicker
+                                    label="Дата начала"
+                                    value={stage.startDate}
+                                    onChange={(date) => {
+                                        updateStage(stage.id, 'startDate', date);
+                                        if (stage.endDate && date > stage.endDate) {
+                                            updateStage(stage.id, 'endDate', '');
+                                        }
+                                    }}
+                                />
+
+                                <DatePicker
+                                    label="Дата окончания"
+                                    value={stage.endDate}
+                                    onChange={(date) => updateStage(stage.id, 'endDate', date)}
+                                    minDate={stage.startDate}
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
-            ))}
-
-            <button
-                type="button"
-                onClick={addStage}
-                className={classes.addButton}
-            >
-                + Добавить этап
-            </button>
+                ))}
+            </div>
         </div>
     );
 };

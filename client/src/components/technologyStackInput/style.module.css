@@ -1,0 +1,60 @@
+.container {
+    width: 100%;
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius-lg);
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.header {
+    margin-bottom: 16px;
+}
+
+.title {
+    color: var(--light-text-color);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+}
+
+.inputContainer {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.inputContainer > :first-child {
+    flex-grow: 1;
+}
+
+.techList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.techItem {
+    display: flex;
+    align-items: center;
+    background-color: var(--accent-light-color);
+    color: var(--dark-text-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    gap: 8px;
+}
+
+.techItem > button {
+    margin-left: 4px;
+}
+
+@media (max-width: 768px) {
+    .inputContainer {
+        flex-direction: column;
+    }
+
+    .inputContainer > button {
+        align-self: flex-end;
+    }
+}

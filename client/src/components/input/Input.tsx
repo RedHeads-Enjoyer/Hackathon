@@ -3,29 +3,50 @@ import { useId } from 'react';
 import classes from './styles.module.css'
 
 type InputPropsType = {
-    type: "text" | "email" | "password";
-    value: string;
+    type: "text" | "email" | "password" | "number";
+    value: string | number;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    name: string;
+    onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void; // Добавлен новый проп
+    name?: string;
     placeholder?: string;
     label?: string;
     error?: string;
+    min?: number;
+    max?: number;
+    step?: number;
 }
 
 const Input = (props: InputPropsType) => {
     const inputId = useId();
 
+    // Обработчик для number input, чтобы предотвратить ввод нечисловых значений
+    const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (props.type === 'number') {
+            // Позволяем пустую строку или числовые значения
+            if (e.target.value === '' || !isNaN(Number(e.target.value))) {
+                props.onChange(e);
+            }
+        } else {
+            props.onChange(e);
+        }
+    };
+
     return (
-        <div className={classes.input_container}>
+        <div className={`${classes.input_container} ${props.error ? classes.error : ''}`}>
             {props.label && <label htmlFor={inputId} className={classes.label}>{props.label}</label>}
             <input
                 id={inputId}
                 type={props.type}
                 value={props.value}
                 name={props.name}
-                onChange={props.onChange}
+                onChange={handleNumberChange}
+                onKeyDown={props.onKeyDown} // Передаем обработчик событий клавиатуры
                 placeholder={props.placeholder}
+                min={props.type === 'number' ? props.min : undefined}
+                max={props.type === 'number' ? props.max : undefined}
+                step={props.type === 'number' ? props.step : undefined}
             />
+            {props.error && <div className={classes.error_message}>{props.error}</div>}
         </div>
     );
 };
