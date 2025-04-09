@@ -150,7 +150,7 @@ const CreateHackathonPage: React.FC = () => {
                     onChange={handleCriteriaChange}
                 />
             </div>
-            <div>
+            <div className={classes.hackathon_technology}>
                 <TechnologyStackInput
                     initialTechnologies={formData.technologies}
                     onChange={(techs) => setFormData({...formData, technologies: techs})}

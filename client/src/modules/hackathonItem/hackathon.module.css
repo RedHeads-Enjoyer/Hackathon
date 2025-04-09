@@ -21,7 +21,8 @@
     "name image"
     "description image"
     "steps steps"
-"criteria criteria";
+"criteria criteria"
+"technology technology";
 }
 
 .hackathon_name {
@@ -30,6 +31,10 @@
 
 .hackathon_description {
     grid-area: description;
+}
+
+.hackathon_technology {
+    grid-area: technology;
 }
 
 .hackathon_image {

@@ -106,7 +106,6 @@ const CriteriaEditor: React.FC<{
                         <Input
                             label={"Максимальный балл"}
                             type="number"
-                            className={classes.input}
                             value={formData.maxScore}
                             onChange={(e) => handleChange('maxScore', Number(e.target.value))}
                             min={formData.minScore + 1}
@@ -162,7 +161,6 @@ const CriteriaEditor: React.FC<{
 
             <Modal
                 isOpen={deleteConfirm.show}
-                onClose={() => setDeleteConfirm({ show: false, criterionId: null })}
             >
                 <div className={classes.modalContent}>
                     <h4 className={classes.modalTitle}>Удалить критерий?</h4>
@@ -170,11 +168,10 @@ const CriteriaEditor: React.FC<{
                         Вы уверены, что хотите удалить этот критерий? Это действие нельзя отменить.
                     </p>
                     <div className={classes.modalActions}>
-                        <Button variant="danger" onClick={deleteCriterion}>
+                        <Button onClick={deleteCriterion}>
                             Удалить
                         </Button>
                         <Button
-                            variant="outline"
                             onClick={() => setDeleteConfirm({ show: false, criterionId: null })}
                         >
                             Отмена
