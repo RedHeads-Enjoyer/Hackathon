@@ -11,6 +11,9 @@ import CriteriaEditor from "../../components/criteriaEditor/CriteriaEditor.tsx";
 import AwardsEditor from "../../components/awardsEditor/AwardsEditor.tsx";
 import SponsorsEditor from "../../components/sponsorsEditor/SponsorsEditor.tsx";
 import DatePicker from "../../components/datePicker/DatePicker.tsx";
+import Error from "../../components/error/Error.tsx";
+import Button from "../../components/button/Button.tsx";
+import Modal from "../../components/modal/Modal.tsx";
 
 interface Criteria {
     id: string;
@@ -49,6 +52,84 @@ const CreateHackathonPage: React.FC = () => {
         minTeamSize: 1,
         maxTeamSize: 5,
     });
+
+    const [errors, setErrors] = useState<string[]>([]);
+    const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+
+    const validateForm = () => {
+        const newErrors: string[] = [];
+
+        // Основная информация
+        if (!formData.name.trim()) newErrors.push('Введите название хакатона');
+        if (!formData.description.trim()) newErrors.push('Введите описание хакатона');
+        if (!formData.coverImage) newErrors.push('Загрузите обложку хакатона');
+
+        // Даты
+        if (!formData.registrationStart) newErrors.push('Укажите начало регистрации');
+        if (!formData.registrationEnd) newErrors.push('Укажите окончание регистрации');
+        if (!formData.hackathonStart) newErrors.push('Укажите начало хакатона');
+
+        // Размер команды
+        if (!formData.minTeamSize || formData.minTeamSize <= 0) newErrors.push('Укажите минимальный размер команды');
+        if (!formData.maxTeamSize || formData.maxTeamSize <= 0) newErrors.push('Укажите максимальный размер команды');
+        if (formData.minTeamSize >= formData.maxTeamSize) newErrors.push('Минимальный размер должен быть меньше максимального');
+
+        // Этапы хакатона
+        if (formData.stages.length === 0) {
+            newErrors.push('Добавьте хотя бы один этап хакатона');
+        } else {
+            formData.stages.forEach((stage, index) => {
+                if (!stage.name.trim()) newErrors.push(`Укажите название этапа #${index + 1}`);
+                if (!stage.description.trim()) newErrors.push(`Введите описание этапа #${index + 1}`);
+                if (!stage.startDate) newErrors.push(`Укажите дату начала этапа #${index + 1}`);
+                if (!stage.endDate) newErrors.push(`Укажите дату окончания этапа #${index + 1}`);
+            });
+        }
+
+        // Критерии оценки
+        if (formData.criteria.length === 0) newErrors.push('Добавьте хотя бы один критерий оценки');
+
+        // Технологии
+        if (formData.technologies.length === 0) newErrors.push('Добавьте хотя бы одну технологию');
+
+        // Награды
+        if (formData.prizes.length === 0) newErrors.push('Добавьте хотя бы одну награду');
+
+        // Спонсоры
+        if (formData.sponsors.length === 0) newErrors.push('Добавьте хотя бы одного спонсора');
+
+        setErrors(newErrors);
+        return newErrors.length === 0;
+    };
+
+    const handlePublishClick = () => {
+        if (validateForm()) {
+            setIsPublishModalOpen(true);
+        }
+    };
+
+    const renderErrors = () => {
+        if (errors.length === 0) return null;
+
+        return (
+            <Error>
+                <div className={classes.error_title}>Необходимо исправить следующие ошибки:</div>
+                <ul className={classes.error_list}>
+                    {errors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                    ))}
+                </ul>
+            </Error>
+        );
+    };
+
+
+    const confirmPublish = () => {
+        // Здесь логика публикации
+        console.log('Хакатон опубликован:', formData);
+        setIsPublishModalOpen(false);
+        // Можно добавить редирект или уведомление об успехе
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -214,6 +295,38 @@ const CreateHackathonPage: React.FC = () => {
                 initialSponsors={formData.sponsors}
                 onChange={handleSponsorsChange}
             />
+
+            {renderErrors()}
+
+            {/* Кнопка публикации */}
+            <div className={classes.publish_section}>
+                <Button
+                    onClick={handlePublishClick}
+                >
+                    Опубликовать хакатон
+                </Button>
+            </div>
+
+            {/* Модальное окно подтверждения */}
+            <Modal isOpen={isPublishModalOpen}>
+                <div className={classes.modalContent}>
+                    <h3 className={classes.modalTitle}>Подтверждение публикации</h3>
+                    <p>Вы уверены, что хотите опубликовать хакатон? После публикации изменить некоторые данные будет невозможно.</p>
+
+                    <div className={classes.modalActions}>
+                        <Button
+                            onClick={() => setIsPublishModalOpen(false)}
+                        >
+                            Отмена
+                        </Button>
+                        <Button
+                            onClick={confirmPublish}
+                        >
+                            Подтвердить публикацию
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

@@ -116,7 +116,7 @@ const StepsListWithDates: React.FC<HackathonStagesProps> = ({ initialStages = []
             </div>
 
             <div className={classes.stagesList}>
-                {stages.map((stage, index) => (
+                {stages.map((stage) => (
                     <div key={stage.id} className={classes.stageCard}>
                         <div
                             className={classes.stageHeader}
@@ -129,8 +129,6 @@ const StepsListWithDates: React.FC<HackathonStagesProps> = ({ initialStages = []
                                 </span>
                             </div>
                             <Button
-                                variant="danger"
-                                size="small"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     confirmDelete(stage.id);
@@ -147,6 +145,7 @@ const StepsListWithDates: React.FC<HackathonStagesProps> = ({ initialStages = []
                                     value={stage.name}
                                     onChange={(e) => updateStage(stage.id, 'name', e.target.value)}
                                     placeholder="Например, Регистрация"
+                                    type={"text"}
                                 />
 
                                 <TextArea
@@ -162,7 +161,6 @@ const StepsListWithDates: React.FC<HackathonStagesProps> = ({ initialStages = []
                                         label="Дата начала"
                                         value={stage.startDate}
                                         onChange={(date) => updateStage(stage.id, 'startDate', date)}
-                                        disabled={index > 0}
                                     />
 
                                     <DatePicker
@@ -178,15 +176,15 @@ const StepsListWithDates: React.FC<HackathonStagesProps> = ({ initialStages = []
                 ))}
             </div>
 
-            <Modal isOpen={!!stageToDelete} onClose={cancelDelete}>
+            <Modal isOpen={!!stageToDelete}>
                 <div className={classes.modalContent}>
                     <h4 className={classes.modalTitle}>Подтверждение удаления</h4>
                     <p>Вы уверены, что хотите удалить этот этап? Это действие нельзя отменить.</p>
                     <div className={classes.modalActions}>
-                        <Button variant="danger" onClick={executeDelete}>
+                        <Button  onClick={executeDelete}>
                             Удалить
                         </Button>
-                        <Button variant="outline" onClick={cancelDelete}>
+                        <Button onClick={cancelDelete}>
                             Отмена
                         </Button>
                     </div>

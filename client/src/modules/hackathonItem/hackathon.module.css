@@ -92,3 +92,29 @@
         grid-template-columns: 1fr;
     }
 }
+
+.modalContent {
+    padding: 20px;
+    max-width: 400px;
+}
+
+.modalTitle {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 18px;
+    color: var(--light-text-color);
+}
+
+.modalText {
+    margin: 0;
+    color: var(--default-text-color);
+    line-height: 1.5;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}

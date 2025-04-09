@@ -37,9 +37,6 @@
     transition: all 0.2s ease;
 }
 
-.stageCard:hover {
-    border-color: var(--accent-color);
-}
 
 .stageHeader {
     display: flex;
