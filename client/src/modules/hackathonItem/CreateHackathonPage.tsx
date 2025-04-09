@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import classes from  './hackathon.module.css';
+import classes from './hackathon.module.css';
 import PageLabel from "../../components/pageLabel/PageLabel.tsx";
 import Input from "../../components/input/Input.tsx";
 import TextArea from "../../components/textArea/TextArea.tsx";
@@ -8,6 +8,9 @@ import StepsListWithDates from "../../components/stepsListWithDates/StepsListWit
 import {Stage} from "../../components/stepsListWithDates/types.ts";
 import TechnologyStackInput from "../../components/technologyStackInput/TechnologyStackInput.tsx";
 import CriteriaEditor from "../../components/criteriaEditor/CriteriaEditor.tsx";
+import AwardsEditor from "../../components/awardsEditor/AwardsEditor.tsx";
+import SponsorsEditor from "../../components/sponsorsEditor/SponsorsEditor.tsx";
+import DatePicker from "../../components/datePicker/DatePicker.tsx";
 
 interface Criteria {
     id: string;
@@ -18,77 +21,52 @@ interface Criteria {
 
 interface Prize {
     id: string;
-    place: number;
-    reward: string;
+    placeFrom: number;
+    placeTo: number;
+    description: string;
 }
 
 interface Sponsor {
     id: string;
     name: string;
-    website: string;
+    url: string;
 }
-
-
 
 const CreateHackathonPage: React.FC = () => {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
         coverImage: null as string | null,
-        croppedImage: null as string | null,
+        registrationStart: '',
+        registrationEnd: '',
+        hackathonStart: '',
         goals: [''],
         stages: [] as Stage[],
         criteria: [] as Criteria[],
         technologies: [] as string[],
         prizes: [] as Prize[],
-        prizePool: '',
         sponsors: [] as Sponsor[],
         minTeamSize: 1,
         maxTeamSize: 5,
-        currentTechnology: '',
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
 
-        setFormData(prev => {
-            // Обработка простых текстовых полей и чисел
-            if (name in prev && !Array.isArray(prev[name as keyof typeof prev])) {
-                return {
-                    ...prev,
-                    [name]: type === 'number' ? Number(value) :
-                        type === 'checkbox' ? checked :
-                            value
-                };
-            }
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'number' ? Number(value) :
+                type === 'checkbox' ? checked :
+                    value
+        }));
+    };
 
-            // Обработка массивов technologies (если у вас есть чекбоксы для технологий)
-            if (name === 'technologies') {
-                return {
-                    ...prev,
-                    technologies: checked
-                        ? [...prev.technologies, value]
-                        : prev.technologies.filter(tech => tech !== value)
-                };
-            }
-
-
-
-            // Обработка вложенных объектов (если есть)
-            if (name.includes('.')) {
-                const [parentKey, childKey] = name.split('.');
-                return {
-                    ...prev,
-                    [parentKey]: {
-                        ...(prev[parentKey as keyof typeof prev] as object),
-                        [childKey]: value
-                    }
-                };
-            }
-
-            return prev;
-        });
+    const handleDateChange = (name: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
     const handleCriteriaChange = (criteria: Criteria[]) => {
@@ -99,7 +77,6 @@ const CreateHackathonPage: React.FC = () => {
     };
 
     const handleImageCrop = (croppedImage: string) => {
-        console.log('Cropped image:', croppedImage); // Добавьте эту строку
         setFormData(prev => ({
             ...prev,
             croppedImage,
@@ -107,59 +84,137 @@ const CreateHackathonPage: React.FC = () => {
         }));
     };
 
+    const handlePrizesChange = (prizes: Prize[]) => {
+        setFormData(prev => ({
+            ...prev,
+            prizes
+        }));
+    };
+
+    const handleSponsorsChange = (sponsors: Sponsor[]) => {
+        setFormData(prev => ({
+            ...prev,
+            sponsors
+        }));
+    };
+
+    const handleStagesChange = (stages: Stage[]) => {
+        setFormData(prev => ({
+            ...prev,
+            stages
+        }));
+    };
+
     return (
-    <div className={classes.page_wrapper}>
-        <PageLabel size={'h3'}>Создание хакатона</PageLabel>
-        <div className={classes.create_container}>
-            <div className={classes.hackathon_name}>
-                <Input
-                    label={"Название хакатона"}
-                    type={"text"}
-                    value={formData.name}
-                    onChange={handleChange}
-                    name={'name'}
-                    placeholder={'Лучший хакатон'}
-                />
-            </div>
-            <div className={classes.hackathon_description}>
-                <TextArea
-                    label="Описание хакатона"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    placeholder="Самый лучший хакатон"
-                    minRows={5}
-                    maxRows={10}
-                />
-            </div>
-            <div className={classes.hackathon_image}>
-                <ImageUploader
-                    onImageChange={handleImageCrop}
-                    initialImage={formData.coverImage}
-                />
-            </div>
-            <div className={classes.hackathon_steps}>
-                <StepsListWithDates
-                    initialStages={formData.stages}
-                    onChange={(stages) => setFormData({...formData, stages})}
-                />
-            </div>
-            <div className={classes.hackathon_criteria}>
-                <CriteriaEditor
-                    initialCriteria={formData.criteria}
-                    onChange={handleCriteriaChange}
-                />
-            </div>
-            <div className={classes.hackathon_technology}>
-                <TechnologyStackInput
-                    initialTechnologies={formData.technologies}
-                    onChange={(techs) => setFormData({...formData, technologies: techs})}
-                />
+        <div className={classes.page_wrapper}>
+            <PageLabel size={'h3'}>Создание хакатона</PageLabel>
+
+            {/* Блок 1: Основные данные */}
+            <div className={classes.info_block}>
+                <h4 className={classes.block_title}>Основные данные</h4>
+                <div className={classes.basic_info_grid}>
+                    <div className={classes.text_info}>
+                        <Input
+                            label="Название хакатона"
+                            type="text"
+                            value={formData.name}
+                            onChange={handleChange}
+                            name="name"
+                            placeholder="Введите название"
+                        />
+                        <TextArea
+                            label="Описание хакатона"
+                            value={formData.description}
+                            onChange={handleChange}
+                            name="description"
+                            placeholder="Опишите ваш хакатон"
+                            minRows={4}
+                        />
+                    </div>
+                    <div className={classes.image_info}>
+                        <ImageUploader
+                            onImageChange={handleImageCrop}
+                            initialImage={formData.coverImage}
+                        />
+                    </div>
+                </div>
             </div>
 
+            {/* Блок 2: Даты */}
+            <div className={classes.info_block}>
+                <h4 className={classes.block_title}>Даты проведения</h4>
+                <div className={classes.dates_grid}>
+                    <DatePicker
+                        label="Начало регистрации"
+                        value={formData.registrationStart}
+                        onChange={(value) => handleDateChange('registrationStart', value)}
+                    />
+                    <DatePicker
+                        label="Окончание регистрации"
+                        value={formData.registrationEnd}
+                        onChange={(value) => handleDateChange('registrationEnd', value)}
+                        minDate={formData.registrationStart}
+                    />
+                    <DatePicker
+                        label="Начало хакатона"
+                        value={formData.hackathonStart}
+                        onChange={(value) => handleDateChange('hackathonStart', value)}
+                        minDate={formData.registrationEnd}
+                    />
+                </div>
+            </div>
 
+            {/* Блок 3: Размер команд */}
+            <div className={classes.info_block}>
+                <h4 className={classes.block_title}>Размер команд</h4>
+                <div className={classes.team_size_grid}>
+                    <Input
+                        label="Минимальный размер команды"
+                        type="number"
+                        value={formData.minTeamSize}
+                        onChange={handleChange}
+                        name="minTeamSize"
+                        min={1}
+                        max={formData.maxTeamSize - 1}
+                    />
+                    <Input
+                        label="Максимальный размер команды"
+                        type="number"
+                        value={formData.maxTeamSize}
+                        onChange={handleChange}
+                        name="maxTeamSize"
+                        min={formData.minTeamSize + 1}
+                        max={20}
+                    />
+                </div>
+            </div>
+
+            {/* Остальные секции */}
+            <StepsListWithDates
+                initialStages={formData.stages}
+                onChange={handleStagesChange}
+            />
+
+            <CriteriaEditor
+                initialCriteria={formData.criteria}
+                onChange={handleCriteriaChange}
+            />
+
+            <TechnologyStackInput
+                initialTechnologies={formData.technologies}
+                onChange={(techs) => setFormData({...formData, technologies: techs})}
+            />
+
+            <AwardsEditor
+                initialAwards={formData.prizes}
+                onChange={handlePrizesChange}
+            />
+
+            <SponsorsEditor
+                initialSponsors={formData.sponsors}
+                onChange={handleSponsorsChange}
+            />
         </div>
-    </div>
     );
 };
 

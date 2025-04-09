@@ -1,0 +1,129 @@
+.container {
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--default-text-color);
+    font-size: 20px;
+}
+
+.form {
+    margin-bottom: 24px;
+}
+
+.placesRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.placeInput {
+    width: 100%;
+}
+
+.inputContainer {
+    margin-bottom: 16px;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+}
+
+.mainButton {
+    min-width: 180px;
+}
+
+.secondaryButton {
+    flex: 0 0 auto;
+}
+
+.awardsList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 12px;
+}
+
+.awardCard {
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.awardCard:hover {
+    border-color: var(--accent-light-color);
+}
+
+.awardCard.active {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-shadow-color);
+}
+
+.awardPlace {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-color);
+    margin-bottom: 8px;
+}
+
+.awardDescription {
+    font-size: 15px;
+    color: var(--default-text-color);
+}
+
+/* Модальное окно */
+.modalContent {
+    padding: 20px;
+    max-width: 400px;
+}
+
+.modalTitle {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 18px;
+    color: var(--light-text-color);
+}
+
+.modalText {
+    margin: 0;
+    color: var(--default-text-color);
+    line-height: 1.5;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .placesRow {
+        grid-template-columns: 1fr;
+    }
+
+    .awardsList {
+        grid-template-columns: 1fr;
+    }
+
+    .actions {
+        flex-wrap: wrap;
+    }
+
+    .mainButton,
+    .secondaryButton {
+        width: 100%;
+    }
+}
