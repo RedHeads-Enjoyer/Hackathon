@@ -10,6 +10,4 @@ type User struct {
 	Role      string    `gorm:"not null" json:"role"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-
-	Hackathons []Hackathon `gorm:"foreignKey:CreatorID" json:"hackathons"`
 }

@@ -1,18 +1,12 @@
 package initializers
 
-import "server/models"
+import (
+	"server/models"
+)
 
 func SyncDatabase() {
 	err := DB.AutoMigrate(
-		&models.User{},
-		&models.Hackathon{},
-		&models.Team{},
-		&models.Stage{},
-		&models.Criterion{},
-		&models.Technology{},
-		&models.Reward{},
-		&models.Sponsor{})
-
+		&models.User{})
 	if err != nil {
 		return
 	}
