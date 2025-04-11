@@ -50,6 +50,9 @@ func SyncDatabase() {
 		&models.SystemRole{},
 		&models.HackathonRole{},
 		&models.TeamRole{},
+		&models.ChatRole{},
+		&models.ChatMessage{},
+		&models.Chat{},
 		&models.File{},
 		&models.Hackathon{},
 		&models.Team{},
@@ -57,6 +60,13 @@ func SyncDatabase() {
 		&models.BndUserHackathon{},
 		&models.BndUserTeam{},
 		&models.HackathonStep{},
+		&models.Award{},
+		&models.Criteria{},
+		&models.Technology{},
+		&models.BndUserChat{},
+		&models.HackathonGoal{},
+		&models.HackathonSponsors{},
+		&models.Score{},
 	}
 
 	for _, model := range modelsOrder {
