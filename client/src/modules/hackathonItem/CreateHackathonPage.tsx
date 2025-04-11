@@ -46,8 +46,8 @@ const CreateHackathonPage: React.FC = () => {
         goals: [''], //
         stages: [] as Stage[], //
         criteria: [] as Criteria[],
-        technologies: [] as string[],
-        prizes: [] as Prize[],
+        technologies: [] as string[], //
+        prizes: [] as Prize[], //
         sponsors: [] as Sponsor[], //
         minTeamSize: 1,
         maxTeamSize: 5,

@@ -12,6 +12,7 @@ type Hackathon struct {
 	Goals        []HackathonStep     `gorm:"foreignKey:HackathonID" json:"goals,omitempty"`
 	Sponsors     []HackathonSponsors `gorm:"foreignKey:HackathonID" json:"sponsors,omitempty"`
 	Technologies []Technology        `gorm:"many2many:hackathon_technologies;" json:"technologies,omitempty"`
+	Awards       []Award             `gorm:"foreignKey:HackathonID" json:"awards,omitempty"`
 }
 
 type HackathonStep struct {
