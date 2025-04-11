@@ -56,6 +56,7 @@ func SyncDatabase() {
 		&models.User{},
 		&models.BndUserHackathon{},
 		&models.BndUserTeam{},
+		&models.HackathonStep{},
 	}
 
 	for _, model := range modelsOrder {
