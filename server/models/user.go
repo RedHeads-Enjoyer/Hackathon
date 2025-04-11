@@ -9,7 +9,8 @@ type User struct {
 	SystemRoleID uint       `gorm:"not null;default:0" json:"-"`
 	SystemRole   SystemRole `gorm:"foreignKey:SystemRoleID" json:"system_role"`
 
-	Avatar     *File              `gorm:"polymorphic:Owner;polymorphicValue:user"`
-	Hackathons []BndUserHackathon `gorm:"foreignKey:UserID" json:"-"`
-	Teams      []BndUserTeam      `gorm:"foreignKey:UserID" json:"-"`
+	Avatar       *File              `gorm:"polymorphic:Owner;polymorphicValue:user"`
+	Hackathons   []BndUserHackathon `gorm:"foreignKey:UserID" json:"-"`
+	Teams        []BndUserTeam      `gorm:"foreignKey:UserID" json:"-"`
+	Technologies []Technology       `gorm:"many2many:user_technologies;" json:"technologies,omitempty"`
 }
