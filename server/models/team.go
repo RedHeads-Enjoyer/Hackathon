@@ -3,6 +3,8 @@ package models
 type Team struct {
 	Base
 
+	Name string `gorm:"size:50;unique;not null" json:"name"`
+
 	Project *File         `gorm:"polymorphic:Owner;polymorphicValue:team" json:"omitempty"`
 	Users   []BndUserTeam `gorm:"foreignKey:TeamID" json:"-"`
 

@@ -8,6 +8,7 @@ type ChatMessage struct {
 	ParentID *uint  `json:"parent_id,omitempty"`
 	IsEdited bool   `gorm:"default:false" json:"is_edited"`
 	IsPinned bool   `gorm:"default:false" json:"is_pinned"`
+	Files    []File `gorm:"polymorphic:Owner;polymorphicValue:chat_message" json:"files,omitempty"`
 
 	User   User         `gorm:"foreignKey:UserID"`
 	Chat   Chat         `gorm:"foreignKey:ChatID"`

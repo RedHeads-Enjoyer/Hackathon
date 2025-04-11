@@ -1,7 +1,22 @@
 package models
 
+import "time"
+
 type Hackathon struct {
 	Base
+
+	RegDateFrom time.Time `json:"reg_date_from,omitempty"`
+	RegDateTo   time.Time `json:"reg_date_to,omitempty"`
+	StartDate   time.Time `json:"start_date,omitempty"`
+
+	MaxTeams    int `json:"max_teams,omitempty"`
+	MaxTeamSize int `json:"max_team_size,omitempty"`
+	MinTeamSize int `json:"min_team_size,omitempty"`
+
+	StatusID uint            `gorm:"not null;default:1" json:"-"`
+	Status   HackathonStatus `gorm:"foreignKey:StatusID" json:"status"`
+
+	PrizeTerms *File `gorm:"polymorphic:Owner;polymorphicValue:hackathon"`
 
 	Files []File `gorm:"polymorphic:Owner;polymorphicValue:hackathon"`
 	Logo  *File  `gorm:"polymorphic:Owner;polymorphicValue:hackathon"`
@@ -35,4 +50,11 @@ type HackathonSponsors struct {
 
 	HackathonID uint      `json:"hackathon_id"`
 	Hackathon   Hackathon `gorm:"foreignKey:HackathonID" json:"-"`
+}
+
+type HackathonStatus struct {
+	Base
+	Name        string      `gorm:"size:50;unique;not null" json:"name"`
+	Description string      `gorm:"size:255" json:"description"`
+	Hackathons  []Hackathon `gorm:"foreignKey:StatusID" json:"-"`
 }
