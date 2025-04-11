@@ -6,9 +6,10 @@ type User struct {
 	Username string `gorm:"unique;not null" json:"username"`
 	Password string `gorm:"not null" json:"-"`
 
-	RoleID     uint       `gorm:"not null;default:0" json:"-"`
-	SystemRole SystemRole `gorm:"foreignKey:SystemRoleID" json:"system_role"`
+	SystemRoleID uint       `gorm:"not null;default:0" json:"-"`
+	SystemRole   SystemRole `gorm:"foreignKey:SystemRoleID" json:"system_role"`
 
 	Avatar     *File              `gorm:"polymorphic:Owner;polymorphicValue:user"`
-	Hackathons []BndUserHackathon `gorm:"foreignKey:UserID" json:"hackathons"`
+	Hackathons []BndUserHackathon `gorm:"foreignKey:UserID" json:"-"`
+	Teams      []BndUserTeam      `gorm:"foreignKey:UserID" json:"-"`
 }

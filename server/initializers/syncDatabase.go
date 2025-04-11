@@ -5,7 +5,7 @@ import (
 	"server/models"
 )
 
-func InitSystemRoles(db *gorm.DB) error {
+func initSystemRoles(db *gorm.DB) error {
 	systemRoles := []models.SystemRole{
 		{Name: "admin", Description: "Полный доступ к системе", Level: 100},
 		{Name: "moderator", Description: "Модератор контента", Level: 50},
@@ -22,7 +22,7 @@ func InitSystemRoles(db *gorm.DB) error {
 	})
 }
 
-func InitHackathonRoles(db *gorm.DB) error {
+func initHackathonRoles(db *gorm.DB) error {
 	hackathonRoles := []models.HackathonRole{
 		{Name: "creator", Description: "Создатель хакатона", Level: 100},
 		{Name: "mentor", Description: "Ментор", Level: 50},
@@ -40,19 +40,42 @@ func InitHackathonRoles(db *gorm.DB) error {
 }
 
 func SyncDatabase() {
-	err := DB.AutoMigrate(
-		&models.User{})
-	if err != nil {
+	// Отключаем ограничения внешних ключей для избежания проблем с порядком
+	if err := DB.Exec("SET CONSTRAINTS ALL DEFERRED").Error; err != nil {
 		return
 	}
 
-	err = InitSystemRoles(DB)
-	if err != nil {
+	// Миграция в правильном порядке
+	modelsOrder := []interface{}{
+		&models.SystemRole{},
+		&models.HackathonRole{},
+		&models.TeamRole{},
+		&models.File{},
+		&models.Hackathon{},
+		&models.Team{},
+		&models.User{},
+		&models.BndUserHackathon{},
+		&models.BndUserTeam{},
+	}
+
+	for _, model := range modelsOrder {
+		if err := DB.AutoMigrate(model); err != nil {
+			return
+		}
+	}
+
+	// Включаем ограничения обратно
+	if err := DB.Exec("SET CONSTRAINTS ALL IMMEDIATE").Error; err != nil {
 		return
 	}
 
-	err = InitHackathonRoles(DB)
-	if err != nil {
+	// Инициализация ролей
+	if err := initSystemRoles(DB); err != nil {
 		return
 	}
+
+	if err := initHackathonRoles(DB); err != nil {
+		return
+	}
+
 }
