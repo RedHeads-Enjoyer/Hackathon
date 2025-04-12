@@ -54,7 +54,7 @@ func (ac *AuthController) RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	defaultRoleID := uint(0)
+	defaultRoleID := uint(1)
 
 	user := models.User{
 		Email:        input.Email,
