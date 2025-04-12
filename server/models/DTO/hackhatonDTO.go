@@ -46,7 +46,6 @@ func (dto *HackathonCreateDTO) ToModel() *models.Hackathon {
 		MaxTeamSize: dto.MaxTeamSize,
 
 		OrganizationID: dto.OrganizationID,
-		//StatusID: 0
 	}
 }
 

@@ -1,13 +1,12 @@
 package controllers
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"gorm.io/gorm"
 	"net/http"
 	"server/models"
-	"server/types"
-
-	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
+	"server/models/DTO"
 )
 
 type HackathonController struct {
@@ -18,174 +17,91 @@ func NewHackathonController(db *gorm.DB) *HackathonController {
 	return &HackathonController{DB: db}
 }
 
-// RegisterHandler регистрирует нового пользователя
-func (hc *HackathonController) c(c *gin.Context) {
-	var input struct {
-		Email    string `json:"email"    binding:"required,email"`
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required,min=8"`
-	}
+func (hc *HackathonController) create(c *gin.Context) {
+	var dto DTO.HackathonCreateDTO
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Привязка JSON к DTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных", "details": err.Error()})
 		return
 	}
 
-	var existingUser models.User
-	if err := ac.DB.Where("email = ? OR username = ?", input.Email, input.Username).
-		First(&existingUser).Error; err == nil {
+	// Валидация данных
+	validate := validator.New()
+	if err := validate.Struct(dto); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка валидации", "details": err.Error()})
+		return
+	}
 
-		var message string
-		if existingUser.Email == input.Email {
-			message = "Пользователь с таким email уже зарегистрирован"
-		} else {
-			message = "Этот username уже занят"
+	// Преобразование DTO в модель
+	hackathon := dto.ToModel()
+
+	// Установка статуса по умолчанию (например, "Черновик")
+	hackathon.StatusID = 1 // Предполагается, что статус с ID 1 - это "Черновик"
+
+	// Обработка файлов
+	for _, fileDTO := range dto.Files {
+		file := models.File{
+			Name:       fileDTO.Name,
+			StoredName: fileDTO.StoredName,
+			URL:        fileDTO.URL,
+			Size:       fileDTO.Size,
+			Type:       fileDTO.Type,
+			OwnerType:  "hackathon",
 		}
+		hackathon.Files = append(hackathon.Files, file)
+	}
 
-		c.JSON(http.StatusConflict, gin.H{
-			"error": message,
-		})
+	// Обработка шагов
+	for _, stepDTO := range dto.Steps {
+		step := models.HackathonStep{
+			Name:        stepDTO.Name,
+			Description: stepDTO.Description,
+			StartDate:   stepDTO.StartDate,
+			EndDate:     stepDTO.EndDate,
+		}
+		hackathon.Steps = append(hackathon.Steps, step)
+	}
+
+	// Обработка целей
+	for _, goal := range dto.Goals {
+		hackathon.Goals = append(hackathon.Goals, models.HackathonGoal{Description: goal})
+	}
+
+	// Обработка наград
+	for _, awardDTO := range dto.Awards {
+		award := models.Award{
+			PlaceFrom:    awardDTO.PlaceFrom,
+			PlaceTo:      awardDTO.PlaceTo,
+			MoneyAmount:  awardDTO.MoneyAmount,
+			Additionally: awardDTO.Additionally,
+		}
+		hackathon.Awards = append(hackathon.Awards, award)
+	}
+
+	// Обработка технологий
+	for _, techID := range dto.Technologies {
+		var tech models.Technology
+		if err := hc.DB.First(&tech, techID).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Технология не найдена", "techID": techID})
+			return
+		}
+		hackathon.Technologies = append(hackathon.Technologies, tech)
+	}
+
+	// Обработка критериев
+	for _, criteriaID := range dto.Criteria {
+		var criteria models.Criteria
+		if err := hc.DB.First(&criteria, criteriaID).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Критерий не найден", "criteriaID": criteriaID})
+			return
+		}
+		hackathon.Criteria = append(hackathon.Criteria, criteria)
+	}
+
+	// Сохранение хакатона в базе данных
+	if err := hc.DB.Create(&hackathon).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании хакатона", "details": err.Error()})
 		return
 	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка хеширования пароля"})
-		return
-	}
-
-	defaultRoleID := uint(1)
-
-	user := models.User{
-		Email:        input.Email,
-		Username:     input.Username,
-		Password:     string(hashedPassword),
-		SystemRoleID: defaultRoleID,
-	}
-
-	if err := ac.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания пользователя"})
-		return
-	}
-
-	systemRole, err := models.GetRoleByID(ac.DB, user.SystemRoleID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения роли пользователя"})
-		return
-	}
-
-	accessToken, refreshToken, err := GenerateTokens(user.ID, user.Email, systemRole)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации токена"})
-		return
-	}
-
-	SetRefreshTokenCookie(c, refreshToken)
-
-	c.JSON(http.StatusCreated, gin.H{
-		"access_token": accessToken,
-		"user": gin.H{
-			"id":    user.ID,
-			"email": user.Email,
-		},
-	})
-}
-
-// LoginHandler аутентифицирует пользователя
-func (ac *AuthController) LoginHandler(c *gin.Context) {
-	var input struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
-	}
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	var user models.User
-	if err := ac.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверные данные"})
-		return
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверные данные"})
-		return
-	}
-
-	systemRole, err := models.GetRoleByID(ac.DB, user.SystemRoleID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения роли пользователя"})
-		return
-	}
-
-	accessToken, refreshToken, err := GenerateTokens(user.ID, user.Email, systemRole)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации токена"})
-		return
-	}
-
-	SetRefreshTokenCookie(c, refreshToken)
-
-	c.JSON(http.StatusOK, gin.H{
-		"access_token": accessToken,
-		"user": gin.H{
-			"id":          user.ID,
-			"username":    user.Username,
-			"system_role": systemRole,
-		},
-	})
-}
-
-// CurrentUserHandler возвращает данные текущего пользователя
-func (ac *AuthController) CurrentUserHandler(c *gin.Context) {
-	claims := c.MustGet("user_claims").(*types.Claims)
-
-	user, err := models.GetUserByID(ac.DB, claims.UserID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"user": user,
-	})
-}
-
-// LogoutHandler выполняет выход пользователя
-func (ac *AuthController) LogoutHandler(c *gin.Context) {
-	claims := c.MustGet("user_claims").(*types.Claims)
-
-	if err := InvalidateToken(claims.ID, claims.ExpiresAt.Time); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Logout failed"})
-		return
-	}
-
-	ClearRefreshTokenCookie(c)
-
-	c.JSON(http.StatusOK, gin.H{"message": "Выход успешен"})
-}
-
-func (ac *AuthController) RefreshTokenHandler(c *gin.Context) {
-	refreshToken, err := getRefreshToken(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	claims, err := validateRefreshToken(refreshToken)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
-
-	newAccess, newRefresh, err := GenerateTokens(claims.UserID, claims.Username, claims.SystemRole)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при генерации токена"})
-		return
-	}
-
-	SetRefreshTokenCookie(c, newRefresh)
-	c.JSON(http.StatusOK, gin.H{"access_token": newAccess})
 }
