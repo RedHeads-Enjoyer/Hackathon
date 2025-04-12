@@ -18,6 +18,8 @@ type User struct {
 
 	Chats    []BndUserChat `gorm:"foreignKey:UserID" json:"-"`
 	Messages []ChatMessage `gorm:"foreignKey:UserID" json:"-"`
+
+	Organizations []Organization `gorm:"foreignKey:OwnerID" json:"organizations,omitempty"`
 }
 
 func GetUserByID(db *gorm.DB, id uint) (User, error) {

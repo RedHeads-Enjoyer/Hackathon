@@ -3,7 +3,7 @@ package models
 type Award struct {
 	Base
 	MoneyAmount  float64   `gorm:"default:1.0" json:"money_amount"`
-	Additionally float64   `gorm:"default:1.0" json:"additionally"`
+	Additionally string    `gorm:"default:1.0" json:"additionally"`
 	PlaceFrom    int       `gorm:"not null" json:"place_from"`
 	PlaceTo      int       `gorm:"not null" json:"place_to"`
 	HackathonID  uint      `json:"hackathon_id"`
