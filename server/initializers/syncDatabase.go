@@ -7,9 +7,9 @@ import (
 
 func initSystemRoles(db *gorm.DB) error {
 	systemRoles := []models.SystemRole{
-		{Name: "admin", Description: "Полный доступ к системе", Level: 100},
-		{Name: "moderator", Description: "Модератор контента", Level: 50},
 		{Name: "user", Description: "Обычный пользователь", Level: 10},
+		{Name: "moderator", Description: "Модератор контента", Level: 50},
+		{Name: "admin", Description: "Полный доступ к системе", Level: 100},
 	}
 
 	return db.Transaction(func(tx *gorm.DB) error {

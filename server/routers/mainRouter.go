@@ -2,12 +2,13 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
+	"server/initializers"
 )
 
 func Router() *gin.Engine {
 	r := gin.Default()
 
-	//AuthRouter(r, initializers.DB)
+	AuthRouter(r, initializers.DB)
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "Hello World")

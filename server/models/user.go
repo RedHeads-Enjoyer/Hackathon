@@ -1,5 +1,7 @@
 package models
 
+import "gorm.io/gorm"
+
 type User struct {
 	Base
 	Email    string `gorm:"unique;not null" json:"email"`
@@ -16,4 +18,12 @@ type User struct {
 
 	Chats    []BndUserChat `gorm:"foreignKey:UserID" json:"-"`
 	Messages []ChatMessage `gorm:"foreignKey:UserID" json:"-"`
+}
+
+func GetUserByID(db *gorm.DB, id uint) (User, error) {
+	var user User
+	if err := db.First(&user, id).Error; err != nil {
+		return user, err
+	}
+	return user, nil
 }
