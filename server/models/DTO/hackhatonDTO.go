@@ -41,12 +41,12 @@ func (dto *HackathonCreateDTO) ToModel() *models.Hackathon {
 		StartDate:   dto.StartDate,
 		EndDate:     dto.EndDate,
 
-		MaxTeams: dto.MaxTeams,
+		MaxTeams:    dto.MaxTeams,
 		MinTeamSize: dto.MinTeamSize,
 		MaxTeamSize: dto.MaxTeamSize,
 
 		OrganizationID: dto.OrganizationID,
-		StatusID: 0
+		//StatusID: 0
 	}
 }
 
