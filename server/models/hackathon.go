@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"time"
 )
 
@@ -34,25 +33,5 @@ type Hackathon struct {
 	Goals        []HackathonGoal    `gorm:"foreignKey:HackathonID" json:"goals,omitempty"`
 	Technologies []Technology       `gorm:"many2many:hackathon_technologies;" json:"technologies,omitempty"`
 	Awards       []Award            `gorm:"foreignKey:HackathonID" json:"awards,omitempty"`
-	Criteria     []Criteria         `gorm:"many2many:hackathon_criteria;" json:"criteria,omitempty"`
-}
-
-func (hackathon *Hackathon) Validate() error {
-	if hackathon.RegDateFrom.After(hackathon.RegDateTo) {
-		return errors.New("дата окончания регистрации должна быть позже даты начала регистрации")
-	}
-
-	if hackathon.StartDate.After(hackathon.EndDate) {
-		return errors.New("дата окончания хакатона должна быть позже даты начала хакатона")
-	}
-
-	if hackathon.RegDateTo.After(hackathon.StartDate) {
-		return errors.New("дата начала хакатона должна быть позже даты окончания регистрации")
-	}
-
-	if hackathon.MaxTeamSize < hackathon.MinTeamSize {
-		return errors.New("максимальный размер команды должен быть больше минимального размера команды")
-	}
-
-	return nil
+	Criteria     []Criteria         `gorm:"foreignKey:HackathonID" json:"criteria,omitempty"`
 }

@@ -10,10 +10,7 @@ func Router() *gin.Engine {
 
 	AuthRouter(r, initializers.DB)
 	TechnologyRouter(r, initializers.DB)
-
-	r.GET("/ping", func(c *gin.Context) {
-		c.String(200, "Hello World")
-	})
+	OrganizationRouter(r, initializers.DB)
 
 	return r
 }

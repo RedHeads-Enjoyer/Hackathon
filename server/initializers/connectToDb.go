@@ -8,7 +8,6 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -27,12 +26,13 @@ func ConnectToDb() {
 	)
 
 	// Настройка логгера GORM
-	gormConfig := &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
-	}
+	//gormConfig := &gorm.Config{
+	//	Logger: logger.Default.LogMode(logger.Info),
+	//}
 
 	// Подключаемся к БД
-	DB, err = gorm.Open(postgres.Open(dsn), gormConfig)
+	//DB, err = gorm.Open(postgres.Open(dsn), gormConfig)
+	DB, err = gorm.Open(postgres.Open(dsn))
 	if err != nil {
 		log.Fatal("Failed to connect to database: ", err)
 	}
