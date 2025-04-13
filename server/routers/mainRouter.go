@@ -17,5 +17,7 @@ func Router() *gin.Engine {
 	HackathonRouter(r, initializers.DB)
 	UserRouter(r, initializers.DB)
 
+	r.Static("/uploads", "./data/uploads")
+
 	return r
 }

@@ -30,14 +30,6 @@ func (uc *UserController) GetAll(c *gin.Context) {
 		return
 	}
 
-	// Форматируем ответ, чтобы включить информацию о файлах
-	for i := range users {
-		if users[i].Avatar != nil {
-			// Здесь вы можете добавить дополнительные поля, если необходимо
-			users[i].Avatar.URL = "http://localhost:80/uploads/" + users[i].Avatar.StoredName
-		}
-	}
-
 	c.JSON(http.StatusOK, users)
 }
 
@@ -76,7 +68,7 @@ func (uc *UserController) Update(c *gin.Context) {
 	// Проверяем, был ли загружен файл
 	if file, err := c.FormFile("avatar"); err == nil {
 		// Определяем путь для сохранения файла
-		uploadDir := "/data/uploads" // Папка для загрузки файлов
+		uploadDir := "/app/uploads" // Папка для загрузки файлов
 		if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании директории"})
 			return
@@ -96,7 +88,7 @@ func (uc *UserController) Update(c *gin.Context) {
 		newFile := models.File{
 			Name:         file.Filename,
 			StoredName:   storedName,
-			URL:          filePath,
+			URL:          "http://localhost/uploads/" + storedName,
 			Size:         file.Size,
 			Type:         file.Header.Get("Content-Type"),
 			UploadedByID: user.ID,

@@ -26,6 +26,7 @@ services:
 #      - "${SERVER_PORT}:8080"
     volumes:
       - ./server:/app
+      - uploads-data:/app/uploads # Подключите общий том
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -65,6 +66,8 @@ services:
     environment:
       - SERVER_PORT=${SERVER_PORT}
       - CLIENT_PORT=${CLIENT_PORT}
+    volumes:
+      - uploads-data:/app/uploads # Подключите общий том
     depends_on:
       - server
       - client
@@ -87,4 +90,5 @@ services:
 
 volumes:
   postgres-data:
+  uploads-data:
 
