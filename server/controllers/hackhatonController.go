@@ -50,6 +50,7 @@ func (hc *HackathonController) Create(c *gin.Context) {
 		if err := hc.DB.Create(&criteriaModel).Error; err != nil {
 			return
 		}
+		hackathon.Criteria = append(hackathon.Criteria, criteriaModel)
 	}
 
 	// Создание шагов
@@ -58,6 +59,7 @@ func (hc *HackathonController) Create(c *gin.Context) {
 		if err := hc.DB.Create(&stepModel).Error; err != nil {
 			return
 		}
+		hackathon.Steps = append(hackathon.Steps, stepModel)
 	}
 
 	// Создание наград
@@ -66,6 +68,7 @@ func (hc *HackathonController) Create(c *gin.Context) {
 		if err := hc.DB.Create(&awardModel).Error; err != nil {
 			return
 		}
+		hackathon.Awards = append(hackathon.Awards, awardModel)
 	}
 
 	// Проверяем, были ли загружены файлы
@@ -74,37 +77,22 @@ func (hc *HackathonController) Create(c *gin.Context) {
 		return
 	}
 
-	files := c.MultipartForm.File["files"] // Получаем массив файлов по имени поля "files"
+	files := c.Request.MultipartForm.File["files"] // Получаем массив файлов по имени поля "files"
 	if len(files) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Файлы не найдены"})
 		return
 	}
 
+	// Обработка каждого файла
 	for _, file := range files {
 		newFile, err := hc.FileController.UploadFile(c, file, hackathon.ID, "hackathon")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-	}
-
-	// Создание файлов
-	for _, file := range dto.Files {
-		fileModel := file.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
-		if err := hc.DB.Create(&fileModel).Error; err != nil {
-			return
-		}
-	}
-
-	// Проверяем, был ли загружен файл
-	if files, err := c.FormFile("files"); err == nil {
-		for _, file := range files {
-			newFile, err := hc.FileController.UploadFile(c, file, hackathon.ID, "hackathon")
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				return
-			}
-		}
+		// Здесь вы можете сохранить информацию о загруженном файле в базу данных, если это необходимо
+		// Например, добавьте его в массив файлов хакатона
+		hackathon.Files = append(hackathon.Files, newFile) // Предполагается, что у вас есть поле Files в модели хакатона
 	}
 
 	c.JSON(http.StatusCreated, hackathon)
@@ -115,6 +103,17 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 	var hackathons []models.Hackathon
 
 	if err := hc.DB.Find(&hackathons).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении хакатонов", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, hackathons)
+}
+
+func (hc *HackathonController) GetAllFull(c *gin.Context) {
+	var hackathons []models.Hackathon
+
+	if err := hc.DB.Preload("Logo").Preload("Users").Preload("Files").Preload("Teams").Preload("Steps").Preload("Goals").Preload("Technologies").Preload("Awards").Preload("Goals").Preload("Users").Preload("Users").Preload("Criteria").Preload("Organization").Preload("Status").Find(&hackathons).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении хакатонов", "details": err.Error()})
 		return
 	}

@@ -9,8 +9,8 @@ type CriteriaCreateDTO struct {
 	MinScore    *uint  `json:"min_score" validate:"required,min=0"`
 }
 
-func (dto *CriteriaCreateDTO) ToModel(hackathonID uint) models.Criteria {
-	return models.Criteria{
+func (dto *CriteriaCreateDTO) ToModel(hackathonID uint) *models.Criteria {
+	return &models.Criteria{
 		Name:        dto.Name,
 		Description: dto.Description,
 		MaxScore:    dto.MaxScore,

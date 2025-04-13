@@ -13,6 +13,7 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	{
 		public.POST("", hackathonController.Create)
 		public.GET("", hackathonController.GetAll)
+		public.GET("/full", hackathonController.GetAllFull)
 		//public.GET("/full", organizationController.GetAllFull)
 		//public.GET("/:id", organizationController.GetByID)
 		//public.GET("/full/:id", organizationController.GetByIDFull)

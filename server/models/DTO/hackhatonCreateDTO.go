@@ -27,8 +27,6 @@ type HackathonCreateDTO struct {
 	Steps  []HackathonStepCreateDTO `json:"steps" validate:"required,dive,required"`
 	Goals  []string                 `json:"goals" validate:"dive,min=1,max=255,required"`
 	Awards []AwardCreateDTO         `json:"awards" validate:"required,dive,required"`
-
-	Files []FileDTO `json:"files" validate:"required,dive,required"`
 }
 
 func (dto *HackathonCreateDTO) ToModel() *models.Hackathon {
