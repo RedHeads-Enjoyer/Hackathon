@@ -11,6 +11,7 @@ func Router() *gin.Engine {
 	AuthRouter(r, initializers.DB)
 	TechnologyRouter(r, initializers.DB)
 	OrganizationRouter(r, initializers.DB)
+	HackathonRouter(r, initializers.DB)
 
 	return r
 }

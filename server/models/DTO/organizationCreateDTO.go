@@ -8,17 +8,16 @@ type OrganizationCreateDTO struct {
 	OGRN         *string `json:"ogrn,omitempty"`
 	ContactEmail string  `json:"contact_email" validate:"required,email"`
 	Website      string  `json:"website,omitempty"`
-	OwnerID      uint    `json:"owner_id" validate:"required"`
 }
 
-func (dto *OrganizationCreateDTO) ToModel() *models.Organization {
+func (dto *OrganizationCreateDTO) ToModel(userID uint) *models.Organization {
 	return &models.Organization{
 		LegalName:    dto.LegalName,
 		INN:          dto.INN,
 		OGRN:         dto.OGRN,
 		ContactEmail: dto.ContactEmail,
 		Website:      dto.Website,
-		OwnerID:      dto.OwnerID,
+		OwnerID:      userID,
 		IsVerified:   false,
 	}
 }

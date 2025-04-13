@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"server/controllers"
+	"server/middlewares"
 )
 
 func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
@@ -11,7 +12,6 @@ func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
 
 	public := router.Group("/organization")
 	{
-		public.POST("", organizationController.Create)
 		public.GET("", organizationController.GetAll)
 		public.GET("/full", organizationController.GetAllFull)
 		public.GET("/:id", organizationController.GetByID)
@@ -19,5 +19,11 @@ func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
 		public.PUT("/:id", organizationController.Update)
 		public.PUT("/:id/verify", organizationController.SetVerified)
 		public.DELETE("/:id", organizationController.Delete)
+	}
+
+	protected := router.Group("/organization")
+	protected.Use(middlewares.Auth())
+	{
+		protected.POST("", organizationController.Create)
 	}
 }

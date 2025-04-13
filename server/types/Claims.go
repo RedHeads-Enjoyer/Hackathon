@@ -11,9 +11,3 @@ type Claims struct {
 	SystemRole models.SystemRole `json:"systemRoleId"`
 	*jwt.RegisteredClaims
 }
-
-type UserHackathon struct {
-	UserID      uint   `gorm:"primaryKey"`
-	HackathonID uint   `gorm:"primaryKey"`
-	Role        string `gorm:"size:20;not null;default:'participant'"` // "creator", "mentor", "participant"
-}

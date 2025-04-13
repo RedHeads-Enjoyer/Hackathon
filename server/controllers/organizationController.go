@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"server/models"
 	"server/models/DTO"
+	"server/types"
 )
 
 type OrganizationController struct {
@@ -36,8 +37,12 @@ func (oc *OrganizationController) Create(c *gin.Context) {
 		return
 	}
 
-	// Преобразование DTO в модель
-	org := dto.ToModel()
+	claims := c.MustGet("user_claims").(*types.Claims)
+
+	c.JSON(http.StatusCreated, claims)
+
+	// Преобразование DTO в модель1
+	org := dto.ToModel(claims.UserID)
 
 	// Сохранение организации в базе данных
 	if err := oc.DB.Create(&org).Error; err != nil {
