@@ -10,7 +10,6 @@ import (
 type HackathonStep struct {
 	Base
 
-	Order       int       `json:"order"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	StartDate   time.Time `json:"start_date"`
@@ -31,10 +30,6 @@ func (s *HackathonStep) Validate() error {
 
 	if s.StartDate.After(s.EndDate) {
 		return errors.New("дата окончания этапа должна быть после даты начала")
-	}
-
-	if s.Order <= 0 {
-		return errors.New("порядковый номер этапа должен быть положительным")
 	}
 
 	return nil

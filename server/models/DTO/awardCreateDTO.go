@@ -9,8 +9,8 @@ type AwardCreateDTO struct {
 	Additionally string  `json:"description" validate:"max=500"`
 }
 
-func (dto *AwardCreateDTO) ToModel(hackathonID uint) models.Award {
-	return models.Award{
+func (dto *AwardCreateDTO) ToModel(hackathonID uint) *models.Award {
+	return &models.Award{
 		MoneyAmount:  dto.MoneyAmount,
 		Additionally: dto.Additionally,
 		PlaceFrom:    dto.PlaceFrom,

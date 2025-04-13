@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
@@ -55,10 +56,13 @@ func (hc *HackathonController) Create(c *gin.Context) {
 
 	// Создание шагов
 	for _, step := range dto.Steps {
+		fmt.Println("Step: ", step)
 		stepModel := step.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
 		if err := hc.DB.Create(&stepModel).Error; err != nil {
+			fmt.Println("StepErr: ", stepModel)
 			return
 		}
+
 		hackathon.Steps = append(hackathon.Steps, stepModel)
 	}
 
@@ -72,28 +76,28 @@ func (hc *HackathonController) Create(c *gin.Context) {
 	}
 
 	// Проверяем, были ли загружены файлы
-	if err := c.Request.ParseMultipartForm(10 << 20); err != nil { // 10 MB limit
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка при парсинге формы", "details": err.Error()})
-		return
-	}
-
-	files := c.Request.MultipartForm.File["files"] // Получаем массив файлов по имени поля "files"
-	if len(files) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Файлы не найдены"})
-		return
-	}
-
-	// Обработка каждого файла
-	for _, file := range files {
-		newFile, err := hc.FileController.UploadFile(c, file, hackathon.ID, "hackathon")
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		// Здесь вы можете сохранить информацию о загруженном файле в базу данных, если это необходимо
-		// Например, добавьте его в массив файлов хакатона
-		hackathon.Files = append(hackathon.Files, newFile) // Предполагается, что у вас есть поле Files в модели хакатона
-	}
+	//if err := c.Request.ParseMultipartForm(10 << 20); err != nil { // 10 MB limit
+	//	c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка при парсинге формы", "details": err.Error()})
+	//	return
+	//}
+	//
+	//files := c.Request.MultipartForm.File["files"] // Получаем массив файлов по имени поля "files"
+	//if len(files) == 0 {
+	//	c.JSON(http.StatusBadRequest, gin.H{"error": "Файлы не найдены"})
+	//	return
+	//}
+	//
+	//// Обработка каждого файла
+	//for _, file := range files {
+	//	newFile, err := hc.FileController.UploadFile(c, file, hackathon.ID, "hackathon")
+	//	if err != nil {
+	//		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	//		return
+	//	}
+	//	// Здесь вы можете сохранить информацию о загруженном файле в базу данных, если это необходимо
+	//	// Например, добавьте его в массив файлов хакатона
+	//	hackathon.Files = append(hackathon.Files, newFile) // Предполагается, что у вас есть поле Files в модели хакатона
+	//}
 
 	c.JSON(http.StatusCreated, hackathon)
 }
@@ -113,7 +117,7 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 func (hc *HackathonController) GetAllFull(c *gin.Context) {
 	var hackathons []models.Hackathon
 
-	if err := hc.DB.Preload("Logo").Preload("Users").Preload("Files").Preload("Teams").Preload("Steps").Preload("Goals").Preload("Technologies").Preload("Awards").Preload("Goals").Preload("Users").Preload("Users").Preload("Criteria").Preload("Organization").Preload("Status").Find(&hackathons).Error; err != nil {
+	if err := hc.DB.Preload("Logo").Preload("Users").Preload("Files").Preload("Teams").Preload("Steps").Preload("Goals").Preload("Technologies").Preload("Awards").Preload("Goals").Preload("Users").Preload("Steps").Preload("Criteria").Preload("Organization").Preload("Status").Find(&hackathons).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении хакатонов", "details": err.Error()})
 		return
 	}
