@@ -22,16 +22,16 @@ type Hackathon struct {
 	StatusID uint            `gorm:"not null;default:1" json:"-"`
 	Status   HackathonStatus `gorm:"foreignKey:StatusID" json:"status"`
 
-	OrganizationID uint         `gorm:"not null" json:"organization_id"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID" json:"organization"`
+	OrganizationID uint          `gorm:"not null" json:"organization_id"`
+	Organization   *Organization `gorm:"foreignKey:OrganizationID" json:"organization"`
 
-	Logo         *File              `gorm:"polymorphic:Owner;polymorphicValue:hackathon"`
-	Users        []BndUserHackathon `gorm:"foreignKey:HackathonID" json:"-"`
-	Files        []File             `gorm:"polymorphic:Owner;polymorphicValue:hackathon"`
-	Teams        []Team             `gorm:"foreignKey:HackathonID" json:"teams,omitempty"`
-	Steps        []HackathonStep    `gorm:"foreignKey:HackathonID" json:"steps,omitempty"`
-	Goals        []HackathonGoal    `gorm:"foreignKey:HackathonID" json:"goals,omitempty"`
-	Technologies []Technology       `gorm:"many2many:hackathon_technologies;" json:"technologies,omitempty"`
-	Awards       []Award            `gorm:"foreignKey:HackathonID" json:"awards,omitempty"`
-	Criteria     []Criteria         `gorm:"foreignKey:HackathonID" json:"criteria,omitempty"`
+	Logo         File                `gorm:"polymorphic:Owner;polymorphicValue:hackathon"`
+	Users        *[]BndUserHackathon `gorm:"foreignKey:HackathonID" json:"-"`
+	Files        *[]File             `gorm:"polymorphic:Owner;polymorphicValue:hackathon" json:"files,omitempty"`
+	Teams        *[]Team             `gorm:"foreignKey:HackathonID" json:"teams,omitempty"`
+	Steps        *[]HackathonStep    `gorm:"foreignKey:HackathonID" json:"steps,omitempty"`
+	Goals        *[]HackathonGoal    `gorm:"foreignKey:HackathonID" json:"goals,omitempty"`
+	Technologies *[]Technology       `gorm:"many2many:hackathon_technologies;" json:"technologies,omitempty"`
+	Awards       *[]Award            `gorm:"foreignKey:HackathonID" json:"awards,omitempty"`
+	Criteria     *[]Criteria         `gorm:"foreignKey:HackathonID" json:"criteria,omitempty"`
 }

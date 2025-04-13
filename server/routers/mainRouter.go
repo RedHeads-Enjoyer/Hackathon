@@ -8,10 +8,14 @@ import (
 func Router() *gin.Engine {
 	r := gin.Default()
 
+	// Сделано
 	AuthRouter(r, initializers.DB)
 	TechnologyRouter(r, initializers.DB)
 	OrganizationRouter(r, initializers.DB)
+
+	// Не доделано
 	HackathonRouter(r, initializers.DB)
+	UserRouter(r, initializers.DB)
 
 	return r
 }

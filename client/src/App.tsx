@@ -14,6 +14,8 @@ import NotFound from "./modules/auth/NotFound.tsx";
 import PermissionDenied from "./modules/auth/PermissionDenied.tsx";
 import CreateHackathonItem from "./modules/hackathonItem/CreateHackathonPage.tsx";
 import {logout} from "./modules/auth/store/authSlice.ts";
+import UserEditForm from "./modules/user/UserEditForm.tsx";
+import UserList from "./modules/user/UserList.tsx";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -44,7 +46,12 @@ function App() {
                     </ProtectedRoute>
                 } />
 
+
+
                 <Route element={<ProtectedRoute roles={[]}><Outlet /></ProtectedRoute>}>
+
+                    <Route path="/user/edit" element={<UserEditForm userId={1}/> } />
+                    <Route path="/user/list" element={<UserList /> } />
                     <Route path="/hackathon/create" element={<CreateHackathonItem />} />
                     <Route path="/user1" element={<HackathonList />} />
                     <Route path="/user2" element={<HackathonList />} />

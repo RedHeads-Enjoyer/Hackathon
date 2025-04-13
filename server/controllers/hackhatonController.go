@@ -5,6 +5,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 	"net/http"
+	"server/models"
 	"server/models/DTO"
 )
 
@@ -46,4 +47,16 @@ func (hc *HackathonController) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, hackathon)
+}
+
+// GetAll - Получение списка всех хакатонов
+func (hc *HackathonController) GetAll(c *gin.Context) {
+	var hackathons []models.Hackathon
+
+	if err := hc.DB.Find(&hackathons).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении хакатонов", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, hackathons)
 }

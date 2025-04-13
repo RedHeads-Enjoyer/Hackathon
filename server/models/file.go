@@ -8,7 +8,7 @@ type File struct {
 	Size         int64  `gorm:"not null"`
 	Type         string `gorm:"size:100;not null"`
 	UploadedByID uint   `gorm:"not null"`
-	UploadedBy   User   `gorm:"foreignKey:UploadedByID"`
+	UploadedBy   *User  `gorm:"foreignKey:UploadedByID"`
 
 	// Полиморфные поля для связи с разными сущностями
 	OwnerType string `gorm:"size:50"`
