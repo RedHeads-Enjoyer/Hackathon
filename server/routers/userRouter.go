@@ -13,5 +13,7 @@ func UserRouter(router *gin.Engine, db *gorm.DB) {
 	{
 		public.GET("", userController.GetAll)
 		public.PUT("/:id", userController.Update)
+		public.GET("/:id", userController.GetByID)
+		public.DELETE("/:id", userController.Delete)
 	}
 }

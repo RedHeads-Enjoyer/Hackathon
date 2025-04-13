@@ -90,3 +90,44 @@ func (uc *UserController) Update(c *gin.Context) {
 
 	c.JSON(http.StatusOK, user)
 }
+
+// GetByID - Обработчик для получения пользователя по ID
+func (uc *UserController) GetByID(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID пользователя"})
+		return
+	}
+
+	var user models.User
+	if err := uc.DB.Preload("SystemRole").Preload("Avatar").First(&user, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении пользователя", "details": err.Error()})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
+// Delete - Обработчик для удаления пользователя по ID
+func (uc *UserController) Delete(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID пользователя"})
+		return
+	}
+
+	if err := uc.DB.Delete(&models.User{}, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении пользователя", "details": err.Error()})
+		}
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil) // Успешное удаление, возвращаем статус 204 No Content
+}

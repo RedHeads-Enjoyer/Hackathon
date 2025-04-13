@@ -46,15 +46,9 @@ func (dto *HackathonCreateDTO) ToModel() *models.Hackathon {
 		MaxTeamSize: dto.MaxTeamSize,
 
 		OrganizationID: dto.OrganizationID,
+		StatusID:       1,
 	}
 	return hackathon
-}
-
-type AwardCreateDTO struct {
-	PlaceFrom    int     `json:"place_from" validate:"required,min=1"`
-	PlaceTo      int     `json:"place_to" validate:"required,min=1,gtefield=PlaceFrom"`
-	MoneyAmount  float64 `json:"money_amount" validate:"required,min=0"`
-	Additionally string  `json:"description" validate:"max=500"`
 }
 
 type FileDTO struct {
