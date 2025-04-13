@@ -7,7 +7,7 @@ import (
 )
 
 func UserRouter(router *gin.Engine, db *gorm.DB) {
-	userController := controllers.NewUserController(db)
+	userController := controllers.NewUserController(db, controllers.NewFileController(db))
 
 	public := router.Group("/user")
 	{
