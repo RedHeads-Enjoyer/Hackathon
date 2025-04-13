@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
@@ -56,10 +55,8 @@ func (hc *HackathonController) Create(c *gin.Context) {
 
 	// Создание шагов
 	for _, step := range dto.Steps {
-		fmt.Println("Step: ", step)
 		stepModel := step.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
 		if err := hc.DB.Create(&stepModel).Error; err != nil {
-			fmt.Println("StepErr: ", stepModel)
 			return
 		}
 
@@ -75,29 +72,40 @@ func (hc *HackathonController) Create(c *gin.Context) {
 		hackathon.Awards = append(hackathon.Awards, awardModel)
 	}
 
+	if file, err := c.FormFile("logo"); err == nil {
+		// Вызов метода для загрузки файла
+		newFile, err := hc.FileController.UploadFile(c, file, hackathon.ID, "user")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		// Обновляем поле профиля пользователя, если необходимо
+		hackathon.Logo = newFile // Или URL, если вы хотите хранить URL
+	}
+
 	// Проверяем, были ли загружены файлы
-	//if err := c.Request.ParseMultipartForm(10 << 20); err != nil { // 10 MB limit
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка при парсинге формы", "details": err.Error()})
-	//	return
-	//}
-	//
-	//files := c.Request.MultipartForm.File["files"] // Получаем массив файлов по имени поля "files"
-	//if len(files) == 0 {
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": "Файлы не найдены"})
-	//	return
-	//}
-	//
-	//// Обработка каждого файла
-	//for _, file := range files {
-	//	newFile, err := hc.FileController.UploadFile(c, file, hackathon.ID, "hackathon")
-	//	if err != nil {
-	//		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	//		return
-	//	}
-	//	// Здесь вы можете сохранить информацию о загруженном файле в базу данных, если это необходимо
-	//	// Например, добавьте его в массив файлов хакатона
-	//	hackathon.Files = append(hackathon.Files, newFile) // Предполагается, что у вас есть поле Files в модели хакатона
-	//}
+	if err := c.Request.ParseMultipartForm(10 << 20); err != nil { // 10 MB limit
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка при парсинге формы", "details": err.Error()})
+		return
+	}
+
+	files := c.Request.MultipartForm.File["files"] // Получаем массив файлов по имени поля "files"
+	if len(files) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Файлы не найдены"})
+		return
+	}
+
+	// Обработка каждого файла
+	for _, file := range files {
+		newFile, err := hc.FileController.UploadFile(c, file, hackathon.ID, "hackathon")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		// Здесь вы можете сохранить информацию о загруженном файле в базу данных, если это необходимо
+		// Например, добавьте его в массив файлов хакатона
+		hackathon.Files = append(hackathon.Files, newFile) // Предполагается, что у вас есть поле Files в модели хакатона
+	}
 
 	c.JSON(http.StatusCreated, hackathon)
 }
@@ -123,4 +131,30 @@ func (hc *HackathonController) GetAllFull(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, hackathons)
+}
+
+func (hc *HackathonController) Update(c *gin.Context) {
+	id := c.Param("id")
+	var dto DTO.HackathonUpdateDTO
+
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных", "details": err.Error()})
+		return
+	}
+
+	var hackathon models.Hackathon
+	if err := hc.DB.First(&hackathon, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
+		return
+	}
+
+	// Обновляем хакатон с помощью DTO
+	hackathon = dto.ToModel(hackathon)
+
+	if err := hc.DB.Save(&hackathon).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при обновлении хакатона", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, hackathon)
 }
