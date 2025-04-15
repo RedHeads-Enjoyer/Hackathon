@@ -1,7 +1,9 @@
 package models
 
+import "gorm.io/gorm"
+
 type File struct {
-	Base
+	gorm.Model
 	Name         string `gorm:"size:255;not null"`
 	StoredName   string `gorm:"size:255;not null"`
 	URL          string `gorm:"size:512;not null"`
@@ -10,7 +12,6 @@ type File struct {
 	UploadedByID uint   `gorm:"not null"`
 	UploadedBy   *User  `gorm:"foreignKey:UploadedByID"`
 
-	// Полиморфные поля для связи с разными сущностями
 	OwnerType string `gorm:"size:50"`
 	OwnerID   uint
 }

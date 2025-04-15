@@ -1,11 +1,12 @@
 package models
 
 import (
+	"gorm.io/gorm"
 	"time"
 )
 
 type Hackathon struct {
-	Base
+	gorm.Model
 
 	Name        string `gorm:"size:50;unique;not null" json:"name"`
 	Description string `gorm:"size:255" json:"description"`
@@ -19,8 +20,8 @@ type Hackathon struct {
 	MaxTeamSize int  `json:"max_team_size,omitempty"`
 	MinTeamSize int  `json:"min_team_size,omitempty"`
 
-	StatusID uint            `gorm:"not null;default:1" json:"-"`
-	Status   HackathonStatus `gorm:"foreignKey:StatusID" json:"status"`
+	StatusID uint `gorm:"not null;default:1" json:"-"`
+	Status   int  `gorm:"not null" json:"status"`
 
 	OrganizationID uint         `gorm:"not null" json:"organization_id"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID" json:"organization"`
@@ -30,7 +31,6 @@ type Hackathon struct {
 	Files        []*File            `gorm:"polymorphic:Owner;polymorphicValue:hackathon" json:"files,omitempty"`
 	Teams        []*Team            `gorm:"foreignKey:HackathonID" json:"teams,omitempty"`
 	Steps        []*HackathonStep   `gorm:"foreignKey:HackathonID" json:"steps,omitempty"`
-	Goals        []*HackathonGoal   `gorm:"foreignKey:HackathonID" json:"goals,omitempty"`
 	Technologies []*Technology      `gorm:"many2many:hackathon_technologies;" json:"technologies,omitempty"`
 	Awards       []*Award           `gorm:"foreignKey:HackathonID" json:"awards,omitempty"`
 	Criteria     []*Criteria        `gorm:"foreignKey:HackathonID" json:"criteria,omitempty"`

@@ -54,13 +54,13 @@ func (ac *AuthController) RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	defaultRoleID := uint(1)
+	defaultRoleID := int(1)
 
 	user := models.User{
-		Email:        input.Email,
-		Username:     input.Username,
-		Password:     string(hashedPassword),
-		SystemRoleID: defaultRoleID,
+		Email:      input.Email,
+		Username:   input.Username,
+		Password:   string(hashedPassword),
+		SystemRole: defaultRoleID,
 	}
 
 	if err := ac.DB.Create(&user).Error; err != nil {
@@ -68,13 +68,7 @@ func (ac *AuthController) RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	systemRole, err := models.GetRoleByID(ac.DB, user.SystemRoleID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения роли пользователя"})
-		return
-	}
-
-	accessToken, refreshToken, err := GenerateTokens(user.ID, user.Email, systemRole)
+	accessToken, refreshToken, err := GenerateTokens(user.ID, user.Email, user.SystemRole)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации токена"})
 		return
@@ -114,13 +108,7 @@ func (ac *AuthController) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	systemRole, err := models.GetRoleByID(ac.DB, user.SystemRoleID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения роли пользователя"})
-		return
-	}
-
-	accessToken, refreshToken, err := GenerateTokens(user.ID, user.Email, systemRole)
+	accessToken, refreshToken, err := GenerateTokens(user.ID, user.Email, user.SystemRole)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации токена"})
 		return
@@ -133,7 +121,7 @@ func (ac *AuthController) LoginHandler(c *gin.Context) {
 		"user": gin.H{
 			"id":          user.ID,
 			"username":    user.Username,
-			"system_role": systemRole,
+			"system_role": user.SystemRole,
 		},
 	})
 }

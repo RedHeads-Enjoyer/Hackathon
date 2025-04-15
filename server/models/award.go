@@ -1,7 +1,9 @@
 package models
 
+import "gorm.io/gorm"
+
 type Award struct {
-	Base
+	gorm.Model
 	MoneyAmount  float64   `gorm:"default:1.0" json:"money_amount"`
 	Additionally string    `gorm:"default:1.0" json:"additionally"`
 	PlaceFrom    int       `gorm:"not null" json:"place_from"`

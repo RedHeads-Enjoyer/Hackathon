@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"os"
 	"server/initializers"
-	"server/models"
 	"server/types"
 	"time"
 )
@@ -36,7 +35,7 @@ func getRequiredEnv(key string) string {
 	return value
 }
 
-func GenerateTokens(userID uint, email string, systemRole models.SystemRole) (string, string, error) {
+func GenerateTokens(userID uint, email string, systemRole int) (string, string, error) {
 	// Access Token
 	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, &types.Claims{
 		UserID:     userID,

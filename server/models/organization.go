@@ -1,7 +1,9 @@
 package models
 
+import "gorm.io/gorm"
+
 type Organization struct {
-	Base
+	gorm.Model
 	LegalName    string  `gorm:"unique;not null" json:"legal_name"`
 	INN          string  `gorm:"unique,size:12" json:"inn"`
 	OGRN         *string `gorm:"unique,size:15" json:"ogrn"`
