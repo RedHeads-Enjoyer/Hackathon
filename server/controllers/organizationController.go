@@ -39,8 +39,6 @@ func (oc *OrganizationController) Create(c *gin.Context) {
 
 	claims := c.MustGet("user_claims").(*types.Claims)
 
-	c.JSON(http.StatusCreated, claims)
-
 	// Преобразование DTO в модель1
 	org := dto.ToModel(claims.UserID)
 
@@ -56,7 +54,7 @@ func (oc *OrganizationController) Create(c *gin.Context) {
 func (oc *OrganizationController) GetAllFull(c *gin.Context) {
 	var organizations []models.Organization
 
-	if err := oc.DB.Preload("Owner").Find(&organizations).Error; err != nil {
+	if err := oc.DB.Preload("Owner").Preload("Hackathons").Find(&organizations).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении организаций", "details": err.Error()})
 		return
 	}
@@ -80,7 +78,7 @@ func (oc *OrganizationController) GetByIDFull(c *gin.Context) {
 	var organization models.Organization
 
 	// Поиск организации по ID
-	if err := oc.DB.Preload("Owner").First(&organization, id).Error; err != nil {
+	if err := oc.DB.Preload("Owner").Preload("Hackathons").First(&organization, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Организация не найдена"})
 		} else {
@@ -139,7 +137,7 @@ func (oc *OrganizationController) Update(c *gin.Context) {
 	}
 
 	// Преобразование DTO в модель
-	organization = dto.ToModel(organization) // Предполагается, что ToModel принимает существующую организацию и обновляет её поля
+	organization = dto.ToModel(organization)
 
 	// Сохранение обновленной организации в базе данных
 	if err := oc.DB.Save(&organization).Error; err != nil {

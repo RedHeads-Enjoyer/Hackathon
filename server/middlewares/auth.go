@@ -10,12 +10,6 @@ import (
 	"strings"
 )
 
-type Claims struct {
-	UserID uint   `json:"user_id"`
-	Email  string `json:"email"`
-	*jwt.RegisteredClaims
-}
-
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token, err := extractToken(c)

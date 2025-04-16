@@ -17,7 +17,7 @@ func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
 		public.GET("/:id", organizationController.GetByID)
 		public.GET("/full/:id", organizationController.GetByIDFull)
 		public.PUT("/:id", organizationController.Update)
-		public.PUT("/:id/verify", organizationController.SetVerified)
+
 		public.DELETE("/:id", organizationController.Delete)
 	}
 
@@ -25,5 +25,11 @@ func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
 	protected.Use(middlewares.Auth())
 	{
 		protected.POST("", organizationController.Create)
+	}
+
+	system := router.Group("/organization")
+	protected.Use(middlewares.Auth(), middlewares.SystemRole(2))
+	{
+		system.PUT("/:id/verify", organizationController.SetVerified)
 	}
 }
