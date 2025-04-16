@@ -20,13 +20,7 @@ func NewHackathonController(db *gorm.DB) *HackathonController {
 
 // Создание хакатона
 func (hc *HackathonController) Create(c *gin.Context) {
-	var dto DTO.HackathonCreateDTO
-
-	// Привязка JSON к DTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных", "details": err.Error()})
-		return
-	}
+	dto := c.MustGet("hackathon_dto").(DTO.HackathonCreateDTO)
 
 	// Валидация данных
 	validate := validator.New()
@@ -153,25 +147,86 @@ func (hc *HackathonController) GetAllFull(c *gin.Context) {
 }
 
 func (hc *HackathonController) Update(c *gin.Context) {
-	id := c.Param("id")
 	var dto DTO.HackathonUpdateDTO
 
+	// Привязка JSON к DTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных", "details": err.Error()})
 		return
 	}
 
+	// Извлечение ID хакатона из URL
+	hackathonID := c.Param("id")
+	if hackathonID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
+		return
+	}
+
 	var hackathon models.Hackathon
-	if err := hc.DB.First(&hackathon, id).Error; err != nil {
+	tx := hc.DB.Begin()
+	if err := tx.Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при начале транзакции"})
+		return
+	}
+
+	// Поиск хакатона по ID
+	if err := tx.First(&hackathon, hackathonID).Error; err != nil {
+		tx.Rollback()
 		c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
 		return
 	}
 
-	// Обновляем хакатон с помощью DTO
+	// Обновление полей хакатона
 	hackathon = dto.ToModel(hackathon)
 
-	if err := hc.DB.Save(&hackathon).Error; err != nil {
+	// Удаление старых этапов, если переданы новые
+	if len(dto.Steps) > 0 {
+		if err := tx.Where("hackathon_id = ?", hackathon.ID).Delete(&models.HackathonStep{}).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении старых этапов", "details": err.Error()})
+			return
+		}
+
+		// Создание новых этапов
+		for _, step := range dto.Steps {
+			stepModel := step.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
+			if err := tx.Create(&stepModel).Error; err != nil {
+				tx.Rollback()
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании этапа", "details": err.Error()})
+				return
+			}
+		}
+	}
+
+	// Удаление старых наград, если переданы новые
+	if len(dto.Awards) > 0 {
+		if err := tx.Where("hackathon_id = ?", hackathon.ID).Delete(&models.Award{}).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении старых наград", "details": err.Error()})
+			return
+		}
+
+		// Создание новых наград
+		for _, award := range dto.Awards {
+			awardModel := award.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
+			if err := tx.Create(&awardModel).Error; err != nil {
+				tx.Rollback()
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании награды", "details": err.Error()})
+				return
+			}
+		}
+	}
+
+	// Сохранение обновленного хакатона
+	if err := tx.Save(&hackathon).Error; err != nil {
+		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при обновлении хакатона", "details": err.Error()})
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при подтверждении транзакции"})
 		return
 	}
 

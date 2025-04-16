@@ -1,14 +1,13 @@
 package middlewares
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"server/types"
 	"strconv"
 )
 
-func Owner() gin.HandlerFunc {
+func User() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ownerID := c.Param("id")
 		if ownerID == "" {
@@ -45,9 +44,6 @@ func Owner() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
-		fmt.Println(ownerIDUint != claims.UserID)
-		fmt.Println(claims.SystemRole)
 
 		c.Next()
 	}

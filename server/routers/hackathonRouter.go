@@ -13,12 +13,7 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	{
 		public.GET("", hackathonController.GetAll)
 		public.GET("/full", hackathonController.GetAllFull)
-		//public.GET("/full", organizationController.GetAllFull)
 		public.GET("/:id", hackathonController.GetByIDFull)
-		//public.GET("/full/:id", organizationController.GetByIDFull)
-
-		//public.PUT("/:id/verify", organizationController.SetVerified)
-
 	}
 
 	protected := router.Group("/hackathon")

@@ -22,10 +22,7 @@ type HackathonCreateDTO struct {
 	Technologies   []uint              `json:"technologies" validate:"dive,min=1"`
 	Criteria       []CriteriaCreateDTO `json:"criteria" validate:"required,dive,required"`
 
-	Logo *string `json:"logo_url,omitempty" validate:"omitempty,url"`
-
 	Steps  []HackathonStepCreateDTO `json:"steps" validate:"required,dive,required"`
-	Goals  []string                 `json:"goals" validate:"dive,min=1,max=255,required"`
 	Awards []AwardCreateDTO         `json:"awards" validate:"required,dive,required"`
 }
 
@@ -44,7 +41,7 @@ func (dto *HackathonCreateDTO) ToModel() *models.Hackathon {
 		MaxTeamSize: dto.MaxTeamSize,
 
 		OrganizationID: dto.OrganizationID,
-		StatusID:       1,
+		StatusID:       0,
 	}
 	return hackathon
 }

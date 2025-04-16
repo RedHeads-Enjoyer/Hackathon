@@ -5,16 +5,51 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"server/models"
+	"server/models/DTO"
 	"server/types"
+	"strconv"
 )
 
 func OrganizationOwner(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		orgID := c.Param("organization_id")
-		if orgID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор организации"})
-			c.Abort()
-			return
+		var orgID uint
+		var dto DTO.HackathonCreateDTO
+		// Проверка метода запроса
+		if c.Request.Method == http.MethodPost || c.Request.Method == http.MethodPut {
+
+			// Привязка JSON к requestBody
+			if err := c.ShouldBindJSON(&dto); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных", "details": err.Error()})
+				c.Abort()
+				return
+			}
+
+			orgID = dto.OrganizationID
+		} else {
+			// Если метод не POST или PUT, можно извлечь orgID из параметров URL
+			orgIDParam := c.Param("organization_id")
+			if orgIDParam == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор организации"})
+				c.Abort()
+				return
+			}
+
+			var err error
+			var orgID64 uint64
+			orgID64, err = strconv.ParseUint(orgIDParam, 10, 32)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат идентификатора организации"})
+				c.Abort()
+				return
+			}
+
+			// Преобразование orgID64 в uint
+			if orgID64 > uint64(^uint(0)) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Идентификатор организации слишком велик"})
+				c.Abort()
+				return
+			}
+			orgID = uint(orgID64)
 		}
 
 		userClaims, exists := c.Get("user_claims")
@@ -43,6 +78,8 @@ func OrganizationOwner(db *gorm.DB) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		c.Set("hackathon_dto", dto)
 
 		c.Next()
 	}
