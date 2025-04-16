@@ -43,7 +43,7 @@ func (hc *HackathonController) Create(c *gin.Context) {
 	}
 
 	// Сохранение хакатона в базе данных
-	if err := hc.DB.Create(&hackathon).Error; err != nil {
+	if err := tx.Create(&hackathon).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании хакатона", "details": err.Error()})
 		return
@@ -52,7 +52,7 @@ func (hc *HackathonController) Create(c *gin.Context) {
 	// Создание критериев
 	for _, criteria := range dto.Criteria {
 		criteriaModel := criteria.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
-		if err := hc.DB.Create(&criteriaModel).Error; err != nil {
+		if err := tx.Create(&criteriaModel).Error; err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании критерия", "details": err.Error()})
 			return
@@ -63,7 +63,7 @@ func (hc *HackathonController) Create(c *gin.Context) {
 	// Создание шагов
 	for _, step := range dto.Steps {
 		stepModel := step.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
-		if err := hc.DB.Create(&stepModel).Error; err != nil {
+		if err := tx.Create(&stepModel).Error; err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании этапа", "details": err.Error()})
 			return
@@ -75,7 +75,7 @@ func (hc *HackathonController) Create(c *gin.Context) {
 	// Создание наград
 	for _, award := range dto.Awards {
 		awardModel := award.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
-		if err := hc.DB.Create(&awardModel).Error; err != nil {
+		if err := tx.Create(&awardModel).Error; err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании награды", "details": err.Error()})
 			return
@@ -117,6 +117,41 @@ func (hc *HackathonController) Create(c *gin.Context) {
 	//	// Например, добавьте его в массив файлов хакатона
 	//	hackathon.Files = append(hackathon.Files, newFile) // Предполагается, что у вас есть поле Files в модели хакатона
 	//}
+
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+
+	userID := claims.UserID
+
+	// Проверка, не добавлен ли пользователь уже
+	var existingUser models.BndUserHackathon
+	if err := tx.Where("user_id = ? AND hackathon_id = ?", userID, hackathon.ID).First(&existingUser).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Пользователь уже добавлен к хакатону"})
+		tx.Rollback()
+		return
+	}
+
+	// Добавление пользователя к хакатону
+	userHackathon := models.BndUserHackathon{
+		UserID:        userID,
+		HackathonID:   hackathon.ID,
+		HackathonRole: 3,
+	}
+
+	if err := tx.Create(&userHackathon).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при добавлении пользователя к хакатону", "details": err.Error()})
+		tx.Rollback()
+		return
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при подтверждении транзакции"})
@@ -367,9 +402,9 @@ func (hc *HackathonController) GetUsers(c *gin.Context) {
 			usersWithRoles = append(usersWithRoles, userDTO.UserWithHackathonRoleDTO{
 				Username:      user.Username,
 				Email:         user.Email,
-				SystemRole:    user.SystemRole,             // Системная роль пользователя
-				Avatar:        avatarURL,                   // Аватар пользователя
-				HackathonRole: userHackathon.HackathonRole, // Роль пользователя в хакатоне
+				SystemRole:    user.SystemRole,
+				Avatar:        avatarURL,
+				HackathonRole: userHackathon.HackathonRole,
 			})
 		}
 	}

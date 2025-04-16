@@ -16,6 +16,7 @@ func Router() *gin.Engine {
 	// Не доделано
 	HackathonRouter(r, initializers.DB)
 	UserRouter(r, initializers.DB)
+	InviteRouter(r, initializers.DB)
 
 	r.Static("/uploads", "./data/uploads")
 
