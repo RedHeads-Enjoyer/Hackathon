@@ -218,6 +218,23 @@ func (hc *HackathonController) Update(c *gin.Context) {
 		}
 	}
 
+	if len(dto.Criteria) > 0 {
+		if err := tx.Where("hackathon_id = ?", hackathon.ID).Delete(&models.Criteria{}).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении старых критериев", "details": err.Error()})
+			return
+		}
+
+		for _, criteria := range dto.Criteria {
+			criteiaModel := criteria.ToModel(hackathon.ID)
+			if err := tx.Create(&criteiaModel).Error; err != nil {
+				tx.Rollback()
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании критериев", "details": err.Error()})
+				return
+			}
+		}
+	}
+
 	// Сохранение обновленного хакатона
 	if err := tx.Save(&hackathon).Error; err != nil {
 		tx.Rollback()

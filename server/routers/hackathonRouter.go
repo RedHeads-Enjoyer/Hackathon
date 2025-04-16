@@ -19,8 +19,8 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	protected := router.Group("/hackathon")
 	protected.Use(middlewares.Auth(), middlewares.OrganizationOwner(db))
 	{
-		public.PUT("/:id", hackathonController.Update)
+		protected.PUT("/:id", hackathonController.Update)
 		protected.POST("", hackathonController.Create)
-		public.DELETE("/:id", hackathonController.Delete)
+		protected.DELETE("/:id", hackathonController.Delete)
 	}
 }

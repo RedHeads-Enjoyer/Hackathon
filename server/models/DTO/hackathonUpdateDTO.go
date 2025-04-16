@@ -19,6 +19,7 @@ type HackathonUpdateDTO struct {
 	OrganizationID *uint                    `json:"organization_id,omitempty"`
 	Steps          []HackathonStepCreateDTO `json:"steps,omitempty"`
 	Awards         []AwardCreateDTO         `json:"awards,omitempty"`
+	Criteria       []CriteriaCreateDTO      `json:"criteria,omitempty"`
 }
 
 // ToModel обновляет существующий хакатон на основе данных из DTO

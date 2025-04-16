@@ -26,30 +26,31 @@ func OrganizationOwner(db *gorm.DB) gin.HandlerFunc {
 
 			orgID = dto.OrganizationID
 		} else {
-			// Если метод не POST или PUT, можно извлечь orgID из параметров URL
-			orgIDParam := c.Param("organization_id")
-			if orgIDParam == "" {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор организации"})
+			hackathonIDParam := c.Param("id")
+			if hackathonIDParam == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
 				c.Abort()
 				return
 			}
 
-			var err error
-			var orgID64 uint64
-			orgID64, err = strconv.ParseUint(orgIDParam, 10, 32)
+			// Преобразование идентификатора хакатона в uint
+			hackathonID, err := strconv.ParseUint(hackathonIDParam, 10, 32)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат идентификатора организации"})
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат идентификатора хакатона"})
 				c.Abort()
 				return
 			}
 
-			// Преобразование orgID64 в uint
-			if orgID64 > uint64(^uint(0)) {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Идентификатор организации слишком велик"})
+			// Поиск хакатона в базе данных
+			var hackathon models.Hackathon
+			if err := db.First(&hackathon, hackathonID).Error; err != nil {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
 				c.Abort()
 				return
 			}
-			orgID = uint(orgID64)
+
+			// Извлечение organization_id из найденного хакатона
+			orgID = hackathon.OrganizationID
 		}
 
 		userClaims, exists := c.Get("user_claims")
