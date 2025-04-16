@@ -3,19 +3,15 @@ package middlewares
 import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"log"
 	"net/http"
 	"server/models"
-	"server/models/DTO/hackathonDTO"
 	"server/types"
 	"strconv"
 )
 
 func OrganizationOwnerPath(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		log.Println("Параметры запроса:", c.Params)
 		var orgID uint
-		var dto hackathonDTO.HackathonCreateDTO
 
 		hackathonIDParam := c.Param("hackathon_id")
 		if hackathonIDParam == "" {
@@ -67,8 +63,6 @@ func OrganizationOwnerPath(db *gorm.DB) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
-		c.Set("hackathon_dto", dto)
 
 		c.Next()
 	}

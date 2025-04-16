@@ -32,9 +32,9 @@ func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
 	}
 
 	system := router.Group("/organization")
-	protected.Use(middlewares.Auth(), middlewares.SystemRole(2))
+	system.Use(middlewares.Auth(), middlewares.SystemRole(2))
 	{
 		system.PUT("/:id/verify", organizationController.SetVerified)
-		public.GET("/full", organizationController.GetAllFull)
+		system.GET("/full", organizationController.GetAllFull)
 	}
 }

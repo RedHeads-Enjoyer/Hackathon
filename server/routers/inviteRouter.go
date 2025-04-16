@@ -9,10 +9,17 @@ import (
 
 func InviteRouter(router *gin.Engine, db *gorm.DB) {
 	inviteController := controllers.NewInviteController(db)
-	protectedOrg := router.Group("/hackathon")
-	protectedOrg.Use(middlewares.Auth(), middlewares.OrganizationOwnerPath(db))
+	protected := router.Group("/hackathon")
+	protected.Use(middlewares.Auth(), middlewares.OrganizationOwnerPath(db))
 	{
-		protectedOrg.POST("/:hackathon_id/invite/:mentor_id", inviteController.InviteMentor)
-		protectedOrg.GET("/:hackathon_id/invites", inviteController.GetMentorInvitations)
+		protected.POST("/:hackathon_id/invite/:mentor_id", inviteController.InviteMentor)
+		protected.GET("/:hackathon_id/invites", inviteController.GetMentorInvitations)
 	}
+
+	protected = router.Group("/hackathon")
+	protected.Use(middlewares.Auth())
+	{
+		protected.POST("/accept/:invite_id", inviteController.AcceptMentorInvite)
+	}
+
 }

@@ -32,6 +32,21 @@ func (hc *HackathonController) Create(c *gin.Context) {
 		return
 	}
 
+	// Извлечение ID организации из DTO или контекста
+	organizationID := dto.OrganizationID // Предполагается, что у вас есть поле OrganizationID в DTO
+
+	// Проверка статуса организации
+	var organization models.Organization
+	if err := hc.DB.First(&organization, organizationID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Организация не найдена"})
+		return
+	}
+
+	if !organization.IsVerified {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Организация не имеет права создавать хакатоны"})
+		return
+	}
+
 	// Преобразование DTO в модель
 	hackathon := dto.ToModel()
 
