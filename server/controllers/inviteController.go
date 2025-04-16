@@ -3,8 +3,11 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"log"
 	"net/http"
 	"server/models"
+	"server/types"
+	"strconv"
 )
 
 type InviteController struct {
@@ -37,9 +40,29 @@ func (hc *InviteController) InviteMentor(c *gin.Context) {
 		return
 	}
 
+	// Извлечение ID пользователя из claims
+	claims := c.MustGet("user_claims").(*types.Claims)
+	userID := claims.UserID
+
+	// Преобразование mentorID из string в uint
+	mentorIDUint, err := strconv.ParseUint(mentorID, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный идентификатор ментора"})
+		return
+	}
+
+	log.Printf(strconv.Itoa(int(userID)))
+	log.Printf(mentorIDUint)
+
+	// Проверка, что пользователь не пытается пригласить себя
+	if userID == uint(mentorIDUint) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Нельзя пригласить себя в качестве ментора"})
+		return
+	}
+
 	// Проверка, существует ли пользователь-ментор
 	var mentor models.User
-	if err := hc.DB.First(&mentor, mentorID).Error; err != nil {
+	if err := hc.DB.First(&mentor, mentorIDUint).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь-ментор не найден"})
 		return
 	}
@@ -99,10 +122,20 @@ func (hc *InviteController) AcceptMentorInvite(c *gin.Context) {
 		return
 	}
 
+	// Извлечение ID пользователя из claims
+	claims := c.MustGet("user_claims").(*types.Claims)
+	userID := claims.UserID
+
 	// Проверка, существует ли приглашение
 	var invite models.MentorInvite
 	if err := hc.DB.First(&invite, inviteID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Приглашение не найдено"})
+		return
+	}
+
+	// Проверка, что приглашение предназначено для текущего пользователя
+	if invite.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "У вас нет прав на принятие этого приглашения"})
 		return
 	}
 
@@ -113,11 +146,10 @@ func (hc *InviteController) AcceptMentorInvite(c *gin.Context) {
 	}
 
 	// Добавление ментора в хакатон с ролью 2
-	mentorID := invite.UserID
 	hackathonID := invite.HackathonID
 
 	mentorHackathon := models.BndUserHackathon{
-		UserID:        mentorID,
+		UserID:        userID,
 		HackathonID:   hackathonID,
 		HackathonRole: 2,
 	}
@@ -135,4 +167,45 @@ func (hc *InviteController) AcceptMentorInvite(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Приглашение принято"})
+}
+
+func (hc *InviteController) RejectMentorInvite(c *gin.Context) {
+	// Извлечение ID приглашения из URL
+	inviteID := c.Param("invite_id")
+	if inviteID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор приглашения"})
+		return
+	}
+
+	// Извлечение ID пользователя из claims
+	claims := c.MustGet("user_claims").(*types.Claims)
+	userID := claims.UserID
+
+	// Проверка, существует ли приглашение
+	var invite models.MentorInvite
+	if err := hc.DB.First(&invite, inviteID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Приглашение не найдено"})
+		return
+	}
+
+	// Проверка, что приглашение предназначено для текущего пользователя
+	if invite.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "У вас нет прав на отклонение этого приглашения"})
+		return
+	}
+
+	// Проверка статуса приглашения
+	if invite.Status != 0 {
+		c.JSON(http.StatusConflict, gin.H{"error": "Приглашение уже принято или отклонено"})
+		return
+	}
+
+	// Обновление статуса приглашения
+	invite.Status = -1 // Статус -1 для отклоненного приглашения
+	if err := hc.DB.Save(&invite).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при обновлении статуса приглашения", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Приглашение отклонено"})
 }
