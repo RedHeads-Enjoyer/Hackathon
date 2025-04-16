@@ -6,6 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"os"
+	"server/controllers"
 	"server/types"
 	"strings"
 )
@@ -21,6 +22,11 @@ func Auth() gin.HandlerFunc {
 		claims, err := parseToken(token)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			return
+		}
+
+		if controllers.IsTokenBlacklisted(claims.ID) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token is blacklisted"})
 			return
 		}
 

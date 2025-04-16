@@ -84,7 +84,7 @@ func validateRefreshToken(tokenString string) (*types.Claims, error) {
 		return []byte(RefreshTokenSecret), nil
 	})
 
-	if err != nil || !token.Valid || isTokenBlacklisted(claims.ID) {
+	if err != nil || !token.Valid || IsTokenBlacklisted(claims.ID) {
 		return nil, errors.New("invalid refresh token")
 	}
 
@@ -120,7 +120,7 @@ func InvalidateToken(tokenID string, expiresAt time.Time) error {
 	return initializers.Cache.Set(ctx, "blacklist:"+tokenID, "1", time.Until(expiresAt)).Err()
 }
 
-func isTokenBlacklisted(tokenID string) bool {
+func IsTokenBlacklisted(tokenID string) bool {
 	ctx := context.Background()
 	exists, err := initializers.Cache.Exists(ctx, "blacklist:"+tokenID).Result()
 	return err == nil && exists > 0

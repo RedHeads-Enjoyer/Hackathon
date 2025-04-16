@@ -194,7 +194,7 @@ func (hc *HackathonController) Update(c *gin.Context) {
 	}
 
 	// Извлечение ID хакатона из URL
-	hackathonID := c.Param("id")
+	hackathonID := c.Param("hackathon_id")
 	if hackathonID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
 		return
@@ -289,7 +289,7 @@ func (hc *HackathonController) Update(c *gin.Context) {
 }
 
 func (hc *HackathonController) GetByIDFull(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("hackathon_id")
 	var hackathon models.Hackathon
 
 	if err := hc.DB.Preload("Logo").Preload("Users").Preload("Files").Preload("Teams").Preload("Steps").Preload("Technologies").Preload("Awards").Preload("Criteria").Preload("Organization").First(&hackathon, id).Error; err != nil {
@@ -302,7 +302,7 @@ func (hc *HackathonController) GetByIDFull(c *gin.Context) {
 
 // Delete - Удаление хакатона по ID
 func (hc *HackathonController) Delete(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("hackathon_id")
 	var hackathon models.Hackathon
 
 	// Проверяем, существует ли хакатон
@@ -337,7 +337,7 @@ func (hc *HackathonController) AddUser(c *gin.Context) {
 	userID := claims.UserID
 
 	// Извлечение ID хакатона из URL
-	hackathonID := c.Param("id")
+	hackathonID := c.Param("hackathon_id")
 	if hackathonID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
 		return
@@ -373,7 +373,7 @@ func (hc *HackathonController) AddUser(c *gin.Context) {
 
 func (hc *HackathonController) GetUsers(c *gin.Context) {
 	// Извлечение ID хакатона из URL
-	hackathonID := c.Param("id")
+	hackathonID := c.Param("hackathon_id")
 	if hackathonID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
 		return

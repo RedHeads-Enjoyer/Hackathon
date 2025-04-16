@@ -13,21 +13,26 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	{
 		public.GET("", hackathonController.GetAll)
 		public.GET("/full", hackathonController.GetAllFull)
-		public.GET("/:id", hackathonController.GetByIDFull)
+		public.GET("/:hackathon_id", hackathonController.GetByIDFull)
 	}
 
-	protectedOrg := router.Group("/hackathon")
-	protectedOrg.Use(middlewares.Auth(), middlewares.OrganizationOwner(db))
+	protected := router.Group("/hackathon")
+	protected.Use(middlewares.Auth(), middlewares.OrganizationOwnerPath(db))
 	{
-		protectedOrg.PUT("/:id", hackathonController.Update)
-		protectedOrg.POST("", hackathonController.Create)
-		protectedOrg.DELETE("/:id", hackathonController.Delete)
+		protected.PUT("/:hackathon_id", hackathonController.Update)
+		protected.DELETE("/:hackathon_id", hackathonController.Delete)
 	}
 
-	protectedAuth := router.Group("/hackathon")
-	protectedAuth.Use(middlewares.Auth())
+	protected = router.Group("/hackathon")
+	protected.Use(middlewares.Auth(), middlewares.OrganizationOwnerBody(db))
 	{
-		protectedAuth.POST("/:id/join", hackathonController.AddUser)
-		protectedAuth.GET("/:id/users", hackathonController.GetUsers)
+		protected.POST("", hackathonController.Create)
+	}
+
+	protected = router.Group("/hackathon")
+	protected.Use(middlewares.Auth())
+	{
+		protected.POST("/:hackathon_id/join", hackathonController.AddUser)
+		protected.GET("/:hackathon_id/users", hackathonController.GetUsers)
 	}
 }

@@ -62,7 +62,7 @@ func (hc *InviteController) InviteMentor(c *gin.Context) {
 
 func (hc *InviteController) GetMentorInvitations(c *gin.Context) {
 	// Извлечение ID хакатона из URL
-	hackathonID := c.Param("id")
+	hackathonID := c.Param("hackathon_id")
 	if hackathonID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
 		return

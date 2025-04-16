@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 	"server/models"
 	"server/types"
@@ -144,6 +145,7 @@ func (ac *AuthController) CurrentUserHandler(c *gin.Context) {
 // LogoutHandler выполняет выход пользователя
 func (ac *AuthController) LogoutHandler(c *gin.Context) {
 	claims := c.MustGet("user_claims").(*types.Claims)
+	log.Printf("User  %d is logging out, invalidating token %s", claims.UserID, claims.ID)
 
 	if err := InvalidateToken(claims.ID, claims.ExpiresAt.Time); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Logout failed"})
