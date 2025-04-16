@@ -1,4 +1,4 @@
-package DTO
+package awardDTO
 
 import "server/models"
 

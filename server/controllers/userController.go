@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"server/models"
-	"server/models/DTO"
+	"server/models/DTO/userDTO"
 	"strconv"
 )
 
@@ -40,7 +40,7 @@ func (uc *UserController) Update(c *gin.Context) {
 	}
 	ownerID := uint(id) // Преобразование в uint
 
-	var dto DTO.UserUpdateDTO
+	var dto userDTO.UserUpdateDTO
 
 	// Привязка JSON к DTO
 	if err := c.ShouldBind(&dto); err != nil {

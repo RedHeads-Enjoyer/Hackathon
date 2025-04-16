@@ -10,16 +10,17 @@ import (
 func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
 	organizationController := controllers.NewOrganizationController(db)
 
-	public := router.Group("/organization")
-	{
-		public.GET("", organizationController.GetAll)
-		public.GET("/:id", organizationController.GetByID)
-	}
-
 	protected := router.Group("/organization")
 	protected.Use(middlewares.Auth())
 	{
 		protected.POST("", organizationController.Create)
+		protected.GET("/my", organizationController.GetMy)
+	}
+
+	public := router.Group("/organization")
+	{
+		public.GET("", organizationController.GetAll)
+		public.GET("/:id", organizationController.GetByID)
 	}
 
 	owner := router.Group("/organization")

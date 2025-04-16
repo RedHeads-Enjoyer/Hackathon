@@ -1,4 +1,4 @@
-package DTO
+package hackathonDTO
 
 import (
 	"server/models"

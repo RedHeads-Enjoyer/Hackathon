@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"server/models/DTO"
+	"server/models/DTO/technology"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -20,7 +20,7 @@ func NewTechnologyController(db *gorm.DB) *TechnologyController {
 
 // Создание технологии
 func (tc *TechnologyController) Create(c *gin.Context) {
-	var dto DTO.TechnologyCreateDTO
+	var dto technology.TechnologyCreateDTO
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных", "details": err.Error()})
@@ -70,7 +70,7 @@ func (tc *TechnologyController) GetByID(c *gin.Context) {
 // Обновление технологии
 func (tc *TechnologyController) Update(c *gin.Context) {
 	id := c.Param("id")
-	var dto DTO.TechnologyUpdateDTO
+	var dto technology.TechnologyUpdateDTO
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных", "details": err.Error()})

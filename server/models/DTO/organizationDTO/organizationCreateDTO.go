@@ -1,4 +1,4 @@
-package DTO
+package organizationDTO
 
 import "server/models"
 

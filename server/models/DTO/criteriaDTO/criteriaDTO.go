@@ -1,4 +1,4 @@
-package DTO
+package criteriaDTO
 
 import "server/models"
 

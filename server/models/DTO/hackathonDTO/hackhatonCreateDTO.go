@@ -1,7 +1,9 @@
-package DTO
+package hackathonDTO
 
 import (
 	"server/models"
+	"server/models/DTO/awardDTO"
+	"server/models/DTO/criteriaDTO"
 	"time"
 )
 
@@ -18,12 +20,12 @@ type HackathonCreateDTO struct {
 	MinTeamSize int  `json:"min_team_size" validate:"min=1"`
 	MaxTeamSize int  `json:"max_team_size" validate:"gtfield=MinTeamSize"`
 
-	OrganizationID uint                `json:"organization_id" validate:"required"`
-	Technologies   []uint              `json:"technologies" validate:"dive,min=1"`
-	Criteria       []CriteriaCreateDTO `json:"criteria" validate:"required,dive,required"`
+	OrganizationID uint                            `json:"organization_id" validate:"required"`
+	Technologies   []uint                          `json:"technologies" validate:"dive,min=1"`
+	Criteria       []criteriaDTO.CriteriaCreateDTO `json:"criteria" validate:"required,dive,required"`
 
-	Steps  []HackathonStepCreateDTO `json:"steps" validate:"required,dive,required"`
-	Awards []AwardCreateDTO         `json:"awards" validate:"required,dive,required"`
+	Steps  []HackathonStepCreateDTO  `json:"steps" validate:"required,dive,required"`
+	Awards []awardDTO.AwardCreateDTO `json:"awards" validate:"required,dive,required"`
 }
 
 func (dto *HackathonCreateDTO) ToModel() *models.Hackathon {

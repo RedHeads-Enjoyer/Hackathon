@@ -1,12 +1,15 @@
 package controllers
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 	"net/http"
 	"server/models"
-	"server/models/DTO"
+	"server/models/DTO/hackathonDTO"
+	"server/models/DTO/userDTO"
+	"server/types"
 )
 
 type HackathonController struct {
@@ -20,7 +23,7 @@ func NewHackathonController(db *gorm.DB) *HackathonController {
 
 // Создание хакатона
 func (hc *HackathonController) Create(c *gin.Context) {
-	dto := c.MustGet("hackathon_dto").(DTO.HackathonCreateDTO)
+	dto := c.MustGet("hackathon_dto").(hackathonDTO.HackathonCreateDTO)
 
 	// Валидация данных
 	validate := validator.New()
@@ -147,7 +150,7 @@ func (hc *HackathonController) GetAllFull(c *gin.Context) {
 }
 
 func (hc *HackathonController) Update(c *gin.Context) {
-	var dto DTO.HackathonUpdateDTO
+	var dto hackathonDTO.HackathonUpdateDTO
 
 	// Привязка JSON к DTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -280,4 +283,101 @@ func (hc *HackathonController) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusNoContent, nil) // Возвращаем статус 204 No Content
+}
+
+func (hc *HackathonController) AddUser(c *gin.Context) {
+	// Извлечение данных пользователя из контекста
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+
+	userID := claims.UserID
+
+	// Извлечение ID хакатона из URL
+	hackathonID := c.Param("id")
+	if hackathonID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
+		return
+	}
+
+	var hackathon models.Hackathon
+	if err := hc.DB.First(&hackathon, hackathonID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
+		return
+	}
+
+	// Проверка, не добавлен ли пользователь уже
+	var existingUser models.BndUserHackathon
+	if err := hc.DB.Where("user_id = ? AND hackathon_id = ?", userID, hackathon.ID).First(&existingUser).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Пользователь уже добавлен к хакатону"})
+		return
+	}
+
+	// Добавление пользователя к хакатону
+	userHackathon := models.BndUserHackathon{
+		UserID:        userID,
+		HackathonID:   hackathon.ID,
+		HackathonRole: 1,
+	}
+
+	if err := hc.DB.Create(&userHackathon).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при добавлении пользователя к хакатону", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Пользователь успешно добавлен к хакатону"})
+}
+
+func (hc *HackathonController) GetUsers(c *gin.Context) {
+	// Извлечение ID хакатона из URL
+	hackathonID := c.Param("id")
+	if hackathonID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
+		return
+	}
+
+	var hackathon models.Hackathon
+	// Поиск хакатона по ID и предзагрузка связанных пользователей
+	if err := hc.DB.Preload("Users").First(&hackathon, hackathonID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении хакатона", "details": err.Error()})
+		return
+	}
+
+	// Извлечение пользователей из связанной структуры
+	var usersWithRoles []userDTO.UserWithHackathonRoleDTO
+	for _, userHackathon := range hackathon.Users {
+		var user models.User
+		if err := hc.DB.First(&user, userHackathon.UserID).Error; err == nil {
+			avatarURL := ""
+			if user.Avatar != nil {
+				avatarURL = user.Avatar.URL // Проверяем, что Avatar не nil
+			}
+			usersWithRoles = append(usersWithRoles, userDTO.UserWithHackathonRoleDTO{
+				Username:      user.Username,
+				Email:         user.Email,
+				SystemRole:    user.SystemRole,             // Системная роль пользователя
+				Avatar:        avatarURL,                   // Аватар пользователя
+				HackathonRole: userHackathon.HackathonRole, // Роль пользователя в хакатоне
+			})
+		}
+	}
+
+	if len(usersWithRoles) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Пользователи не найдены для данного хакатона"})
+		return
+	}
+
+	c.JSON(http.StatusOK, usersWithRoles)
 }

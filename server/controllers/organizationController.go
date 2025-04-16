@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"server/models"
-	"server/models/DTO"
+	"server/models/DTO/organizationDTO"
 	"server/types"
 )
 
@@ -22,7 +22,7 @@ func NewOrganizationController(db *gorm.DB) *OrganizationController {
 
 // Create - Создание новой организации
 func (oc *OrganizationController) Create(c *gin.Context) {
-	var dto DTO.OrganizationCreateDTO
+	var dto organizationDTO.OrganizationCreateDTO
 
 	// Привязка JSON к DTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -109,7 +109,7 @@ func (oc *OrganizationController) GetByID(c *gin.Context) {
 
 func (oc *OrganizationController) Update(c *gin.Context) {
 	id := c.Param("id")
-	var dto DTO.OrganizationUpdateDTO
+	var dto organizationDTO.OrganizationUpdateDTO
 
 	// Привязка JSON к DTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -207,4 +207,34 @@ func (oc *OrganizationController) SetVerified(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, organization)
+}
+
+func (oc *OrganizationController) GetMy(c *gin.Context) {
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		c.Abort()
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		c.Abort()
+		return
+	}
+
+	// Получение идентификатора пользователя
+	userID := claims.UserID
+
+	// Поиск организаций, связанных с пользователем
+	var organizations []models.Organization
+	if err := oc.DB.Where("owner_id = ?", userID).Find(&organizations).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении организаций"})
+		c.Abort()
+		return
+	}
+
+	// Возврат списка организаций
+	c.JSON(http.StatusOK, organizations)
 }

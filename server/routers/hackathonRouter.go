@@ -16,11 +16,18 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 		public.GET("/:id", hackathonController.GetByIDFull)
 	}
 
-	protected := router.Group("/hackathon")
-	protected.Use(middlewares.Auth(), middlewares.OrganizationOwner(db))
+	protectedOrg := router.Group("/hackathon")
+	protectedOrg.Use(middlewares.Auth(), middlewares.OrganizationOwner(db))
 	{
-		protected.PUT("/:id", hackathonController.Update)
-		protected.POST("", hackathonController.Create)
-		protected.DELETE("/:id", hackathonController.Delete)
+		protectedOrg.PUT("/:id", hackathonController.Update)
+		protectedOrg.POST("", hackathonController.Create)
+		protectedOrg.DELETE("/:id", hackathonController.Delete)
+	}
+
+	protectedAuth := router.Group("/hackathon")
+	protectedAuth.Use(middlewares.Auth())
+	{
+		protectedAuth.POST("/:id/join", hackathonController.AddUser)
+		protectedAuth.GET("/:id/users", hackathonController.GetUsers)
 	}
 }

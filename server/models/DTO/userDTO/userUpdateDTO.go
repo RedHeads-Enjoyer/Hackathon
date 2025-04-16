@@ -1,4 +1,4 @@
-package DTO
+package userDTO
 
 import "server/models"
 

@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"server/models"
-	"server/models/DTO"
+	"server/models/DTO/hackathonDTO"
 	"server/types"
 	"strconv"
 )
@@ -13,7 +13,7 @@ import (
 func OrganizationOwner(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var orgID uint
-		var dto DTO.HackathonCreateDTO
+		var dto hackathonDTO.HackathonCreateDTO
 		// Проверка метода запроса
 		if c.Request.Method == http.MethodPost || c.Request.Method == http.MethodPut {
 
