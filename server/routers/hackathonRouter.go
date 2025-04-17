@@ -37,8 +37,20 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	}
 
 	protected = router.Group("/hackathon")
+	protected.Use(middlewares.Auth(), middlewares.HackathonParticipant(db))
+	{
+		protected.GET("/:hackathon_id/team", hackathonController.GetTeams)
+	}
+
+	protected = router.Group("/hackathon")
 	protected.Use(middlewares.Auth(), middlewares.HackathonParticipant(db), middlewares.HackathonRoleLover(db, 2))
 	{
 		protected.POST("/:hackathon_id/team", hackathonController.CreateTeam)
+	}
+
+	protected = router.Group("/hackathon")
+	protected.Use(middlewares.Auth(), middlewares.HackathonParticipant(db), middlewares.HackathonRoleLover(db, 2), middlewares.TeamRole(db, 2))
+	{
+		protected.PUT("/:hackathon_id/team/:team_id", hackathonController.UpdateTeam)
 	}
 }

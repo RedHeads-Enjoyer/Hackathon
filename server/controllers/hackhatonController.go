@@ -476,13 +476,20 @@ func (hc *HackathonController) CreateTeam(c *gin.Context) {
 	}
 
 	var hackathon models.Hackathon
-	// Поиск хакатона по ID и предзагрузка связанных пользователей
+	// Поиск хакатона по ID
 	if err := hc.DB.First(&hackathon, hackathonID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении хакатона", "details": err.Error()})
+		return
+	}
+
+	// Проверка, состоит ли пользователь уже в команде в этом хакатоне
+	var userTeam models.BndUserTeam
+	if err := hc.DB.Where("user_id = ? AND team_id IN (SELECT id FROM teams WHERE hackathon_id = ?)", userID, hackathonID).First(&userTeam).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Пользователь уже состоит в команде в этом хакатоне"})
 		return
 	}
 
@@ -497,7 +504,7 @@ func (hc *HackathonController) CreateTeam(c *gin.Context) {
 	}
 
 	// Добавление создателя команды
-	userTeam := models.BndUserTeam{
+	userTeam = models.BndUserTeam{
 		UserID:   userID,
 		TeamID:   teamModel.ID,
 		TeamRole: 2,
@@ -509,4 +516,90 @@ func (hc *HackathonController) CreateTeam(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, teamModel)
+}
+
+func (hc *HackathonController) GetTeams(c *gin.Context) {
+	hackathonIDStr := c.Param("hackathon_id")
+	if hackathonIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
+		return
+	}
+
+	// Преобразование ID хакатона из строки в uint
+	hackathonID, err := strconv.ParseUint(hackathonIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный идентификатор хакатона"})
+		return
+	}
+
+	var teams []models.Team
+	// Поиск команд по ID хакатона с предзагрузкой участников
+	if err := hc.DB.Preload("Users").Where("hackathon_id = ?", hackathonID).Find(&teams).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении команд", "details": err.Error()})
+		return
+	}
+
+	// Формирование упрощённого ответа
+	var teamDTOs []teamDTO.GetDTO
+	for _, team := range teams {
+		var userDTOs []userDTO.GetUserInTeamMini
+		for _, userTeam := range team.Users {
+			userDTOs = append(userDTOs, userDTO.GetUserInTeamMini{
+				UserID:   userTeam.UserID,
+				TeamRole: userTeam.TeamRole,
+				Username: userTeam.User.Username, // Предполагается, что у вас есть поле Username в модели User
+			})
+		}
+		teamDTOs = append(teamDTOs, teamDTO.GetDTO{
+			ID:          team.ID,
+			Name:        team.Name,
+			HackathonID: team.HackathonID,
+			Users:       userDTOs,
+		})
+	}
+
+	c.JSON(http.StatusOK, teamDTOs)
+}
+
+func (hc *HackathonController) UpdateTeam(c *gin.Context) {
+	var team teamDTO.UpdateDTO
+	if err := c.ShouldBindJSON(&team); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка валидации данных", "details": err.Error()})
+		return
+	}
+
+	teamIDStr := c.Param("team_id")
+	if teamIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор команды"})
+		return
+	}
+
+	// Преобразование ID команды из строки в uint
+	teamID, err := strconv.ParseUint(teamIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный идентификатор команды"})
+		return
+	}
+
+	var existingTeam models.Team
+	// Поиск команды по ID
+	if err := hc.DB.First(&existingTeam, teamID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Команда не найдена"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении команды", "details": err.Error()})
+		return
+	}
+
+	// Обновление данных команды с использованием метода ToModel
+	updatedTeam := team.ToModel(existingTeam)
+
+	// Сохранение изменений в базе данных
+	if err := hc.DB.Save(updatedTeam).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при обновлении команды", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, updatedTeam) // Возвращаем обновлённую команду
 }
