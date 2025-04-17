@@ -3,7 +3,6 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"log"
 	"net/http"
 	"server/models"
 	"server/types"
@@ -50,9 +49,6 @@ func (hc *InviteController) InviteMentor(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный идентификатор ментора"})
 		return
 	}
-
-	log.Printf(strconv.Itoa(int(userID)))
-	log.Printf(mentorIDUint)
 
 	// Проверка, что пользователь не пытается пригласить себя
 	if userID == uint(mentorIDUint) {
@@ -208,4 +204,19 @@ func (hc *InviteController) RejectMentorInvite(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Приглашение отклонено"})
+}
+
+func (hc *InviteController) GetInvitesToMe(c *gin.Context) {
+	// Извлечение ID пользователя из claims
+	claims := c.MustGet("user_claims").(*types.Claims)
+	userID := claims.UserID
+
+	// Получение приглашений для указанного пользователя
+	var invitations []models.MentorInvite
+	if err := hc.DB.Where("user_id = ?", userID).Find(&invitations).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении приглашений", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, invitations)
 }

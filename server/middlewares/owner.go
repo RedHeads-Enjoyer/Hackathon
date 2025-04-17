@@ -1,18 +1,18 @@
 package middlewares
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"net/http"
+	"server/models"
 	"server/types"
-	"strconv"
 )
 
-func Owner() gin.HandlerFunc {
+func Owner(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ownerID := c.Param("id")
-		if ownerID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор пользователя"})
+		orgId := c.Param("id")
+		if orgId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор организации"})
 			c.Abort()
 			return
 		}
@@ -31,23 +31,18 @@ func Owner() gin.HandlerFunc {
 			return
 		}
 
-		var ownerIDUint uint
-		if parsedID, err := strconv.ParseUint(ownerID, 10, 32); err == nil {
-			ownerIDUint = uint(parsedID)
-		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный идентификатор пользователя"})
+		var org models.Organization
+		if err := db.First(&org, orgId).Error; err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Организация не найдена"})
 			c.Abort()
 			return
 		}
 
-		if ownerIDUint != claims.UserID && claims.SystemRole == 1 {
+		if org.OwnerID != claims.UserID && claims.SystemRole == 1 {
 			c.JSON(http.StatusForbidden, gin.H{"error": "У вас нет прав на выполнение этого действия"})
 			c.Abort()
 			return
 		}
-
-		fmt.Println(ownerIDUint != claims.UserID)
-		fmt.Println(claims.SystemRole)
 
 		c.Next()
 	}

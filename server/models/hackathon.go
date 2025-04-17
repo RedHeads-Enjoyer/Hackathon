@@ -23,8 +23,8 @@ type Hackathon struct {
 	StatusID uint `gorm:"not null;default:1" json:"-"`
 	Status   int  `gorm:"not null" json:"status"`
 
-	OrganizationID uint         `gorm:"not null" json:"organization_id"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID" json:"organization"`
+	OrganizationID uint          `gorm:"not null" json:"organization_id"`
+	Organization   *Organization `gorm:"foreignKey:OrganizationID" json:"organization,omitempty"`
 
 	Logo         *File              `gorm:"polymorphic:Owner;polymorphicValue:hackathon"`
 	Users        []BndUserHackathon `gorm:"foreignKey:HackathonID" json:"-"`

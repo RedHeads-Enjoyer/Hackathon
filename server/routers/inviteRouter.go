@@ -21,6 +21,7 @@ func InviteRouter(router *gin.Engine, db *gorm.DB) {
 	{
 		protected.POST("/accept/:invite_id", inviteController.AcceptMentorInvite)
 		protected.POST("/reject/:invite_id", inviteController.RejectMentorInvite)
+		protected.GET("/invites/in", inviteController.GetInvitesToMe)
 	}
 
 }

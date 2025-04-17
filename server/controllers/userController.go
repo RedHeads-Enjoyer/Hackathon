@@ -22,7 +22,7 @@ func NewUserController(db *gorm.DB, fileController *FileController) *UserControl
 func (uc *UserController) GetAll(c *gin.Context) {
 	var users []models.User
 	// Предварительная загрузка связанных данных
-	if err := uc.DB.Preload("SystemRole").Preload("Avatar").Find(&users).Error; err != nil {
+	if err := uc.DB.Preload("Avatar").Find(&users).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении пользователей", "details": err.Error()})
 		return
 	}
@@ -100,7 +100,7 @@ func (uc *UserController) GetByID(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := uc.DB.Preload("SystemRole").Preload("Avatar").First(&user, id).Error; err != nil {
+	if err := uc.DB.Preload("Avatar").First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
 		} else {

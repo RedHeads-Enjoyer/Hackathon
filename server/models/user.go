@@ -12,7 +12,7 @@ type User struct {
 
 	Avatar       *File              `gorm:"polymorphic:Owner;polymorphicValue:user"`
 	Hackathons   []BndUserHackathon `gorm:"foreignKey:UserID" json:"-"`
-	Teams        []Team             `gorm:"many2many:user_team" json:"-"`
+	Teams        []BndUserTeam      `gorm:"foreignKey:UserID" json:"teams,omitempty"`
 	Technologies []Technology       `gorm:"many2many:user_technologies;" json:"technologies,omitempty"`
 
 	Chats    []Chat        `gorm:"many2many:user_chat" json:"-"`

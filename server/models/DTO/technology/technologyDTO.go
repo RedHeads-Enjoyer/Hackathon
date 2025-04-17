@@ -3,7 +3,7 @@ package technology
 import "server/models"
 
 type TechnologyCreateDTO struct {
-	Name        string `json:"name" validate:"required,min=3,max=50"`
+	Name        string `json:"name" validate:"required,min=1,max=50"`
 	Description string `json:"description,omitempty" validate:"max=255"`
 }
 

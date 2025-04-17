@@ -26,6 +26,7 @@ func SyncDatabase() {
 		&models.Score{},
 		&models.TeamInvite{},
 		&models.MentorInvite{},
+		&models.BndUserTeam{},
 	}
 
 	for _, model := range modelsOrder {

@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"server/models"
 	"server/models/DTO/hackathonDTO"
+	"server/models/DTO/teamDTO"
 	"server/models/DTO/userDTO"
 	"server/types"
+	"strconv"
 )
 
 type HackathonController struct {
@@ -96,6 +98,22 @@ func (hc *HackathonController) Create(c *gin.Context) {
 			return
 		}
 		hackathon.Awards = append(hackathon.Awards, awardModel)
+	}
+
+	for _, techID := range dto.Technologies {
+		var technology models.Technology
+		if err := tx.First(&technology, techID).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Технология не найдена", "details": err.Error()})
+			tx.Rollback()
+			return
+		}
+
+		// Связываем технологию с хакатоном
+		if err := tx.Model(&hackathon).Association("Technologies").Append(&technology); err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при связывании технологии с хакатоном", "details": err.Error()})
+			return
+		}
 	}
 
 	//if file, err := c.FormFile("logo"); err == nil {
@@ -430,4 +448,65 @@ func (hc *HackathonController) GetUsers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, usersWithRoles)
+}
+
+func (hc *HackathonController) CreateTeam(c *gin.Context) {
+	var team teamDTO.CreateDTO
+	if err := c.ShouldBindJSON(&team); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка валидации данных", "details": err.Error()})
+		return
+	}
+
+	// Извлечение ID пользователя из claims
+	claims := c.MustGet("user_claims").(*types.Claims)
+	userID := claims.UserID
+
+	// Извлечение ID хакатона из URL
+	hackathonIDStr := c.Param("hackathon_id")
+	if hackathonIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
+		return
+	}
+
+	// Преобразование ID хакатона из строки в uint
+	hackathonID, err := strconv.ParseUint(hackathonIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный идентификатор хакатона"})
+		return
+	}
+
+	var hackathon models.Hackathon
+	// Поиск хакатона по ID и предзагрузка связанных пользователей
+	if err := hc.DB.First(&hackathon, hackathonID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении хакатона", "details": err.Error()})
+		return
+	}
+
+	// Установка HackathonID в модель команды
+	teamModel := team.ToModel()
+	teamModel.HackathonID = uint(hackathonID) // Убедитесь, что HackathonID установлен
+
+	// Создание команды
+	if err := hc.DB.Create(&teamModel).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании команды", "details": err.Error()})
+		return
+	}
+
+	// Добавление создателя команды
+	userTeam := models.BndUserTeam{
+		UserID:   userID,
+		TeamID:   teamModel.ID,
+		TeamRole: 2,
+	}
+
+	if err := hc.DB.Create(&userTeam).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при добавлении пользователя в команду", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, teamModel)
 }

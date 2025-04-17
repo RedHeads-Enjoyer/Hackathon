@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
@@ -42,6 +43,9 @@ func OrganizationOwnerBody(db *gorm.DB) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		fmt.Println(organization.OwnerID)
+		fmt.Println(claims.UserID)
 
 		if organization.OwnerID != claims.UserID && claims.SystemRole == 1 {
 			c.JSON(http.StatusForbidden, gin.H{"error": "У вас нет прав на выполнение этого действия"})
