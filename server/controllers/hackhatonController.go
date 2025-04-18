@@ -433,6 +433,7 @@ func (hc *HackathonController) GetUsers(c *gin.Context) {
 				avatarURL = user.Avatar.URL // Проверяем, что Avatar не nil
 			}
 			usersWithRoles = append(usersWithRoles, userDTO.UserWithHackathonRoleDTO{
+				Id:            user.ID,
 				Username:      user.Username,
 				Email:         user.Email,
 				SystemRole:    user.SystemRole,
@@ -556,6 +557,11 @@ func (hc *HackathonController) GetTeams(c *gin.Context) {
 			HackathonID: team.HackathonID,
 			Users:       userDTOs,
 		})
+	}
+
+	if len(teamDTOs) == 0 {
+		c.JSON(http.StatusOK, []interface{}{})
+		return
 	}
 
 	c.JSON(http.StatusOK, teamDTOs)

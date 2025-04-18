@@ -9,16 +9,15 @@ import (
 	"strconv"
 )
 
-type InviteController struct {
-	DB             *gorm.DB
-	FileController *FileController
+type MentorInviteController struct {
+	DB *gorm.DB
 }
 
-func NewInviteController(db *gorm.DB) *InviteController {
-	return &InviteController{DB: db}
+func NewInviteController(db *gorm.DB) *MentorInviteController {
+	return &MentorInviteController{DB: db}
 }
 
-func (hc *InviteController) InviteMentor(c *gin.Context) {
+func (hc *MentorInviteController) InviteMentor(c *gin.Context) {
 	// Извлечение ID хакатона из URL
 	hackathonID := c.Param("hackathon_id")
 	if hackathonID == "" {
@@ -85,7 +84,7 @@ func (hc *InviteController) InviteMentor(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Приглашение для ментора успешно отправлено"})
 }
 
-func (hc *InviteController) GetMentorInvitations(c *gin.Context) {
+func (hc *MentorInviteController) GetMentorInvitations(c *gin.Context) {
 	// Извлечение ID хакатона из URL
 	hackathonID := c.Param("hackathon_id")
 	if hackathonID == "" {
@@ -110,7 +109,7 @@ func (hc *InviteController) GetMentorInvitations(c *gin.Context) {
 	c.JSON(http.StatusOK, invitations)
 }
 
-func (hc *InviteController) AcceptMentorInvite(c *gin.Context) {
+func (hc *MentorInviteController) AcceptMentorInvite(c *gin.Context) {
 	// Извлечение ID приглашения из URL
 	inviteID := c.Param("invite_id")
 	if inviteID == "" {
@@ -165,7 +164,7 @@ func (hc *InviteController) AcceptMentorInvite(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Приглашение принято"})
 }
 
-func (hc *InviteController) RejectMentorInvite(c *gin.Context) {
+func (hc *MentorInviteController) RejectMentorInvite(c *gin.Context) {
 	// Извлечение ID приглашения из URL
 	inviteID := c.Param("invite_id")
 	if inviteID == "" {
@@ -206,7 +205,7 @@ func (hc *InviteController) RejectMentorInvite(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Приглашение отклонено"})
 }
 
-func (hc *InviteController) GetInvitesToMe(c *gin.Context) {
+func (hc *MentorInviteController) GetInvitesToMe(c *gin.Context) {
 	// Извлечение ID пользователя из claims
 	claims := c.MustGet("user_claims").(*types.Claims)
 	userID := claims.UserID

@@ -40,7 +40,7 @@ func HackathonRoleLover(db *gorm.DB, level int) gin.HandlerFunc {
 		}
 
 		if userHackathon.HackathonRole >= level {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Вы не можете создать команду"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ваша роль не соответствует"})
 			c.Abort()
 			return
 		}

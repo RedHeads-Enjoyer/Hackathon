@@ -9,6 +9,7 @@ import (
 
 func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	hackathonController := controllers.NewHackathonController(db)
+	inviteTeamController := controllers.NewTeamInviteController(db)
 	public := router.Group("/hackathon")
 	{
 		public.GET("", hackathonController.GetAll)
@@ -46,11 +47,14 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	protected.Use(middlewares.Auth(), middlewares.HackathonParticipant(db), middlewares.HackathonRoleLover(db, 2))
 	{
 		protected.POST("/:hackathon_id/team", hackathonController.CreateTeam)
+		protected.GET("/:hackathon_id/team/invite", inviteTeamController.GetTeamInvitesForMe)
 	}
 
 	protected = router.Group("/hackathon")
 	protected.Use(middlewares.Auth(), middlewares.HackathonParticipant(db), middlewares.HackathonRoleLover(db, 2), middlewares.TeamRole(db, 2))
 	{
 		protected.PUT("/:hackathon_id/team/:team_id", hackathonController.UpdateTeam)
+		protected.POST("/:hackathon_id/team/:team_id/invite/:user_id", inviteTeamController.InviteUser)
+
 	}
 }
