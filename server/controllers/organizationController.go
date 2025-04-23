@@ -304,7 +304,9 @@ func (oc *OrganizationController) GetMy(c *gin.Context) {
 
 	// Возвращаем данные с информацией о пагинации
 	c.JSON(http.StatusOK, gin.H{
-		"list":  organizations,
-		"total": totalCount,
+		"list":   organizations,
+		"total":  totalCount,
+		"limit":  filterData.Limit,
+		"offset": filterData.Offset,
 	})
 }

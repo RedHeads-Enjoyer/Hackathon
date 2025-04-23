@@ -1,20 +1,33 @@
 import React, {useState} from 'react';
 import classes from '../style.module.css';
-import {OrganizationFilterData} from '../types.ts';
+import {FilterUpdate, OrganizationFilterData, SelectOption} from '../types.ts';
 import Input from "../../../components/input/Input.tsx";
 import Button from "../../../components/button/Button.tsx";
 import Pagination from "../../../components/pagination/Pagination.tsx";
+import Select from "../../../components/select/Select.tsx";
 
 type OrganizationFilterProps = {
     filterData: OrganizationFilterData;
-    setFilterData: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    setFilterData: (update: FilterUpdate | React.ChangeEvent<HTMLInputElement>) => void;
     onResetFilters: () => void;
     onSearch: () => void;
-    onPaginationChange: (n: number) => void
 };
 
-const OrganizationFilter = ({filterData, setFilterData, onResetFilters, onSearch, onPaginationChange}: OrganizationFilterProps) => {
+const OrganizationFilter = ({filterData, setFilterData, onResetFilters, onSearch}: OrganizationFilterProps) => {
     const [isExpanded, setIsExpanded] = useState<boolean>(false)
+
+    const statusOptions: SelectOption[] = [
+        {value: -1, label: "Отклонена"},
+        {value: 0,  label: "Не рассмотрена"},
+        {value: 1, label: "Подтверждена"},
+    ]
+
+    const handlePaginationChange = (page: number) => {
+        setFilterData({
+            name: 'offset',
+            value: (page - 1) * filterData.limit
+        });
+    };
 
     return (
         <div className={classes.expandedCard}>
@@ -29,7 +42,7 @@ const OrganizationFilter = ({filterData, setFilterData, onResetFilters, onSearch
                         currentPage={Math.floor(filterData.offset / filterData.limit) + 1}
                         itemsPerPage={filterData.limit}
                         totalItems={filterData.total}
-                        onPageChange={onPaginationChange}/>
+                        onPageChange={handlePaginationChange}/>
                 </div>
             </div>
 
@@ -40,7 +53,7 @@ const OrganizationFilter = ({filterData, setFilterData, onResetFilters, onSearch
                             label="Полное название"
                             type="text"
                             value={filterData.legalName}
-                            onChange={setFilterData}
+                            onChange={(e) => setFilterData(e)}
                             name="legalName"
                             placeholder="Введите полное название"
                         />
@@ -49,7 +62,7 @@ const OrganizationFilter = ({filterData, setFilterData, onResetFilters, onSearch
                             label="Email"
                             type="text"
                             value={filterData.contactEmail}
-                            onChange={setFilterData}
+                            onChange={(e) => setFilterData(e)}
                             name="contactEmail"
                             placeholder="Введите email"
                         />
@@ -57,7 +70,7 @@ const OrganizationFilter = ({filterData, setFilterData, onResetFilters, onSearch
                             label="ИНН"
                             type="textNumber"
                             value={filterData.INN}
-                            onChange={setFilterData}
+                            onChange={(e) => setFilterData(e)}
                             name="INN"
                             placeholder="Введите ИНН"
                         />
@@ -65,7 +78,7 @@ const OrganizationFilter = ({filterData, setFilterData, onResetFilters, onSearch
                             label="ОГРН"
                             type="textNumber"
                             value={filterData.OGRN}
-                            onChange={setFilterData}
+                            onChange={(e) => setFilterData(e)}
                             name="OGRN"
                             placeholder="Введите ОГРН"
                         />
@@ -73,9 +86,19 @@ const OrganizationFilter = ({filterData, setFilterData, onResetFilters, onSearch
                             label="Вебсайт"
                             type="text"
                             value={filterData.website}
-                            onChange={setFilterData}
+                            onChange={(e) => setFilterData(e)}
                             name="website"
                             placeholder="Введите ссылку"
+                        />
+                        <Select
+                            label="Статус организации"
+                            options={statusOptions}
+                            value={filterData.status}
+                            onChange={(value) => setFilterData({
+                                name: 'status',
+                                value: value
+                            })}
+                            placeholder="Выберите статус"
                         />
                     </div>
                     <div className={classes.filterControls}>

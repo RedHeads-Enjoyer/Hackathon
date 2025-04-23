@@ -1,12 +1,13 @@
 import React, {useEffect, useState} from 'react';
 import classes from './style.module.css';
 import PageLabel from "../../components/pageLabel/PageLabel.tsx";
-import {OrganizationFilterData, OrganizationSearchData} from "./types.ts";
+import {FilterUpdate, OrganizationFilterData, OrganizationSearchData} from "./types.ts";
 import Loader from "../../components/loader/Loader.tsx";
 import {OrganizationAPI} from "./organizationAPI.ts";
 import Error from "../../components/error/Error.tsx";
 import OrganizationItem from "./Components/OrganizationItem.tsx";
 import OrganizationFilter from "./Components/OrganizationsFilter.tsx";
+
 
 const MyOrganizationsPage = () => {
     const initialFilterData: OrganizationFilterData = {
@@ -33,7 +34,11 @@ const MyOrganizationsPage = () => {
 
     useEffect(() => {
         searchOrganizations()
-    }, [])
+    }, [filterData.offset])
+
+    useEffect(() => {
+        console.log(filterData)
+    }, [filterData]);
 
     const searchOrganizations = () => {
         setSearhLoading(true)
@@ -59,24 +64,31 @@ const MyOrganizationsPage = () => {
         })
     }
 
-    useEffect(() => {
-        handleSearch();
-    }, [filterData.offset]);
+    const handleFilterChange = (update: FilterUpdate | React.ChangeEvent<HTMLInputElement>) => {
+        let name: keyof OrganizationFilterData;
+        let value: any;
 
-    const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFilterData(prevData => ({
-            ...prevData,
-            [name]: value,
-        }));
+        if ('target' in update) {
+            name = update.target.name as keyof OrganizationFilterData;
+            value = update.target.value;
+        } else {
+            name = update.name;
+            value = update.value;
+        }
+
+        setFilterData(prev => {
+            const newState = {
+                ...prev,
+                [name]: name === 'status' || name === 'limit' || name === 'offset' ? Number(value) : value
+            };
+
+            if (name !== 'offset') {
+                newState.offset = 0;
+            }
+
+            return newState;
+        });
     };
-
-    const handlePaginationChange = (n: number) => {
-        setFilterData(prevState => ({
-            ...prevState,
-            offset: (n - 1) * prevState.limit
-        }));
-    }
 
     const handleResetFilters = () => {
         setFilterData(initialFilterData)
@@ -95,7 +107,6 @@ const MyOrganizationsPage = () => {
                 setFilterData={handleFilterChange}
                 onResetFilters={handleResetFilters}
                 onSearch={handleSearch}
-                onPaginationChange={handlePaginationChange}
             />
             {searchLoading ? <Loader/> :
                 organizations.list?.length > 0 ? (

@@ -1,3 +1,5 @@
+import {stat} from "node:fs";
+
 export type OrganizationCreate = {
     legalName: string,
     INN: string,
@@ -41,3 +43,13 @@ export type OrganizationSearchData = {
     list: Organization[],
     total: number
 }
+
+export type SelectOption = {
+    value: number
+    label: string
+}
+
+export type FilterUpdate = {
+    name: keyof OrganizationFilterData;
+    value: any;
+};
