@@ -76,13 +76,33 @@ const CreateOrganizationPage: React.FC = () => {
             errors.legalName = "Полное название не может быть пустым";
         }
 
+        if (!formData.INN) {
+            errors.INN = "ИНН не может быть пустым";
+        } else if(formData.INN.length != 12) {
+            errors.INN = "Длина ИНН должна быть 12 символов";
+        }
+
+        if (!formData.OGRN) {
+            errors.OGRN = "ОГРН не может быть пустым";
+        } else if(formData.OGRN.length != 12) {
+            errors.INN = "Длина ОГРН должна быть 13 символов";
+        }
 
         if (!formData.contactEmail) {
             errors.contactEmail = "Контактный email не может быть пустым";
         } else {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(formData.contactEmail)) {
-                errors.contactEmail = "Email не верного формата";
+                errors.contactEmail = "Не корректный Email";
+            }
+        }
+
+        if (!formData.website) {
+            errors.website = "Вебсайт не может быть пустым";
+        } else {
+            const baseUrlRegex = /^((http|https|ftp):\/\/)?(([A-Z0-9][A-Z0-9_-]*)(\.[A-Z0-9][A-Z0-9_-]*)+)/i;
+            if (!baseUrlRegex.test(formData.website)) {
+                errors.website = "Не корректный вебсайт";
             }
         }
         return errors;
@@ -90,9 +110,7 @@ const CreateOrganizationPage: React.FC = () => {
 
 
     const handlePublishClick = () => {
-        if (validateForm()) {
-            setIsPublishModalOpen(true);
-        }
+        setIsPublishModalOpen(true);
     };
 
     return (
@@ -105,7 +123,7 @@ const CreateOrganizationPage: React.FC = () => {
                     type="text"
                     value={formData.legalName}
                     onChange={handleChange}
-                    name="name"
+                    name="legalName"
                     placeholder="Введите полное название"
                     required
                     error={formErrors.legalName}
@@ -116,34 +134,39 @@ const CreateOrganizationPage: React.FC = () => {
                 <Input
                     label="Коротное название"
                     type="text"
-                    value={formData.legalName}
+                    value={formData.shortLegalName}
                     onChange={handleChange}
-                    name="name"
+                    name="shortLegalName"
                     placeholder="Введите полное название"
+                    error={formErrors.shortLegalName}
                 />
             </div>
 
             <div className={classes.text_info}>
                 <Input
                     label="ИНН"
-                    type="text"
+                    type="textNumber"
                     value={formData.INN}
                     onChange={handleChange}
                     name="INN"
                     placeholder="Введите ИНН"
+                    maxLength={12}
                     required
+                    error={formErrors.INN}
                 />
             </div>
 
             <div className={classes.text_info}>
                 <Input
                     label="ОГРН"
-                    type="text"
+                    type="textNumber"
                     value={formData.OGRN}
                     onChange={handleChange}
                     name="OGRN"
                     placeholder="Введите ОГРН"
+                    maxLength={13}
                     required
+                    error={formErrors.OGRN}
                 />
             </div>
 
@@ -156,6 +179,7 @@ const CreateOrganizationPage: React.FC = () => {
                     name="contactEmail"
                     placeholder="Введите контактный email"
                     required
+                    error={formErrors.contactEmail}
                 />
             </div>
 
@@ -168,6 +192,7 @@ const CreateOrganizationPage: React.FC = () => {
                     name="website"
                     placeholder="Введите ссылку"
                     required
+                    error={formErrors.website}
                 />
             </div>
 
@@ -182,8 +207,6 @@ const CreateOrganizationPage: React.FC = () => {
 
             {publishError && <Error>{publishError}</Error>}
 
-
-            {/* Модальное окно подтверждения */}
             <Modal
                 isOpen={isPublishModalOpen}
                 title={"Подтверждение создание организации"}
