@@ -32,15 +32,9 @@ api.interceptors.response.use(
     async (error: AxiosError) => {
         const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
-        // Игнорируем определенные endpoints
-        if (originalRequest.url?.includes('/auth/login') ||
-            originalRequest.url?.includes('/auth/refresh') ||
-            originalRequest.url?.includes('/auth/verify')) {
-            return Promise.reject(error);
-        }
-
         // Обработка 401 ошибки
         if (error.response?.status === 401 && !originalRequest._retry) {
+            console.log('Original request:', originalRequest);
             if (isRefreshingFailed) {
                 return Promise.reject(error);
             }
@@ -48,6 +42,7 @@ api.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
+                // Запрос на обновление токена
                 if (!refreshTokenRequest) {
                     refreshTokenRequest = authAPI.refresh().finally(() => {
                         refreshTokenRequest = null;
@@ -62,11 +57,11 @@ api.interceptors.response.use(
                     originalRequest.headers.Authorization = `Bearer ${access_token}`;
                 }
 
-                return api(originalRequest);
+                return api(originalRequest); // Повторный запрос с новым токеном
             } catch (refreshError) {
                 isRefreshingFailed = true;
                 localStorage.removeItem('access_token');
-                window.location.href = '/login';
+                window.location.href = '/login'; // Перенаправление на страницу входа
                 return Promise.reject(refreshError);
             }
         }
@@ -75,6 +70,7 @@ api.interceptors.response.use(
     }
 );
 
+// Функция для выполнения запросов
 export const request = async <T = any>(config: AxiosRequestConfig): Promise<T> => {
     try {
         const response: AxiosResponse<T> = await api(config);
@@ -82,6 +78,7 @@ export const request = async <T = any>(config: AxiosRequestConfig): Promise<T> =
     } catch (error) {
         const axiosError = error as AxiosError;
 
+        // Обработка ошибок
         if (axiosError.response) {
             const errorData = axiosError.response.data as any;
             throw new Error(errorData?.message || errorData?.error || 'Server error');

@@ -22,26 +22,22 @@ func NewAuthController(db *gorm.DB) *AuthController {
 
 // RegisterHandler регистрирует нового пользователя
 func (ac *AuthController) RegisterHandler(c *gin.Context) {
-	var input struct {
-		Email    string `json:"email"    binding:"required,email"`
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required,min=8"`
-	}
+	var registerDTO userDTO.Register
 
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&registerDTO); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	var existingUser models.User
-	if err := ac.DB.Where("email = ? OR username = ?", input.Email, input.Username).
+	if err := ac.DB.Where("email = ? OR username = ?", registerDTO.Email, registerDTO.Username).
 		First(&existingUser).Error; err == nil {
 
 		var message string
-		if existingUser.Email == input.Email {
+		if existingUser.Email == registerDTO.Email {
 			message = "Пользователь с таким email уже зарегистрирован"
 		} else {
-			message = "Этот username уже занят"
+			message = "Этот с таким именем уже зарегистрирован"
 		}
 
 		c.JSON(http.StatusConflict, gin.H{
@@ -50,17 +46,17 @@ func (ac *AuthController) RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(registerDTO.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка хеширования пароля"})
 		return
 	}
 
-	defaultRoleID := int(3)
+	defaultRoleID := int(1)
 
 	user := models.User{
-		Email:      input.Email,
-		Username:   input.Username,
+		Email:      registerDTO.Email,
+		Username:   registerDTO.Username,
 		Password:   string(hashedPassword),
 		SystemRole: defaultRoleID,
 	}

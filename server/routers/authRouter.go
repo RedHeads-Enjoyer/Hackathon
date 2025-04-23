@@ -20,6 +20,9 @@ func AuthRouter(router *gin.Engine, db *gorm.DB) {
 	protected := router.Group("/auth")
 	protected.Use(middlewares.Auth())
 	{
+		protected.GET("/ping", func(context *gin.Context) {
+			context.JSON(200, gin.H{"message": "pong"})
+		})
 		protected.GET("/verify", authController.CurrentUserHandler)
 		protected.POST("/logout", authController.LogoutHandler)
 	}

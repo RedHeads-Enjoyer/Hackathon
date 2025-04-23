@@ -20,13 +20,12 @@
     transform: translateY(0);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     border: 1px solid var(--input-border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.form_container:hover {
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
-}
 
-/* Заголовок формы */
 .form_container h1 {
     color: var(--light-text-color);
     font-size: 28px;
@@ -43,7 +42,6 @@
 /* Кнопка входа */
 .button {
     width: 100%;
-    margin-top: 10px;
     padding: 14px;
     font-size: 16px;
     font-weight: 600;
@@ -71,7 +69,6 @@
     justify-content: center;
     align-items: center;
     gap: 8px;
-    margin-top: 25px;
     color: var(--muted-text-color);
     font-size: 14px;
 }

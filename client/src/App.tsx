@@ -7,7 +7,7 @@ import Logout from "./modules/auth/Logout";
 import {ProtectedRoute} from "./components/protectedRoute/ProtectedRoute";
 import {loginSuccess} from "./modules/auth/store/authSlice.ts";
 import {authAPI} from "./modules/auth/authAPI.ts";
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import {useAppDispatch} from "./store/hooks.ts";
 import StoreDebugger from "./components/storeDebugger/StoreDebugger.tsx";
 import NotFound from "./modules/auth/NotFound.tsx";
@@ -19,37 +19,39 @@ import UserList from "./modules/user/UserList.tsx";
 
 function App() {
     const dispatch = useAppDispatch();
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const initializeAuth = async () => {
             const token = localStorage.getItem('access_token');
-            if (!token) return;
-
+            if (!token) {
+                setLoading(false);
+                return
+            }
             try {
+                console.log("ver")
                 const userData = await authAPI.verify();
                 dispatch(loginSuccess(userData));
             } catch (error) {
                 dispatch(logout());
+            } finally {
+                setLoading(false)
             }
         };
 
         initializeAuth();
     }, [dispatch]);
 
+    if (loading) {
+        return <div>Loading...</div>; // Можно заменить на компонент загрузки
+    }
+
     return (
         <Router>
             <Header/>
             <Routes>
-                <Route path="/" element={
-                    <ProtectedRoute>
-                        <HackathonList />
-                    </ProtectedRoute>
-                } />
-
-
-
-                <Route element={<ProtectedRoute roles={[]}><Outlet /></ProtectedRoute>}>
-
+                <Route element={<ProtectedRoute roleLevel={1}><Outlet /></ProtectedRoute>}>
+                    <Route path="/" element={<HackathonList />}/>
                     <Route path="/user/edit" element={<UserEditForm userId={1}/> } />
                     <Route path="/user/list" element={<UserList /> } />
                     <Route path="/hackathon/create" element={<CreateHackathonItem />} />
