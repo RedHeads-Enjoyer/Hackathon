@@ -3,7 +3,7 @@ package organizationDTO
 import "server/models"
 
 type OrganizationUpdateDTO struct {
-	LegalName    *string `json:"legal_name,omitempty"`
+	LegalName    *string `json:"legalName,omitempty"`
 	INN          *string `json:"inn,omitempty"`
 	OGRN         *string `json:"ogrn,omitempty"`
 	ContactEmail *string `json:"contact_email,omitempty"`
@@ -19,7 +19,7 @@ func (dto *OrganizationUpdateDTO) ToModel(existingOrganization models.Organizati
 		existingOrganization.INN = *dto.INN
 	}
 	if dto.OGRN != nil {
-		existingOrganization.OGRN = dto.OGRN
+		existingOrganization.OGRN = *dto.OGRN
 	}
 	if dto.ContactEmail != nil {
 		existingOrganization.ContactEmail = *dto.ContactEmail

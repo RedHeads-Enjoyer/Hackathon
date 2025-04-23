@@ -44,7 +44,7 @@ func (hc *HackathonController) Create(c *gin.Context) {
 		return
 	}
 
-	if !organization.IsVerified {
+	if organization.Status != 1 {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Организация не имеет права создавать хакатоны"})
 		return
 	}

@@ -3,11 +3,11 @@ package organizationDTO
 import "server/models"
 
 type OrganizationCreateDTO struct {
-	LegalName    string  `json:"legal_name" validate:"required"`
-	INN          string  `json:"inn" validate:"required,len=12"`
-	OGRN         *string `json:"ogrn,omitempty"`
-	ContactEmail string  `json:"contact_email" validate:"required,email"`
-	Website      string  `json:"website,omitempty"`
+	LegalName    string `json:"legalName" validate:"required"`
+	INN          string `json:"INN" validate:"required,len=12"`
+	OGRN         string `json:"OGRN,required,len=13"`
+	ContactEmail string `json:"contactEmail" validate:"required,email"`
+	Website      string `json:"website,required"`
 }
 
 func (dto *OrganizationCreateDTO) ToModel(userID uint) *models.Organization {
@@ -18,6 +18,6 @@ func (dto *OrganizationCreateDTO) ToModel(userID uint) *models.Organization {
 		ContactEmail: dto.ContactEmail,
 		Website:      dto.Website,
 		OwnerID:      userID,
-		IsVerified:   false,
+		Status:       0,
 	}
 }

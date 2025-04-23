@@ -6,11 +6,12 @@ import {OrganizationCreate, OrganizationCreateErrors} from "./types.ts";
 import Button from '../../components/button/Button.tsx';
 import Modal from '../../components/modal/Modal.tsx';
 import Error from "../../components/error/Error.tsx";
+import {OrganizationAPI} from "./organizationAPI.ts";
+import {useNavigate} from "react-router-dom";
 
 const CreateOrganizationPage: React.FC = () => {
     const [formData, setFormData] = useState<OrganizationCreate>({
         legalName: "",
-        shortLegalName: "",
         INN: "",
         OGRN: "",
         contactEmail: "",
@@ -20,24 +21,27 @@ const CreateOrganizationPage: React.FC = () => {
     const [publishLoadnig, setPublishLoadin] = useState<boolean>(false)
     const [formErrors, setFormErrors] = useState<OrganizationCreateErrors>({
         legalName: "",
-        shortLegalName: "",
         INN: "",
         OGRN: "",
         contactEmail: "",
         website: ""
     });
+
+    const navigate = useNavigate()
     const [publishError, setPublishError] = useState<null | string>(null)
 
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
-        const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
-
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: type === 'number' ? Number(value) :
-                type === 'checkbox' ? checked :
-                    value
+            [name]: value
+        }));
+
+        // Сброс ошибок при вводе
+        setFormErrors(prev => ({
+            ...prev,
+            [name]: undefined
         }));
     };
 
@@ -56,14 +60,10 @@ const CreateOrganizationPage: React.FC = () => {
         }
 
         try {
-            // const result = await authAPI.login(formData);
-            // localStorage.setItem('access_token', result.access_token);
-            //
-            // const userData = await authAPI.verify();
-            // dispatch(loginSuccess(userData));
-            // navigate('/');
+            await OrganizationAPI.create(formData);
+            navigate('/');
         } catch (err) {
-            const errorMessage = (err as Error).message || "Ошибка входа";
+            const errorMessage = (err as Error).message || "Ошибка при создании организации";
             setPublishError(errorMessage);
         } finally {
             setPublishLoadin(false);
@@ -84,8 +84,8 @@ const CreateOrganizationPage: React.FC = () => {
 
         if (!formData.OGRN) {
             errors.OGRN = "ОГРН не может быть пустым";
-        } else if(formData.OGRN.length != 12) {
-            errors.INN = "Длина ОГРН должна быть 13 символов";
+        } else if(formData.OGRN.length != 13) {
+            errors.OGRN = "Длина ОГРН должна быть 13 символов";
         }
 
         if (!formData.contactEmail) {
@@ -127,18 +127,6 @@ const CreateOrganizationPage: React.FC = () => {
                     placeholder="Введите полное название"
                     required
                     error={formErrors.legalName}
-                />
-            </div>
-
-            <div className={classes.text_info}>
-                <Input
-                    label="Коротное название"
-                    type="text"
-                    value={formData.shortLegalName}
-                    onChange={handleChange}
-                    name="shortLegalName"
-                    placeholder="Введите полное название"
-                    error={formErrors.shortLegalName}
                 />
             </div>
 

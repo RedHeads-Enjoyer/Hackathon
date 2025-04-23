@@ -30,16 +30,34 @@ func (oc *OrganizationController) Create(c *gin.Context) {
 		return
 	}
 
-	// Валидация данных
+	// Валидация данных1
 	validate := validator.New()
 	if err := validate.Struct(dto); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка валидации", "details": err.Error()})
 		return
 	}
 
+	var existingOrganization models.Organization
+	err := oc.DB.Where("\"legalName\" = ? OR \"INN\" = ? OR \"OGRN\" = ?", dto.LegalName, dto.INN, dto.OGRN).First(&existingOrganization).Error
+	if err == nil {
+		// Если запись найдена, возвращаем соответствующее сообщение
+		if existingOrganization.LegalName == dto.LegalName {
+			c.JSON(http.StatusConflict, gin.H{"error": "Организация с таким полным названием уже зарегистрирована"})
+			return
+		}
+		if existingOrganization.INN == dto.INN {
+			c.JSON(http.StatusConflict, gin.H{"error": "Организация с таким ИНН уже зарегистрирована"})
+			return
+		}
+		if existingOrganization.OGRN == dto.OGRN {
+			c.JSON(http.StatusConflict, gin.H{"error": "Организация с таким ОГРН уже зарегистрирована"})
+			return
+		}
+	}
+
 	claims := c.MustGet("user_claims").(*types.Claims)
 
-	// Преобразование DTO в модель1
+	// Преобразование DTO в модель
 	org := dto.ToModel(claims.UserID)
 
 	// Сохранение организации в базе данных
@@ -187,7 +205,7 @@ func (oc *OrganizationController) SetVerified(c *gin.Context) {
 
 	// Получение значения isVerified из тела запроса
 	var requestBody struct {
-		IsVerified bool `json:"is_verified"`
+		status int `json:"status"`
 	}
 
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
@@ -196,7 +214,7 @@ func (oc *OrganizationController) SetVerified(c *gin.Context) {
 	}
 
 	// Установка значения isVerified
-	organization.IsVerified = requestBody.IsVerified
+	organization.Status = 1
 
 	fmt.Println(organization)
 

@@ -1,6 +1,5 @@
 export type OrganizationCreate = {
     legalName: string,
-    shortLegalName: string,
     INN: string,
     OGRN: string,
     contactEmail: string,
@@ -9,7 +8,6 @@ export type OrganizationCreate = {
 
 export type OrganizationCreateErrors = {
     legalName?: string,
-    shortLegalName?: string,
     INN?: string,
     OGRN?: string,
     contactEmail?: string,

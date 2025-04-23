@@ -26,6 +26,7 @@ const Input = (props: InputPropsType) => {
         }
 
         props.onChange({ target: { name: props.name, value: props.value } } as React.ChangeEvent<HTMLInputElement>);
+        
         if (props.type === 'number') {
             if (e.target.value === '' || !isNaN(Number(e.target.value))) {
                 props.onChange(e);
