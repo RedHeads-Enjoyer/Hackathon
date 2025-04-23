@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"server/models"
+	"server/models/DTO/userDTO"
 	"server/types"
 
 	"github.com/gin-gonic/gin"
@@ -88,23 +89,20 @@ func (ac *AuthController) RegisterHandler(c *gin.Context) {
 
 // LoginHandler аутентифицирует пользователя
 func (ac *AuthController) LoginHandler(c *gin.Context) {
-	var input struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
-	}
+	var loginDTO userDTO.Login
 
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&loginDTO); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	var user models.User
-	if err := ac.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
+	if err := ac.DB.Where("email = ?", loginDTO.Email).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверные данные"})
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginDTO.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверные данные"})
 		return
 	}

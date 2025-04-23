@@ -1,10 +1,10 @@
-import React, {useState, FormEvent} from "react";
-import classes from './auth.module.css'
-import {Link, useNavigate} from "react-router-dom";
-import {LoginFormData} from "./authTypes.ts";
-import {authAPI} from "./authAPI.ts";
-import {loginFailure, loginStart, loginSuccess} from "./store/authSlice.ts";
-import {useAppDispatch} from "../../store/hooks.ts";
+import React, { useState, FormEvent } from "react";
+import classes from './auth.module.css';
+import { Link, useNavigate } from "react-router-dom";
+import { LoginFormData } from "./authTypes.ts";
+import { authAPI } from "./authAPI.ts";
+import { loginFailure, loginStart, loginSuccess } from "./store/authSlice.ts";
+import { useAppDispatch } from "../../store/hooks.ts";
 import PageLabel from "../../components/pageLabel/PageLabel.tsx";
 import Input from "../../components/input/Input.tsx";
 import Button from "../../components/button/Button.tsx";
@@ -15,10 +15,11 @@ const Login: React.FC = () => {
         email: "",
         password: "",
     });
-    const [error, setError] = useState<String | null>(null)
-    const [loading, setLoading] = useState<boolean>(false)
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({});
     const dispatch = useAppDispatch();
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -26,19 +27,42 @@ const Login: React.FC = () => {
             ...prev,
             [name]: value
         }));
+
+        // Сброс ошибок при вводе
+        setFormErrors(prev => ({
+            ...prev,
+            [name]: undefined
+        }));
+    };
+
+    const validateForm = () => {
+        const errors: { email?: string; password?: string } = {};
+        if (!formData.email) {
+            errors.email = "Email не может быть пустым";
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                errors.email = "Email не верного формата";
+            }
+        }
+        if (!formData.password) {
+            errors.password = "Пароль не может быть пустым";
+        }
+        return errors;
     };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        setLoading(true)
-        setError(null)
+        setLoading(true);
+        setError(null);
         dispatch(loginStart());
 
-        if (!formData.email || !formData.password) {
-            setError("Заполните все поля");
-            setLoading(false)
-            dispatch(loginFailure())
-            return
+        const validationErrors = validateForm();
+        if (Object.keys(validationErrors).length > 0) {
+            setFormErrors(validationErrors);
+            setLoading(false);
+            dispatch(loginFailure());
+            return;
         }
 
         try {
@@ -47,12 +71,12 @@ const Login: React.FC = () => {
 
             const userData = await authAPI.verify();
             dispatch(loginSuccess(userData));
-            navigate('/')
+            navigate('/');
         } catch (err) {
             const errorMessage = (err as Error).message || "Ошибка входа";
             setError(errorMessage);
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
     };
 
@@ -67,6 +91,7 @@ const Login: React.FC = () => {
                     onChange={handleChange}
                     label={"Email"}
                     placeholder={"example@mail.ru"}
+                    error={formErrors.email}
                 />
                 <Input
                     type={"password"}
@@ -75,6 +100,7 @@ const Login: React.FC = () => {
                     onChange={handleChange}
                     label={"Пароль"}
                     placeholder={"examplePassword"}
+                    error={formErrors.password}
                 />
                 <Button
                     onClick={handleSubmit}
@@ -84,14 +110,12 @@ const Login: React.FC = () => {
                     Войти
                 </Button>
 
-                {error != null && <Error><p>{error}</p></Error>}
-
+                {error && <Error><p>{error}</p></Error>}
 
                 <span className={classes.info}>
                     <p>Нет аккаунта? </p>
                     <Link to={"/register"}>Зарегистрироваться</Link>
                 </span>
-
             </div>
         </div>
     );

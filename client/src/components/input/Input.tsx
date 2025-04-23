@@ -19,10 +19,9 @@ type InputPropsType = {
 const Input = (props: InputPropsType) => {
     const inputId = useId();
 
-    // Обработчик для number input, чтобы предотвратить ввод нечисловых значений
     const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        props.onChange({ target: { name: props.name, value: props.value } } as React.ChangeEvent<HTMLInputElement>)
         if (props.type === 'number') {
-            // Позволяем пустую строку или числовые значения
             if (e.target.value === '' || !isNaN(Number(e.target.value))) {
                 props.onChange(e);
             }
@@ -31,8 +30,10 @@ const Input = (props: InputPropsType) => {
         }
     };
 
+    const isError = props.error
+
     return (
-        <div className={`${classes.input_container} ${props.error ? classes.error : ''}`}>
+        <div className={`${classes.input_container} ${isError ? classes.error : ''}`}>
             {props.label && <label htmlFor={inputId} className={classes.label}>{props.label}</label>}
             <input
                 id={inputId}
@@ -40,7 +41,7 @@ const Input = (props: InputPropsType) => {
                 value={props.value}
                 name={props.name}
                 onChange={handleNumberChange}
-                onKeyDown={props.onKeyDown} // Передаем обработчик событий клавиатуры
+                onKeyDown={props.onKeyDown}
                 placeholder={props.placeholder}
                 min={props.type === 'number' ? props.min : undefined}
                 max={props.type === 'number' ? props.max : undefined}

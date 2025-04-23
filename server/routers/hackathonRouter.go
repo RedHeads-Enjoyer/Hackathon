@@ -35,6 +35,7 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	{
 		protected.POST("/:hackathon_id/join", hackathonController.AddUser)
 		protected.GET("/:hackathon_id/users", hackathonController.GetUsers)
+		protected.GET("/team/:team_id", inviteTeamController.GetTeamMembers)
 	}
 
 	protected = router.Group("/hackathon")
