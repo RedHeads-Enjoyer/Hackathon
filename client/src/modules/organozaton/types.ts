@@ -32,4 +32,6 @@ export type OrganizationFilterData = {
     OGRN: string,
     contactEmail: string,
     website: string,
+    limit: number,
+    offset: number
 }

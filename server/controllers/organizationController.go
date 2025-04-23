@@ -22,7 +22,7 @@ func NewOrganizationController(db *gorm.DB) *OrganizationController {
 
 // Create - Создание новой организации
 func (oc *OrganizationController) Create(c *gin.Context) {
-	var dto organizationDTO.OrganizationCreateDTO
+	var dto organizationDTO.OrganizationCreate
 
 	// Привязка JSON к DTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -242,17 +242,49 @@ func (oc *OrganizationController) GetMy(c *gin.Context) {
 		return
 	}
 
-	// Получение идентификатора пользователя
-	userID := claims.UserID
-
-	// Поиск организаций, связанных с пользователем
-	var organizations []models.Organization
-	if err := oc.DB.Where("\"ownerId\" = ?", userID).Find(&organizations).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении организаций"})
-		c.Abort()
+	// Парсинг параметров фильтрации из тела запроса
+	var filterData organizationDTO.OrganizationFilterData
+	if err := c.ShouldBindJSON(&filterData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат фильтров"})
 		return
 	}
 
-	// Возврат списка организаций
+	// Поиск организаций, связанных с пользователем
+	query := oc.DB.Where("\"ownerId\" = ?", claims.UserID)
+
+	// Применение фильтров
+	if filterData.LegalName != "" {
+		query = query.Where("\"legalName\" LIKE ?", "%"+filterData.LegalName+"%")
+	}
+	if filterData.INN != "" {
+		query = query.Where("INN = ?", filterData.INN)
+	}
+	if filterData.OGRN != "" {
+		query = query.Where("OGRN = ?", filterData.OGRN)
+	}
+	if filterData.ContactEmail != "" {
+		query = query.Where("\"contactEmail\" LIKE ?", "%"+filterData.ContactEmail+"%")
+	}
+	if filterData.Website != "" {
+		query = query.Where("website LIKE ?", "%"+filterData.Website+"%")
+	}
+	if filterData.Status != 0 {
+		query = query.Where("status = ?", filterData.Status)
+	}
+
+	// Применение пагинации
+	if filterData.Limit > 0 {
+		query = query.Limit(filterData.Limit)
+	}
+	if filterData.Offset > 0 {
+		query = query.Offset(filterData.Offset)
+	}
+
+	var organizations []models.Organization
+	if err := query.Find(&organizations).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении организаций"})
+		return
+	}
+
 	c.JSON(http.StatusOK, organizations)
 }

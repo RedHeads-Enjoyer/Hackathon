@@ -2,13 +2,18 @@ import React, {useState} from 'react';
 import classes from '../style.module.css';
 import {OrganizationFilterData} from '../types.ts';
 import Input from "../../../components/input/Input.tsx";
+import Button from "../../../components/button/Button.tsx";
+import Pagination from "../../../components/pagination/Pagination.tsx";
 
 type OrganizationFilterProps = {
     filterData: OrganizationFilterData;
     setFilterData: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onResetFilters: () => void;
+    onSearch: () => void;
+    onPaginationChange: (n: number) => void
 };
 
-const OrganizationFilter = ({filterData, setFilterData}: OrganizationFilterProps) => {
+const OrganizationFilter = ({filterData, setFilterData, onResetFilters, onSearch, onPaginationChange}: OrganizationFilterProps) => {
     const [isExpanded, setIsExpanded] = useState<boolean>(false)
 
     return (
@@ -16,49 +21,57 @@ const OrganizationFilter = ({filterData, setFilterData}: OrganizationFilterProps
             <div className={classes.expanded}
                 onClick={() => setIsExpanded(prevState => !prevState)}>
                 <h3 className={classes.title}>Фильтры поиска (123) 1-20</h3>
+                <Pagination currentPage={filterData.offset} itemsPerPage={20} totalItems={123} onPageChange={onPaginationChange}/>
             </div>
             {isExpanded &&
                 <div className={classes.expandedFilters}>
-                    <Input
-                        label="Полное название"
-                        type="text"
-                        value={filterData.legalName}
-                        onChange={setFilterData}
-                        name="legalName"
-                        placeholder="Введите полное название"
-                    />
-                    <Input
-                        label="Email"
-                        type="text"
-                        value={filterData.contactEmail}
-                        onChange={setFilterData}
-                        name="contactEmail"
-                        placeholder="Введите email"
-                    />
-                    <Input
-                        label="ИНН"
-                        type="textNumber"
-                        value={filterData.INN}
-                        onChange={setFilterData}
-                        name="INN"
-                        placeholder="Введите ИНН"
-                    />
-                    <Input
-                        label="ОГРН"
-                        type="textNumber"
-                        value={filterData.OGRN}
-                        onChange={setFilterData}
-                        name="OGRN"
-                        placeholder="Введите ОГРН"
-                    />
-                    <Input
-                        label="Вебсайт"
-                        type="text"
-                        value={filterData.website}
-                        onChange={setFilterData}
-                        name="website"
-                        placeholder="Введите ссылку"
-                    />
+                    <div className={classes.filters}>
+                        <Input
+                            label="Полное название"
+                            type="text"
+                            value={filterData.legalName}
+                            onChange={setFilterData}
+                            name="legalName"
+                            placeholder="Введите полное название"
+                        />
+
+                        <Input
+                            label="Email"
+                            type="text"
+                            value={filterData.contactEmail}
+                            onChange={setFilterData}
+                            name="contactEmail"
+                            placeholder="Введите email"
+                        />
+                        <Input
+                            label="ИНН"
+                            type="textNumber"
+                            value={filterData.INN}
+                            onChange={setFilterData}
+                            name="INN"
+                            placeholder="Введите ИНН"
+                        />
+                        <Input
+                            label="ОГРН"
+                            type="textNumber"
+                            value={filterData.OGRN}
+                            onChange={setFilterData}
+                            name="OGRN"
+                            placeholder="Введите ОГРН"
+                        />
+                        <Input
+                            label="Вебсайт"
+                            type="text"
+                            value={filterData.website}
+                            onChange={setFilterData}
+                            name="website"
+                            placeholder="Введите ссылку"
+                        />
+                    </div>
+                    <div className={classes.filterControls}>
+                        <Button onClick={onResetFilters}>Сбросить фильтры</Button>
+                        <Button onClick={onSearch}>Найти</Button>
+                    </div>
                 </div>
             }
 

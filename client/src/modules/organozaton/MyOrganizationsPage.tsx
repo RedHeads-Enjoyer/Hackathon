@@ -10,14 +10,14 @@ import OrganizationFilter from "./Components/OrganizationsFilter.tsx";
 
 const MyOrganizationsPage = () => {
     const initialFilterData: OrganizationFilterData = {
-        CreatedAtFrom: "",
-        CreatedAtTo: "",
         INN: "",
         OGRN: "",
         contactEmail: "",
         legalName: "",
         status: 0,
-        website: ""
+        website: "",
+        limit: 20,
+        offset: 0
     }
 
     const [organizations, setOrganization] = useState<Organization[]>([]);
@@ -26,19 +26,23 @@ const MyOrganizationsPage = () => {
     const [filterData, setFilterData] = useState<OrganizationFilterData>(initialFilterData)
 
     useEffect(() => {
-        OrganizationAPI.getMy()
+        searchOrganizations()
+    }, [])
+
+    const searchOrganizations = () => {
+        setSearchError(null);
+        OrganizationAPI.getMy(filterData)
             .then((data) => {
                 setOrganization(data)
-                console.log(data)
                 setSearhLoading(false)
             })
             .catch ((err) => {
                 const errorMessage = (err as Error).message || "Ошибка при создании организации";
                 setSearchError(errorMessage);
             }).finally(() => {
-                setSearhLoading(false);
-            })
-    }, [])
+            setSearhLoading(false);
+        })
+    }
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -47,6 +51,22 @@ const MyOrganizationsPage = () => {
             [name]: value, // Обновляем соответствующее поле в состоянии
         }));
     };
+
+    const handlePaginationChange = (n: number) => {
+        setFilterData(prevState => ({
+            ...prevState,
+            offset: (n - 1) * prevState.limit
+        }));
+        handleSearch();
+    }
+
+    const handleResetFilters = () => {
+        setFilterData(initialFilterData)
+    }
+
+    const handleSearch = () => {
+        searchOrganizations()
+    }
 
 
     if (searchLoading) {
@@ -60,7 +80,13 @@ const MyOrganizationsPage = () => {
     return (
         <div className={classes.page_wrapper}>
             <PageLabel size={'h3'}>Мои организации</PageLabel>
-            <OrganizationFilter filterData={filterData} setFilterData={handleFilterChange}/>
+            <OrganizationFilter
+                filterData={filterData}
+                setFilterData={handleFilterChange}
+                onResetFilters={handleResetFilters}
+                onSearch={handleSearch}
+                onPaginationChange={handlePaginationChange}
+            />
             {organizations.map((org) => (
                 <div key={`organization_${org.INN}`}>
                     <OrganizationItem organization={org} />
