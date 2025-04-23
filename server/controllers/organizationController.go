@@ -247,7 +247,7 @@ func (oc *OrganizationController) GetMy(c *gin.Context) {
 
 	// Поиск организаций, связанных с пользователем
 	var organizations []models.Organization
-	if err := oc.DB.Where("owner_id = ?", userID).Find(&organizations).Error; err != nil {
+	if err := oc.DB.Where("\"ownerId\" = ?", userID).Find(&organizations).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении организаций"})
 		c.Abort()
 		return

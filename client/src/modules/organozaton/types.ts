@@ -13,3 +13,23 @@ export type OrganizationCreateErrors = {
     contactEmail?: string,
     website?: string
 }
+
+export type Organization = {
+    legalName: string,
+    INN: string,
+    OGRN: string,
+    contactEmail: string,
+    website: string,
+    status: number,
+    CreatedAt: string,
+    UpdatedAt: string,
+}
+
+export type OrganizationFilterData = {
+    status: number,
+    legalName: string,
+    INN: string,
+    OGRN: string,
+    contactEmail: string,
+    website: string,
+}

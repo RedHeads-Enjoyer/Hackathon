@@ -14,6 +14,11 @@ func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
 	protected.Use(middlewares.Auth())
 	{
 		protected.POST("", organizationController.Create)
+	}
+
+	protected = router.Group("/organizations")
+	protected.Use(middlewares.Auth())
+	{
 		protected.GET("/my", organizationController.GetMy)
 	}
 

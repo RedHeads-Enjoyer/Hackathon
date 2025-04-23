@@ -25,6 +25,8 @@ function Header() {
                     </h3>
                     <nav className={classes.nav}>
                         <Link to={'/logout'}>Выход</Link>
+                        <Link to={'/organizations/my'}>Мои организации</Link>
+
                         <p>{authState?.user.email}</p>
                     </nav>
                 </>
