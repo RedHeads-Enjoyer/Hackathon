@@ -258,16 +258,16 @@ func (oc *OrganizationController) GetMy(c *gin.Context) {
 	// Применение фильтров к обоим запросам
 	applyFilters := func(query *gorm.DB) *gorm.DB {
 		if filterData.LegalName != "" {
-			query = query.Where("\"legalName\" LIKE ?", "%"+filterData.LegalName+"%")
+			query = query.Where("legal_name LIKE ?", "%"+filterData.LegalName+"%")
 		}
 		if filterData.INN != "" {
-			query = query.Where("INN = ?", filterData.INN)
+			query = query.Where("inn = ?", filterData.INN)
 		}
 		if filterData.OGRN != "" {
-			query = query.Where("OGRN = ?", filterData.OGRN)
+			query = query.Where("ogrn = ?", filterData.OGRN)
 		}
 		if filterData.ContactEmail != "" {
-			query = query.Where("\"contactEmail\" LIKE ?", "%"+filterData.ContactEmail+"%")
+			query = query.Where("contact_email LIKE ?", "%"+filterData.ContactEmail+"%")
 		}
 		if filterData.Website != "" {
 			query = query.Where("website LIKE ?", "%"+filterData.Website+"%")

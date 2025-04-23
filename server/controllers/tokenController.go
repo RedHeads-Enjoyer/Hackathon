@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	AccessTokenExpire  = getDurationEnv("ACCESS_TOKEN_EXPIRE", 3*time.Second)
+	AccessTokenExpire  = getDurationEnv("ACCESS_TOKEN_EXPIRE", 15*time.Second)
 	RefreshTokenExpire = getDurationEnv("REFRESH_TOKEN_EXPIRE", 24*7*time.Hour)
 	AccessTokenSecret  = getRequiredEnv("ACCESS_TOKEN_SECRET")
 	RefreshTokenSecret = getRequiredEnv("REFRESH_TOKEN_SECRET")
