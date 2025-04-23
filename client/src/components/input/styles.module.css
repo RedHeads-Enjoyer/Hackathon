@@ -44,6 +44,8 @@
     font-size: 12px;
 }
 
+
+
 .input_container.error input {
     border-color: var(--error-border-color);
 }
@@ -76,4 +78,9 @@
 .input_container.error input:invalid {
     border-color: var(--error-border-color);
     background-color: var(--error-bg-color); /* Цвет фона для пустого поля с ошибкой */
+}
+
+.required {
+    color: var(--accent-color);
+    user-select: none;
 }

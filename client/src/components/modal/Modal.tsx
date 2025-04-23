@@ -1,18 +1,38 @@
 import React from 'react';
 import classes from './style.module.css';
+import Button from "../button/Button.tsx";
 
 interface ModalProps {
     isOpen: boolean;
-    children: React.ReactNode;
+    onConfirm: (e: React.FormEvent) => Promise<void>;
+    onReject: () => any;
+    title: string;
+    text: string;
+    rejectText: string;
+    confirmText: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, children }) => {
-    if (!isOpen) return null;
+const Modal: React.FC<ModalProps> = (props) => {
+    if (!props.isOpen) return null;
 
     return (
         <div className={classes.modalOverlay}>
             <div className={classes.modalContent}>
-                {children}
+                <h3 className={classes.modalTitle}>{props.title}</h3>
+                <p>{props.text}</p>
+
+                <div className={classes.modalActions}>
+                    <Button
+                        onClick={props.onReject}
+                    >
+                        {props.rejectText}
+                    </Button>
+                    <Button
+                        onClick={props.onConfirm}
+                    >
+                        {props.confirmText}
+                    </Button>
+                </div>
             </div>
         </div>
     );

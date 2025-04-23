@@ -16,6 +16,7 @@ import CreateHackathonItem from "./modules/hackathonItem/CreateHackathonPage.tsx
 import {logout} from "./modules/auth/store/authSlice.ts";
 import UserEditForm from "./modules/user/UserEditForm.tsx";
 import UserList from "./modules/user/UserList.tsx";
+import CreateOrganizationPage from "./modules/organozaton/CreateOrganizationPage.tsx";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -55,8 +56,7 @@ function App() {
                     <Route path="/user/edit" element={<UserEditForm userId={1}/> } />
                     <Route path="/user/list" element={<UserList /> } />
                     <Route path="/hackathon/create" element={<CreateHackathonItem />} />
-                    <Route path="/user1" element={<HackathonList />} />
-                    <Route path="/user2" element={<HackathonList />} />
+                    <Route path={"/organization/create"} element={<CreateOrganizationPage/>}/>
                 </Route>
 
                 {/* Авторизация */}

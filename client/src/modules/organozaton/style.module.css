@@ -1,0 +1,9 @@
+.page_wrapper {
+    padding: 24px;
+    background-color: var(--default-backgroud-color);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    overflow-y: auto;
+}
