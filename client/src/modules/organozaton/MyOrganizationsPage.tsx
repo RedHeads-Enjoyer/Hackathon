@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import classes from './style.module.css';
 import PageLabel from "../../components/pageLabel/PageLabel.tsx";
-import {Organization, OrganizationFilterData} from "./types.ts";
+import {OrganizationFilterData, OrganizationSearchData} from "./types.ts";
 import Loader from "../../components/loader/Loader.tsx";
 import {OrganizationAPI} from "./organizationAPI.ts";
 import Error from "../../components/error/Error.tsx";
@@ -16,11 +16,17 @@ const MyOrganizationsPage = () => {
         legalName: "",
         status: 0,
         website: "",
-        limit: 20,
-        offset: 0
+        limit: 2,
+        offset: 0,
+        total: 0
     }
 
-    const [organizations, setOrganization] = useState<Organization[]>([]);
+    const initialOrganizationData: OrganizationSearchData = {
+        total: 0,
+        list: []
+    }
+
+    const [organizations, setOrganization] = useState<OrganizationSearchData>(initialOrganizationData);
     const [searchLoading, setSearhLoading] = useState<boolean>(true)
     const [searchError, setSearchError] = useState<null | string>()
     const [filterData, setFilterData] = useState<OrganizationFilterData>(initialFilterData)
@@ -30,10 +36,19 @@ const MyOrganizationsPage = () => {
     }, [])
 
     const searchOrganizations = () => {
+        setSearhLoading(true)
         setSearchError(null);
+        setOrganization(initialOrganizationData)
         OrganizationAPI.getMy(filterData)
             .then((data) => {
-                setOrganization(data)
+                setOrganization(prevState => ({
+                    ...prevState,
+                    list: data.list
+                }));
+                setFilterData(prevState => ({
+                    ...prevState,
+                    total: data.total
+                }));
                 setSearhLoading(false)
             })
             .catch ((err) => {
@@ -44,11 +59,15 @@ const MyOrganizationsPage = () => {
         })
     }
 
+    useEffect(() => {
+        handleSearch();
+    }, [filterData.offset]);
+
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFilterData(prevData => ({
             ...prevData,
-            [name]: value, // Обновляем соответствующее поле в состоянии
+            [name]: value,
         }));
     };
 
@@ -57,7 +76,6 @@ const MyOrganizationsPage = () => {
             ...prevState,
             offset: (n - 1) * prevState.limit
         }));
-        handleSearch();
     }
 
     const handleResetFilters = () => {
@@ -69,14 +87,6 @@ const MyOrganizationsPage = () => {
     }
 
 
-    if (searchLoading) {
-        return (
-            <div className={classes.page_wrapper}>
-                <Loader/>
-            </div>
-            )
-    }
-
     return (
         <div className={classes.page_wrapper}>
             <PageLabel size={'h3'}>Мои организации</PageLabel>
@@ -87,11 +97,18 @@ const MyOrganizationsPage = () => {
                 onSearch={handleSearch}
                 onPaginationChange={handlePaginationChange}
             />
-            {organizations.map((org) => (
-                <div key={`organization_${org.INN}`}>
-                    <OrganizationItem organization={org} />
-                </div>
-            ))}
+            {searchLoading ? <Loader/> :
+                organizations.list?.length > 0 ? (
+                        organizations.list.map((org) => (
+                            <div key={`organization_${org.INN}`}>
+                                <OrganizationItem organization={org} />
+                            </div>
+                        ))
+                    ) : (
+                        <div className={classes.noResults}><p>Организации не найдены</p></div>
+                    )
+            }
+
             {searchError && <Error>{searchError}</Error>}
         </div>
     );

@@ -33,5 +33,11 @@ export type OrganizationFilterData = {
     contactEmail: string,
     website: string,
     limit: number,
-    offset: number
+    offset: number,
+    total: number
+}
+
+export type OrganizationSearchData = {
+    list: Organization[],
+    total: number
 }

@@ -19,9 +19,14 @@ const OrganizationFilter = ({filterData, setFilterData, onResetFilters, onSearch
     return (
         <div className={classes.expandedCard}>
             <div className={classes.expanded}
-                onClick={() => setIsExpanded(prevState => !prevState)}>
-                <h3 className={classes.title}>Фильтры поиска (123) 1-20</h3>
-                <Pagination currentPage={filterData.offset} itemsPerPage={20} totalItems={123} onPageChange={onPaginationChange}/>
+                // onClick={() => setIsExpanded(prevState => !prevState)}
+            >
+                <h3 className={classes.title}>Фильтры поиска ({filterData.total}) {filterData.offset + 1}-{Math.min(filterData.offset + filterData.limit, filterData.total)}</h3>
+                <Pagination
+                    currentPage={Math.floor(filterData.offset / filterData.limit) + 1}
+                    itemsPerPage={filterData.limit}
+                    totalItems={filterData.total}
+                    onPageChange={onPaginationChange}/>
             </div>
             {isExpanded &&
                 <div className={classes.expandedFilters}>

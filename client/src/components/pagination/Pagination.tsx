@@ -9,28 +9,37 @@ type PaginationProps = {
 };
 
 const Pagination = ({ currentPage, totalItems, itemsPerPage, onPageChange }: PaginationProps) => {
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
 
-    // Рассчитываем диапазон отображаемых страниц
-    const getPageNumbers = () => {
-        const pages = [];
-        const maxVisiblePages = 5;
-        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    // Ограничиваем currentPage в допустимых пределах
+    const normalizedCurrentPage = Math.max(1, Math.min(currentPage, totalPages));
 
-        if (endPage - startPage + 1 < maxVisiblePages) {
-            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    const getVisiblePages = () => {
+        const visiblePages = [];
+        const maxVisible = 5;
+        let start = Math.max(1, normalizedCurrentPage - Math.floor(maxVisible / 2));
+        let end = Math.min(totalPages, start + maxVisible - 1);
+
+        // Корректируем, если в начале
+        if (normalizedCurrentPage <= Math.floor(maxVisible / 2) + 1) {
+            start = 1;
+            end = Math.min(maxVisible, totalPages);
+        }
+        // Корректируем, если в конце
+        else if (normalizedCurrentPage >= totalPages - Math.floor(maxVisible / 2)) {
+            end = totalPages;
+            start = Math.max(1, end - maxVisible + 1);
         }
 
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(i);
+        for (let i = start; i <= end; i++) {
+            visiblePages.push(i);
         }
 
-        return pages;
+        return visiblePages;
     };
 
-    const handlePageChange = (page: number) => {
-        if (page >= 1 && page <= totalPages) {
+    const handleClick = (page: number) => {
+        if (page !== normalizedCurrentPage) {
             onPageChange(page);
         }
     };
@@ -40,27 +49,30 @@ const Pagination = ({ currentPage, totalItems, itemsPerPage, onPageChange }: Pag
     return (
         <div className={classes.pagination}>
             <button
-                className={`${classes.paginationButton} ${currentPage === 1 ? classes.disabled : ''}`}
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
+                className={`${classes.paginationButton} ${normalizedCurrentPage === 1 ? classes.disabled : ''}`}
+                onClick={() => handleClick(normalizedCurrentPage - 1)}
+                disabled={normalizedCurrentPage === 1}
+                aria-label="Previous page"
             >
                 <FiChevronLeft />
             </button>
 
-            {getPageNumbers().map((page) => (
+            {getVisiblePages().map(page => (
                 <button
                     key={page}
-                    className={`${classes.paginationButton} ${currentPage === page ? classes.active : ''}`}
-                    onClick={() => handlePageChange(page)}
+                    className={`${classes.paginationButton} ${normalizedCurrentPage === page ? classes.active : ''}`}
+                    onClick={() => handleClick(page)}
+                    aria-current={normalizedCurrentPage === page ? 'page' : undefined}
                 >
                     {page}
                 </button>
             ))}
 
             <button
-                className={`${classes.paginationButton} ${currentPage === totalPages ? classes.disabled : ''}`}
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                className={`${classes.paginationButton} ${normalizedCurrentPage === totalPages ? classes.disabled : ''}`}
+                onClick={() => handleClick(normalizedCurrentPage + 1)}
+                disabled={normalizedCurrentPage === totalPages}
+                aria-label="Next page"
             >
                 <FiChevronRight />
             </button>

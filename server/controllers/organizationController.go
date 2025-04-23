@@ -249,42 +249,62 @@ func (oc *OrganizationController) GetMy(c *gin.Context) {
 		return
 	}
 
-	// Поиск организаций, связанных с пользователем
-	query := oc.DB.Where("\"ownerId\" = ?", claims.UserID)
+	// Базовый запрос для подсчета общего количества
+	countQuery := oc.DB.Model(&models.Organization{}).Where("\"ownerId\" = ?", claims.UserID)
 
-	// Применение фильтров
-	if filterData.LegalName != "" {
-		query = query.Where("\"legalName\" LIKE ?", "%"+filterData.LegalName+"%")
-	}
-	if filterData.INN != "" {
-		query = query.Where("INN = ?", filterData.INN)
-	}
-	if filterData.OGRN != "" {
-		query = query.Where("OGRN = ?", filterData.OGRN)
-	}
-	if filterData.ContactEmail != "" {
-		query = query.Where("\"contactEmail\" LIKE ?", "%"+filterData.ContactEmail+"%")
-	}
-	if filterData.Website != "" {
-		query = query.Where("website LIKE ?", "%"+filterData.Website+"%")
-	}
-	if filterData.Status != 0 {
-		query = query.Where("status = ?", filterData.Status)
+	// Базовый запрос для получения данных
+	dataQuery := oc.DB.Where("\"ownerId\" = ?", claims.UserID)
+
+	// Применение фильтров к обоим запросам
+	applyFilters := func(query *gorm.DB) *gorm.DB {
+		if filterData.LegalName != "" {
+			query = query.Where("\"legalName\" LIKE ?", "%"+filterData.LegalName+"%")
+		}
+		if filterData.INN != "" {
+			query = query.Where("INN = ?", filterData.INN)
+		}
+		if filterData.OGRN != "" {
+			query = query.Where("OGRN = ?", filterData.OGRN)
+		}
+		if filterData.ContactEmail != "" {
+			query = query.Where("\"contactEmail\" LIKE ?", "%"+filterData.ContactEmail+"%")
+		}
+		if filterData.Website != "" {
+			query = query.Where("website LIKE ?", "%"+filterData.Website+"%")
+		}
+		if filterData.Status != 0 {
+			query = query.Where("status = ?", filterData.Status)
+		}
+		return query
 	}
 
-	// Применение пагинации
+	countQuery = applyFilters(countQuery)
+	dataQuery = applyFilters(dataQuery)
+
+	// Подсчет общего количества записей
+	var totalCount int64
+	if err := countQuery.Count(&totalCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при подсчете организаций"})
+		return
+	}
+
+	// Применение пагинации только к запросу данных
 	if filterData.Limit > 0 {
-		query = query.Limit(filterData.Limit)
+		dataQuery = dataQuery.Limit(filterData.Limit)
 	}
 	if filterData.Offset > 0 {
-		query = query.Offset(filterData.Offset)
+		dataQuery = dataQuery.Offset(filterData.Offset)
 	}
 
 	var organizations []models.Organization
-	if err := query.Find(&organizations).Error; err != nil {
+	if err := dataQuery.Find(&organizations).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении организаций"})
 		return
 	}
 
-	c.JSON(http.StatusOK, organizations)
+	// Возвращаем данные с информацией о пагинации
+	c.JSON(http.StatusOK, gin.H{
+		"list":  organizations,
+		"total": totalCount,
+	})
 }
