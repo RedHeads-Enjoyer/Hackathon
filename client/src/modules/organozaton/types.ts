@@ -1,5 +1,3 @@
-import {stat} from "node:fs";
-
 export type OrganizationCreate = {
     legalName: string,
     INN: string,
@@ -17,6 +15,7 @@ export type OrganizationCreateErrors = {
 }
 
 export type Organization = {
+    id: number,
     legalName: string,
     INN: string,
     OGRN: string,

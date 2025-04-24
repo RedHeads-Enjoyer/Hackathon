@@ -1,10 +1,11 @@
 import React, {useState} from 'react';
 import classes from '../style.module.css';
-import {FilterUpdate, OrganizationFilterData, SelectOption} from '../types.ts';
+import {FilterUpdate, OrganizationFilterData} from '../types.ts';
 import Input from "../../../components/input/Input.tsx";
 import Button from "../../../components/button/Button.tsx";
 import Pagination from "../../../components/pagination/Pagination.tsx";
 import Select from "../../../components/select/Select.tsx";
+import {statusOptions} from "../storage.ts";
 
 type OrganizationFilterProps = {
     filterData: OrganizationFilterData;
@@ -15,12 +16,6 @@ type OrganizationFilterProps = {
 
 const OrganizationFilter = ({filterData, setFilterData, onResetFilters, onSearch}: OrganizationFilterProps) => {
     const [isExpanded, setIsExpanded] = useState<boolean>(false)
-
-    const statusOptions: SelectOption[] = [
-        {value: -1, label: "Отклонена"},
-        {value: 0,  label: "Не рассмотрена"},
-        {value: 1, label: "Подтверждена"},
-    ]
 
     const handlePaginationChange = (page: number) => {
         setFilterData({

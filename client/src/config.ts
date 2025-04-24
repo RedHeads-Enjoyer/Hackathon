@@ -50,7 +50,6 @@ api.interceptors.response.use(
                 }
 
                 const data = await refreshTokenRequest;
-                console.log(data)
                 localStorage.setItem('access_token', data.access_token);
 
                 // Обновляем оригинальный запрос

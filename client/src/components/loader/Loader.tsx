@@ -5,7 +5,7 @@ interface LoaderProps {
     size?: 'small' | 'medium' | 'large';
 }
 
-const Loader = ({ color = 'primary', size = 'medium' }: LoaderProps) => {
+const Loader = ({ color = 'primary', size = 'medium'}: LoaderProps) => {
     const sizeClasses = {
         small: classes.small,
         medium: classes.medium,

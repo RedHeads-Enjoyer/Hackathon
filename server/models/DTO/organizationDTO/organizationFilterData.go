@@ -1,6 +1,7 @@
 package organizationDTO
 
 type OrganizationFilterData struct {
+	Id           int    `json:"id"`
 	LegalName    string `json:"legalName"`
 	INN          string `json:"INN"`
 	OGRN         string `json:"OGRN"`

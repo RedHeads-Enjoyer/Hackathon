@@ -1,5 +1,6 @@
 import { useState, useId, useEffect, useRef } from 'react';
 import classes from './style.module.css';
+import Loader from "../loader/Loader.tsx";
 
 type SelectPropsType = {
     options: { value: number; label: string }[];
@@ -10,6 +11,7 @@ type SelectPropsType = {
     label?: string;
     error?: string;
     required?: boolean;
+    loading?: boolean;
 };
 
 const Select = (props: SelectPropsType) => {
@@ -32,6 +34,7 @@ const Select = (props: SelectPropsType) => {
     }, []);
 
     const handleOptionClick = (value: number) => {
+        if (props.loading) return;
         props.onChange(value);
         setIsOpen(false);
     };
@@ -48,12 +51,17 @@ const Select = (props: SelectPropsType) => {
             )}
 
             <div
-                className={`${classes.select} ${isOpen ? classes.open : ''}`}
-                onClick={() => setIsOpen(!isOpen)}
+                className={`${isOpen ? classes.open : ''} ${props.loading ? classes.select : classes.selectLoading}`}
+                onClick={() => {
+                    if (props.loading) return
+                    setIsOpen(!isOpen)
+                }}
                 id={selectId}
             >
                 <div className={classes.selected_value}>
-                    {selectedLabel}
+                    {props.loading ? <Loader/> : <>{selectedLabel}</>}
+
+
                     <span className={classes.arrow}></span>
                 </div>
 

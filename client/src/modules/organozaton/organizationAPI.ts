@@ -7,5 +7,7 @@ export const OrganizationAPI = {
     getMy: async (filterData: OrganizationFilterData) =>
         request<OrganizationSearchData>({method: 'POST', url: 'organizations/my', data: filterData}),
     getAll: async (filterData: OrganizationFilterData) =>
-        request<OrganizationSearchData>({method: 'POST', url: 'organizations', data: filterData})
+        request<OrganizationSearchData>({method: 'POST', url: 'organizations', data: filterData}),
+    setStatus: async (organizationId:number, status: number) =>
+        request<OrganizationSearchData>({method: 'POST', url: `organizations/${organizationId}`, data: status})
 };

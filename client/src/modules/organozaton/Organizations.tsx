@@ -33,14 +33,14 @@ const Organizations = () => {
     const [filterData, setFilterData] = useState<OrganizationFilterData>(initialFilterData)
 
     useEffect(() => {
-        searchOrganizations()
+        searchOrganizations(filterData)
     }, [filterData.offset])
 
     useEffect(() => {
         console.log(filterData)
     }, [filterData]);
 
-    const searchOrganizations = () => {
+    const searchOrganizations = (filterData: OrganizationFilterData) => {
         setSearhLoading(true)
         setSearchError(null);
         setOrganization(initialOrganizationData)
@@ -92,10 +92,11 @@ const Organizations = () => {
 
     const handleResetFilters = () => {
         setFilterData(initialFilterData)
+        searchOrganizations(initialFilterData)
     }
 
     const handleSearch = () => {
-        searchOrganizations()
+        searchOrganizations(filterData)
     }
 
 
@@ -112,7 +113,7 @@ const Organizations = () => {
                 organizations.list?.length > 0 ? (
                     organizations.list.map((org) => (
                         <div key={`organization_${org.INN}`}>
-                            <OrganizationItem organization={org} />
+                            <OrganizationItem organization={org} statusChange/>
                         </div>
                     ))
                 ) : (
