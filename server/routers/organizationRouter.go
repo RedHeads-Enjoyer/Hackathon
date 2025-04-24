@@ -26,7 +26,7 @@ func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
 	protected.Use(middlewares.Auth(), middlewares.SystemRole(2))
 	{
 		protected.POST("", organizationController.GetAll)
-		protected.POST("/:id", organizationController.SetStatus)
+		protected.PUT("/:id", organizationController.SetStatus)
 	}
 
 	public := router.Group("/organization")

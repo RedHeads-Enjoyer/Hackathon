@@ -82,3 +82,7 @@
 .expandedCard:hover {
     border-color: var(--accent-light-color);
 }
+
+.statusSelector {
+    display: flex;
+}

@@ -11,8 +11,8 @@
     align-items: center;
     justify-content: space-between;
     max-width: 350px;
-    transition: all 0.3s ease;
-    animation: slideIn 0.3s ease-out forwards;
+    transition: all 0.1s ease;
+    animation: slideIn 0.1s ease-out forwards;
     color: var(--light-text-color);
     font-size: var(--default-font-size);
 }
@@ -27,21 +27,25 @@
 .notification.success {
     background-color: var(--success-bg-color);
     border-left: 4px solid var(--success-border-color);
+    color: var(--success-border-color);
 }
 
 .notification.error {
     background-color: var(--error-bg-color);
     border-left: 4px solid var(--error-border-color);
+    color: var(--error-border-color);
 }
 
 .notification.warning {
     background-color: var(--warning-bg-color);
     border-left: 4px solid var(--warning-border-color);
+    color: var(--warning-border-color);
 }
 
 .notification.info {
     background-color: var(--info-bg-color);
     border-left: 4px solid var(--info-border-color);
+    color: var(--info-border-color);
 }
 
 /* Animation */
@@ -65,4 +69,14 @@
         transform: translateX(100%);
         opacity: 0;
     }
+}
+
+/* Добавляем стили для иконок и текста */
+.notification_icon {
+    font-size: 1.2em;
+    margin-right: 10px;
+}
+
+.notification_content strong {
+    font-weight: 600;
 }

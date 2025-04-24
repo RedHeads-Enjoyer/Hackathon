@@ -46,6 +46,7 @@ const Organizations = () => {
         setOrganization(initialOrganizationData)
         OrganizationAPI.getAll(filterData)
             .then((data) => {
+                console.log(data)
                 setOrganization(prevState => ({
                     ...prevState,
                     list: data.list

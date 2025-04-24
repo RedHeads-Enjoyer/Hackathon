@@ -15,7 +15,7 @@ export type OrganizationCreateErrors = {
 }
 
 export type Organization = {
-    id: number,
+    ID: number,
     legalName: string,
     INN: string,
     OGRN: string,

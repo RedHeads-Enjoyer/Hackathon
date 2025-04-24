@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
@@ -254,31 +253,28 @@ func (oc *OrganizationController) SetStatus(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Организация не найдена"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении организации", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении организации"})
 		return
 	}
 
-	// Получение значения isVerified из тела запроса
-	type requestBody struct {
-		status int `json:"status"`
+	// Получение статуса из тела запроса
+	var requestBody struct {
+		Status int `json:"status"`
 	}
 
-	var body requestBody
-
-	if err := c.ShouldBindJSON(&body); err != nil {
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат запроса", "details": err.Error()})
 		return
 	}
 
-	organization.Status = body.status
-
-	fmt.Println(organization)
-
-	// Сохранение обновленной организации в базе данных
-	if err := oc.DB.Save(&organization).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при обновлении статуса верификации", "details": err.Error()})
+	// Обновление статуса
+	if err := oc.DB.Model(&organization).Update("status", requestBody.Status).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при обновлении статуса", "details": err.Error()})
 		return
 	}
+
+	// Обновляем объект организации
+	organization.Status = requestBody.Status
 
 	c.JSON(http.StatusOK, organization)
 }

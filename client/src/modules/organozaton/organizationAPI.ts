@@ -9,5 +9,5 @@ export const OrganizationAPI = {
     getAll: async (filterData: OrganizationFilterData) =>
         request<OrganizationSearchData>({method: 'POST', url: 'organizations', data: filterData}),
     setStatus: async (organizationId:number, status: number) =>
-        request<OrganizationSearchData>({method: 'POST', url: `organizations/${organizationId}`, data: status})
+        request<OrganizationSearchData>({method: 'PUT', url: `organizations/${organizationId}`, data: {status}})
 };

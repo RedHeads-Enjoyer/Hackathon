@@ -25,14 +25,13 @@ const OrganizationItem: React.FC<OrganizationCardProps> = (props) => {
 
     const handleStatusChange = (n: number) => {
         setChangeStatusLoading(true);
-        OrganizationAPI.setStatus(props.organization.id, n)
+        OrganizationAPI.setStatus(props.organization.ID, n)
             .then(() => {
                 setOrganization(prevState => ({
                     ...prevState,
                     status: n
                 }));
                 setChangeStatusLoading(false);
-                // Устанавливаем уведомление об успехе
                 setNotification({
                     message: 'Статус успешно изменен',
                     type: 'success'
@@ -40,7 +39,6 @@ const OrganizationItem: React.FC<OrganizationCardProps> = (props) => {
             })
             .catch((error) => {
                 setChangeStatusLoading(false);
-                // Устанавливаем уведомление об ошибке
                 setNotification({
                     message: 'Ошибка при изменении статуса',
                     type: 'error'
@@ -48,7 +46,7 @@ const OrganizationItem: React.FC<OrganizationCardProps> = (props) => {
                 console.error(error);
             })
             .finally(() => {
-                setChangeStatusLoading(true)
+                setChangeStatusLoading(false)
             })
     };
 
@@ -66,31 +64,23 @@ const OrganizationItem: React.FC<OrganizationCardProps> = (props) => {
             <p className={classes.info}>Дата создания: {formatDate(organization.CreatedAt)}</p>
             <p className={classes.info}>Дата изменения: {formatDate(organization.UpdatedAt)}</p>
             {props.statusChange ?
-                <>
-                    <p className={`${classes.info} ${classes.status}`}>Статус: </p>
                     <Select
                         options={statusOptions}
                         value={organization.status}
                         onChange={handleStatusChange}
                         loading={changeStatusLoading}
+                        label={"Статус"}
+                        horizontal
                     />
-                    <Select
-                        options={statusOptions}
-                        value={organization.status}
-                        onChange={handleStatusChange}
-                        loading={true}
-                    />
-                </>
                 :
                 <p className={`${classes.info} ${classes.status}`}>Статус: {organization.status}</p>
             }
 
-            {/* Отображаем уведомление, если оно есть */}
             {notification && (
                 <Notification
                     message={notification.message}
                     type={notification.type}
-                    duration={5000}
+                    duration={1500}
                     onClose={handleNotificationClose}
                 />
             )}

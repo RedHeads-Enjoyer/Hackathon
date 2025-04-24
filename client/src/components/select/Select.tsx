@@ -12,6 +12,7 @@ type SelectPropsType = {
     error?: string;
     required?: boolean;
     loading?: boolean;
+    horizontal?: boolean;
 };
 
 const Select = (props: SelectPropsType) => {
@@ -43,42 +44,45 @@ const Select = (props: SelectPropsType) => {
 
     return (
         <div className={`${classes.select_container} ${isError ? classes.error : ''}`} ref={selectRef}>
-            {props.label && (
-                <label htmlFor={selectId} className={classes.label}>
-                    {props.label}
-                    {props.required && <span className={classes.required}> *</span>}
-                </label>
-            )}
-
-            <div
-                className={`${isOpen ? classes.open : ''} ${props.loading ? classes.select : classes.selectLoading}`}
-                onClick={() => {
-                    if (props.loading) return
-                    setIsOpen(!isOpen)
-                }}
-                id={selectId}
-            >
-                <div className={classes.selected_value}>
-                    {props.loading ? <Loader/> : <>{selectedLabel}</>}
-
-
-                    <span className={classes.arrow}></span>
-                </div>
-
-                {isOpen && (
-                    <div className={classes.options_list}>
-                        {props.options.map(option => (
-                            <div
-                                key={option.value}
-                                className={`${classes.option} ${props.value === option.value ? classes.selected : ''}`}
-                                onClick={() => handleOptionClick(option.value)}
-                            >
-                                {option.label}
-                            </div>
-                        ))}
-                    </div>
+            <div className={props.horizontal ? classes.horizontal :""}>
+                {props.label && (
+                    <label htmlFor={selectId} className={classes.label}>
+                        {props.label}
+                        {props.required && <span className={classes.required}> *</span>}
+                    </label>
                 )}
+
+                <div
+                    className={`${isOpen ? classes.open : ''} ${props.loading ? classes.select : classes.selectLoading}`}
+                    onClick={() => {
+                        if (props.loading) return
+                        setIsOpen(!isOpen)
+                    }}
+                    id={selectId}
+                >
+                    <div className={classes.selected_value}>
+                        {props.loading ? <Loader/> : <>{selectedLabel}</>}
+
+
+                        <span className={classes.arrow}></span>
+                    </div>
+
+                    {isOpen && (
+                        <div className={classes.options_list}>
+                            {props.options.map(option => (
+                                <div
+                                    key={option.value}
+                                    className={`${classes.option} ${props.value === option.value ? classes.selected : ''}`}
+                                    onClick={() => handleOptionClick(option.value)}
+                                >
+                                    {option.label}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
+
 
             {props.error && <div className={classes.error_message}>{props.error}</div>}
         </div>
