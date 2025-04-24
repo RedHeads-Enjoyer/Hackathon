@@ -30,7 +30,7 @@ const OrganizationFilter = ({filterData, setFilterData, onResetFilters, onSearch
                 <div className={classes.expanded}
                      onClick={() => setIsExpanded(prevState => !prevState)}
                 >
-                    <h3 className={classes.title}>Фильтры поиска ({filterData.total}) {filterData.offset + 1}-{Math.min(filterData.offset + filterData.limit, filterData.total)}</h3>
+                    <h3 className={classes.title}>Фильтры поиска ({filterData.total}) {filterData.total == 0 ? filterData.total : filterData.offset + 1}-{Math.min(filterData.offset + filterData.limit, filterData.total)}</h3>
                 </div>
                 <div>
                     <Pagination

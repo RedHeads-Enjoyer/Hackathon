@@ -7,6 +7,7 @@ import Select from "../../../components/select/Select.tsx";
 import {statusOptions} from "../storage.ts";
 import {OrganizationAPI} from "../organizationAPI.ts";
 import Notification, {NotificationProps} from "../../../components/notification/notification.tsx";
+import Button from "../../../components/button/Button.tsx";
 
 type OrganizationCardProps = {
     organization: Organization;
@@ -73,7 +74,7 @@ const OrganizationItem: React.FC<OrganizationCardProps> = (props) => {
                         horizontal
                     />
                 :
-                <p className={`${classes.info} ${classes.status}`}>Статус: {organization.status}</p>
+                <p className={`${classes.info} ${classes.status}`}>Статус: {statusOptions.find(option => option.value == organization.status)?.label}</p>
             }
 
             {notification && (
@@ -84,6 +85,13 @@ const OrganizationItem: React.FC<OrganizationCardProps> = (props) => {
                     onClose={handleNotificationClose}
                 />
             )}
+
+            <Button variant="primary">Подтвердить</Button>
+            <Button variant="danger" size="sm">Удалить</Button>
+            <Button variant="success">Добавить</Button>
+            <Button variant="warning">Внимание</Button>
+            <Button variant="ghost">Отмена</Button>
+            <Button fullWidth>Загрузка...</Button>
         </div>
     );
 };

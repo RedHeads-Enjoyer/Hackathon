@@ -89,6 +89,38 @@
   --warning-border-color: #facc15;
   --info-bg-color: #eff6ff;
   --info-border-color: #60a5fa;
+
+  /* Основные цвета */
+  --button-primary-color: var(--accent-color); /* #ffc107 */
+  --button-primary-dark: var(--accent-dark-color); /* #ffa000 */
+  --button-primary-light: var(--accent-light-color); /* #ffd54f */
+  --button-primary-text: var(--dark-text-color); /* #121212 */
+
+  /* Вторичные цвета */
+  --button-secondary-color: #3a3a3a;
+  --button-secondary-dark: #2a2a2a;
+  --button-secondary-text: var(--light-text-color); /* #f5f5f5 */
+
+  /* Опасные действия (красные) */
+  --button-danger-color: #e53935;
+  --button-danger-dark: #c62828;
+  --button-danger-text: white;
+
+  /* Успешные действия (зеленые) */
+  --button-success-color: #43a047;
+  --button-success-dark: #2e7d32;
+  --button-success-text: white;
+
+  /* Предупреждения (желтые) */
+  --button-warning-color: #ffb300;
+  --button-warning-dark: #ff8f00;
+  --button-warning-text: var(--dark-text-color); /* #121212 */
+
+  /* Ghost кнопки */
+  --button-ghost-color: transparent;
+  --button-ghost-text: var(--accent-color); /* #ffc107 */
+  --button-ghost-border: var(--accent-color); /* #ffc107 */
+  --button-ghost-hover: rgba(255, 193, 7, 0.1);
 }
 
 a {

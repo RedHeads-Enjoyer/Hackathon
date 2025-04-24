@@ -1,96 +1,194 @@
 .button {
     position: relative;
-    background-color: var(--accent-color);
-    color: var(--dark-bg-color);
     border: none;
     border-radius: var(--border-radius);
-    padding: 12px 24px;
-    font-size: var(--default-font-size);
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-duration) ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-width: 120px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     overflow: hidden;
+    font-family: inherit;
+    letter-spacing: 0.5px;
 }
 
-/* Стиль для кнопки на всю ширину */
-.button.fullWidth {
-    width: 100%;
+/* Варианты кнопок */
+.button.primary {
+    background-color: var(--button-primary-color);
+    color: var(--button-primary-text);
 }
 
+.button.secondary {
+    background-color: var(--button-secondary-color);
+    color: var(--button-secondary-text);
+    border: 1px solid var(--input-border-color);
+}
+
+.button.danger {
+    background-color: var(--button-danger-color);
+    color: var(--button-danger-text);
+}
+
+.button.success {
+    background-color: var(--button-success-color);
+    color: var(--button-success-text);
+}
+
+.button.warning {
+    background-color: var(--button-warning-color);
+    color: var(--button-warning-text);
+}
+
+.button.ghost {
+    background-color: var(--button-ghost-color);
+    color: var(--button-ghost-text);
+    border: 1px solid var(--button-ghost-border);
+    box-shadow: none;
+}
+
+/* Размеры кнопок */
+.button.sm {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    min-width: 80px;
+    height: 32px;
+}
+
+.button.md {
+    padding: 10px 20px;
+    font-size: 1rem;
+    min-width: 120px;
+    height: 40px;
+}
+
+.button.lg {
+    padding: 12px 24px;
+    font-size: 1.125rem;
+    min-width: 140px;
+    height: 48px;
+}
+
+/* Состояния кнопок */
 .button:hover:not(:disabled) {
-    background-color: var(--accent-light-color);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.button.primary:hover:not(:disabled) {
+    background-color: var(--button-primary-dark);
+}
+
+.button.secondary:hover:not(:disabled) {
+    background-color: var(--button-secondary-dark);
+}
+
+.button.danger:hover:not(:disabled) {
+    background-color: var(--button-danger-dark);
+}
+
+.button.success:hover:not(:disabled) {
+    background-color: var(--button-success-dark);
+}
+
+.button.warning:hover:not(:disabled) {
+    background-color: var(--button-warning-dark);
+}
+
+.button.ghost:hover:not(:disabled) {
+    background-color: var(--button-ghost-hover);
 }
 
 .button:active:not(:disabled) {
     transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
     background-color: var(--disabled-bg-color);
     color: var(--muted-text-color);
-    cursor: not-allowed;
-    opacity: 0.7;
 }
 
-.button.loading {
-    cursor: progress;
+/* Эффекты фокуса */
+.button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-shadow-color);
 }
 
-.children {
-    margin: 0;
-    transition: opacity 0.3s ease;
-    position: relative;
-    z-index: 1;
+/* Иконки в кнопках */
+.button.withIcon {
+    gap: 10px;
 }
 
-.button.loading .children {
-    opacity: 0;
+.icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
 }
 
-/* Эффект волны при клике */
-.button::after {
-    content: '';
-    position: absolute;
+/* Полная ширина */
+.button.fullWidth {
     width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
-    transform: scale(0);
-    opacity: 0;
-    transition: transform 0.5s ease, opacity 0.5s ease;
-}
-
-.button:active::after {
-    transform: scale(2);
-    opacity: 1;
-    transition: transform 0s, opacity 0s;
 }
 
 /* Анимация загрузки */
 @keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 1; }
-    100% { opacity: 0.6; }
+    0% { opacity: 0.8; }
+    50% { opacity: 0.4; }
+    100% { opacity: 0.8; }
 }
 
-.button.loading::before {
+.button.loading {
+    position: relative;
+    color: transparent;
+}
+
+.button.loading::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Эффект при клике */
+.button::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--accent-color);
-    animation: pulse 1.5s infinite ease-in-out;
-    z-index: 0;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%, -50%);
+    transform-origin: 50% 50%;
+}
+
+/*.button:active::after {*/
+/*    animation: ripple 0.6s ease-out;*/
+/*}*/
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(20, 20);
+        opacity: 0;
+    }
 }
