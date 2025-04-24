@@ -5,8 +5,8 @@ import (
 )
 
 type Claims struct {
-	UserID     uint   `json:"user_id"`
+	UserID     uint   `json:"id"`
 	Username   string `json:"username"`
-	SystemRole int    `json:"systemRoleId"`
+	SystemRole int    `json:"systemRole"`
 	*jwt.RegisteredClaims
 }

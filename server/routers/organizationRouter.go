@@ -11,20 +11,26 @@ func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
 	organizationController := controllers.NewOrganizationController(db)
 
 	protected := router.Group("/organization")
-	protected.Use(middlewares.Auth())
+	protected.Use(middlewares.Auth(), middlewares.SystemRoleLover(1))
 	{
 		protected.POST("", organizationController.Create)
 	}
 
 	protected = router.Group("/organizations")
-	protected.Use(middlewares.Auth())
+	protected.Use(middlewares.Auth(), middlewares.SystemRoleLover(1))
 	{
 		protected.POST("/my", organizationController.GetMy)
 	}
 
+	protected = router.Group("/organizations")
+	protected.Use(middlewares.Auth(), middlewares.SystemRole(2))
+	{
+		protected.POST("", organizationController.GetAll)
+		protected.POST("/:id", organizationController.SetStatus)
+	}
+
 	public := router.Group("/organization")
 	{
-		public.GET("", organizationController.GetAll)
 		public.GET("/:id", organizationController.GetByID)
 	}
 
@@ -39,7 +45,6 @@ func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
 	system := router.Group("/organization")
 	system.Use(middlewares.Auth(), middlewares.SystemRole(2))
 	{
-		system.PUT("/:id/verify", organizationController.SetVerified)
 		system.GET("/full", organizationController.GetAllFull)
 	}
 }

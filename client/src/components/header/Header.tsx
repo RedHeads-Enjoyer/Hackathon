@@ -24,10 +24,18 @@ function Header() {
                         <Link to={'/'}>ХАКАНТОН</Link>
                     </h3>
                     <nav className={classes.nav}>
+                        {authState?.user.systemRole == 1 &&
+                            <>
+                                <Link to={'/organizations/my'}>Мои организации</Link>
+                            </>
+                        }
+                        {(authState?.user.systemRole == 2 || authState?.user.systemRole == 3) &&
+                            <>
+                                <Link to={'/organizations'}>Организации</Link>
+                            </>
+                        }
+                        <p>{authState?.user.username}</p>
                         <Link to={'/logout'}>Выход</Link>
-                        <Link to={'/organizations/my'}>Мои организации</Link>
-
-                        <p>{authState?.user.email}</p>
                     </nav>
                 </>
             }

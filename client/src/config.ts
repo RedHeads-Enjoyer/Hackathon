@@ -49,19 +49,20 @@ api.interceptors.response.use(
                     });
                 }
 
-                const { access_token } = await refreshTokenRequest;
-                localStorage.setItem('access_token', access_token);
+                const data = await refreshTokenRequest;
+                console.log(data)
+                localStorage.setItem('access_token', data.access_token);
 
                 // Обновляем оригинальный запрос
                 if (originalRequest.headers) {
-                    originalRequest.headers.Authorization = `Bearer ${access_token}`;
+                    originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
                 }
 
-                return api(originalRequest); // Повторный запрос с новым токеном
+                return api(originalRequest);
             } catch (refreshError) {
                 isRefreshingFailed = true;
                 localStorage.removeItem('access_token');
-                window.location.href = '/login'; // Перенаправление на страницу входа
+                window.location.href = '/login';
                 return Promise.reject(refreshError);
             }
         }

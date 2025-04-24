@@ -81,14 +81,69 @@ func (oc *OrganizationController) GetAllFull(c *gin.Context) {
 }
 
 func (oc *OrganizationController) GetAll(c *gin.Context) {
-	var organizations []models.Organization
+	// Парсинг параметров фильтрации из тела запроса
+	var filterData organizationDTO.OrganizationFilterData
+	if err := c.ShouldBindJSON(&filterData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат фильтров"})
+		return
+	}
 
-	if err := oc.DB.Find(&organizations).Error; err != nil {
+	// Базовый запрос для получения данных
+	dataQuery := oc.DB.Model(&models.Organization{})
+
+	// Применение фильтров к запросу
+	applyFilters := func(query *gorm.DB) *gorm.DB {
+		if filterData.LegalName != "" {
+			query = query.Where("legal_name LIKE ?", "%"+filterData.LegalName+"%")
+		}
+		if filterData.INN != "" {
+			query = query.Where("inn = ?", filterData.INN)
+		}
+		if filterData.OGRN != "" {
+			query = query.Where("ogrn = ?", filterData.OGRN)
+		}
+		if filterData.ContactEmail != "" {
+			query = query.Where("contact_email LIKE ?", "%"+filterData.ContactEmail+"%")
+		}
+		if filterData.Website != "" {
+			query = query.Where("website LIKE ?", "%"+filterData.Website+"%")
+		}
+		if filterData.Status != 0 {
+			query = query.Where("status = ?", filterData.Status)
+		}
+		return query
+	}
+
+	dataQuery = applyFilters(dataQuery)
+
+	// Подсчет общего количества записей
+	var totalCount int64
+	if err := dataQuery.Count(&totalCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при подсчете организаций", "details": err.Error()})
+		return
+	}
+
+	// Применение пагинации
+	if filterData.Limit > 0 {
+		dataQuery = dataQuery.Limit(filterData.Limit)
+	}
+	if filterData.Offset > 0 {
+		dataQuery = dataQuery.Offset(filterData.Offset)
+	}
+
+	var organizations []models.Organization
+	if err := dataQuery.Find(&organizations).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении организаций", "details": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, organizations)
+	// Возвращаем данные с информацией о пагинации
+	c.JSON(http.StatusOK, gin.H{
+		"list":   organizations,
+		"total":  totalCount,
+		"limit":  filterData.Limit,
+		"offset": filterData.Offset,
+	})
 }
 
 func (oc *OrganizationController) GetByIDFull(c *gin.Context) {
@@ -189,7 +244,7 @@ func (oc *OrganizationController) Delete(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-func (oc *OrganizationController) SetVerified(c *gin.Context) {
+func (oc *OrganizationController) SetStatus(c *gin.Context) {
 	id := c.Param("id")
 	var organization models.Organization
 
@@ -204,17 +259,18 @@ func (oc *OrganizationController) SetVerified(c *gin.Context) {
 	}
 
 	// Получение значения isVerified из тела запроса
-	var requestBody struct {
+	type requestBody struct {
 		status int `json:"status"`
 	}
 
-	if err := c.ShouldBindJSON(&requestBody); err != nil {
+	var body requestBody
+
+	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат запроса", "details": err.Error()})
 		return
 	}
 
-	// Установка значения isVerified
-	organization.Status = 1
+	organization.Status = body.status
 
 	fmt.Println(organization)
 

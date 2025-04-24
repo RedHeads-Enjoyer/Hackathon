@@ -18,6 +18,7 @@ import UserEditForm from "./modules/user/UserEditForm.tsx";
 import UserList from "./modules/user/UserList.tsx";
 import CreateOrganizationPage from "./modules/organozaton/CreateOrganizationPage.tsx";
 import MyOrganizationsPage from "./modules/organozaton/MyOrganizationsPage.tsx";
+import Organizations from "./modules/organozaton/Organizations.tsx";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -59,6 +60,10 @@ function App() {
                     <Route path="/hackathon/create" element={<CreateHackathonItem />} />
                     <Route path={"/organization/create"} element={<CreateOrganizationPage/>}/>
                     <Route path={"/organizations/my"} element={<MyOrganizationsPage/>}/>
+                </Route>
+
+                <Route element={<ProtectedRoute roleLevel={2}><Outlet /></ProtectedRoute>}>
+                    <Route path="/organizations" element={<Organizations />}/>
                 </Route>
 
                 {/* Авторизация */}

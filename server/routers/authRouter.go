@@ -14,7 +14,7 @@ func AuthRouter(router *gin.Engine, db *gorm.DB) {
 	{
 		public.POST("/register", authController.RegisterHandler)
 		public.POST("/login", authController.LoginHandler)
-		public.POST("/refresh", authController.RefreshTokenHandler)
+
 	}
 
 	protected := router.Group("/auth")
@@ -23,6 +23,7 @@ func AuthRouter(router *gin.Engine, db *gorm.DB) {
 		protected.GET("/ping", func(context *gin.Context) {
 			context.JSON(200, gin.H{"message": "pong"})
 		})
+		public.POST("/refresh", authController.RefreshTokenHandler)
 		protected.GET("/verify", authController.CurrentUserHandler)
 		protected.POST("/logout", authController.LogoutHandler)
 	}

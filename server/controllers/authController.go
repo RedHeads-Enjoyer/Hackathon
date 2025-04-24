@@ -114,9 +114,9 @@ func (ac *AuthController) LoginHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"access_token": accessToken,
 		"user": gin.H{
-			"id":          user.ID,
-			"username":    user.Username,
-			"system_role": user.SystemRole,
+			"id":         user.ID,
+			"username":   user.Username,
+			"systemRole": user.SystemRole,
 		},
 	})
 }
@@ -131,9 +131,13 @@ func (ac *AuthController) CurrentUserHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"user": user,
-	})
+	verifyDTO := userDTO.Verify{
+		ID:         user.ID,
+		SystemRole: user.SystemRole,
+		Username:   user.Username,
+	}
+
+	c.JSON(http.StatusOK, verifyDTO)
 }
 
 // LogoutHandler выполняет выход пользователя
@@ -164,12 +168,21 @@ func (ac *AuthController) RefreshTokenHandler(c *gin.Context) {
 		return
 	}
 
-	newAccess, newRefresh, err := GenerateTokens(claims.UserID, claims.Username, claims.SystemRole)
+	userID := claims.UserID
+	var user models.User
+	if err := ac.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
+		return
+	}
+
+	// Генерация новых токенов с обновленными данными
+	newAccess, newRefresh, err := GenerateTokens(user.ID, user.Username, user.SystemRole)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при генерации токена"})
 		return
 	}
 
+	// Установка нового refresh-токена в cookie
 	SetRefreshTokenCookie(c, newRefresh)
 	c.JSON(http.StatusOK, gin.H{"access_token": newAccess})
 }
