@@ -20,6 +20,7 @@ import CreateOrganizationPage from "./modules/organozaton/CreateOrganizationPage
 import MyOrganizationsPage from "./modules/organozaton/MyOrganizationsPage.tsx";
 import Organizations from "./modules/organozaton/Organizations.tsx";
 import Technologies from "./modules/technologies/Technologies.tsx";
+import CreateTechnologyPage from "./modules/technologies/CreateTechnologyPage.tsx";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -66,6 +67,7 @@ function App() {
                 <Route element={<ProtectedRoute roleLevel={2}><Outlet /></ProtectedRoute>}>
                     <Route path="/organizations" element={<Organizations />}/>
                     <Route path="/technologies" element={<Technologies />}/>
+                    <Route path="//technology/create" element={<CreateTechnologyPage />}/>
                 </Route>
 
                 {/* Авторизация */}

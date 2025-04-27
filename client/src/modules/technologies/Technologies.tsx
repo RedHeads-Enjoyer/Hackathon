@@ -5,7 +5,8 @@ import {FilterUpdate, Technology, TechnologyFilterData} from "./types.ts";
 import Loader from "../../components/loader/Loader.tsx";
 import Error from "../../components/error/Error.tsx";
 import TechnologiesFilter from "./components/TechnologiesFilter.tsx";
-import {technologiesAPI} from "./technologiesAPI.ts";
+import {technologyAPI} from "./technologyAPI.ts";
+import TechnologyItem from "./components/TechnologyItem.tsx";
 
 
 const Organizations = () => {
@@ -35,13 +36,10 @@ const Organizations = () => {
         setSearhLoading(true)
         setSearchError(null);
         setTechnologies(initialTechnologyList)
-        technologiesAPI.getAll(filterData)
+        technologyAPI.getAll(filterData)
             .then((data) => {
                 console.log(data)
-                setTechnologies(prevState => ({
-                    ...prevState,
-                    list: data.list
-                }));
+                setTechnologies(data.list);
                 setFilterData(prevState => ({
                     ...prevState,
                     total: data.total
@@ -105,8 +103,7 @@ const Organizations = () => {
                 technologies?.length > 0 ? (
                     technologies.map((tech) => (
                         <div key={`organization_${tech.name}`}>
-                            {tech.name}
-                            {/*<OrganizationItem organization={org} statusChange/>*/}
+                            <TechnologyItem technology={tech}/>
                         </div>
                     ))
                 ) : (

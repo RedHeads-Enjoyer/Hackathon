@@ -86,3 +86,8 @@
 .statusSelector {
     display: flex;
 }
+
+.cardUpdate {
+    display: flex;
+    justify-content: space-between;
+}

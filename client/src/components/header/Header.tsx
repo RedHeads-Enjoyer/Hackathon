@@ -35,6 +35,7 @@ function Header() {
                             <>
                                 <Link to={'/organizations'}>Организации</Link>
                                 <Link to={'/technologies'}>Технологии</Link>
+                                <Link to={'/technology/create'}>Создать технологию</Link>
                             </>
                         }
                         <p>{authState?.user.username}</p>

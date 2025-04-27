@@ -84,26 +84,23 @@ func (tc *TechnologyController) GetAll(c *gin.Context) {
 		return
 	}
 
+	// Преобразование моделей в DTO
+	var technologiesDTO []technologyDTO.GetAll
+	for _, tech := range technologies {
+		techDTO := technologyDTO.GetAll{
+			Name:        tech.Name,
+			Description: tech.Description,
+		}
+		technologiesDTO = append(technologiesDTO, techDTO)
+	}
+
 	// Возвращаем данные с информацией о пагинации
 	c.JSON(http.StatusOK, gin.H{
-		"list":   technologies,
+		"list":   technologiesDTO,
 		"total":  totalCount,
 		"limit":  filterData.Limit,
 		"offset": filterData.Offset,
 	})
-}
-
-// Получение технологии по ID
-func (tc *TechnologyController) GetByID(c *gin.Context) {
-	id := c.Param("id")
-	var technology models.Technology
-
-	if err := tc.DB.First(&technology, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Технология не найдена"})
-		return
-	}
-
-	c.JSON(http.StatusOK, technology)
 }
 
 // Обновление технологии

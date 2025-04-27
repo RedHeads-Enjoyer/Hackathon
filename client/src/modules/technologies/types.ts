@@ -8,6 +8,22 @@ export type TechnologyCreate = {
     description: string
 }
 
+export type TechnologyUpdate = {
+    name: string,
+    description: string
+}
+
+export type TechnologiesSearchData = {
+    list: Technology[],
+    limit: number,
+    offset: number,
+    total: number
+}
+
+export type TechnologyFormError = {
+    name?: string,
+    description?: string,
+}
 
 export type TechnologyFilterData = {
     name: string,
@@ -20,10 +36,3 @@ export type FilterUpdate = {
     name: keyof TechnologyFilterData;
     value: any;
 };
-
-export type TechnologiesSearchData = {
-    list: Technology[],
-    limit: number,
-    offset: number,
-    total: number
-}
