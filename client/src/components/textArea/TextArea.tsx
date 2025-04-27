@@ -12,6 +12,7 @@ interface TextAreaProps {
     disabled?: boolean;
     className?: string;
     error?: string;
+    required?: boolean; // Добавлен параметр required
 }
 
 const TextArea: React.FC<TextAreaProps> = ({
@@ -25,6 +26,7 @@ const TextArea: React.FC<TextAreaProps> = ({
                                                disabled = false,
                                                className = '',
                                                error = '',
+                                               required = false, // Добавлен параметр с дефолтным значением
                                            }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const id = useId();
@@ -49,6 +51,7 @@ const TextArea: React.FC<TextAreaProps> = ({
                 className={`${classes.label} ${disabled ? classes.labelDisabled : ''}`}
             >
                 {label}
+                {required && <span className={classes.required}> *</span>} {/* Звездочка для обязательного поля */}
             </label>
 
             <div className={`${classes.textAreaContainer} ${disabled ? classes.disabled : ''} ${error ? classes.error : ''}`}>
@@ -64,6 +67,7 @@ const TextArea: React.FC<TextAreaProps> = ({
                     rows={minRows}
                     aria-invalid={!!error}
                     aria-describedby={error ? `${id}-error` : undefined}
+                    required={required} // Добавлен атрибут required
                 />
             </div>
 

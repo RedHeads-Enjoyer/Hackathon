@@ -9,7 +9,7 @@ import {technologyAPI} from "./technologyAPI.ts";
 import TechnologyItem from "./components/TechnologyItem.tsx";
 
 
-const Organizations = () => {
+const Technologies = () => {
     const initialFilterData: TechnologyFilterData = {
         name: "",
         limit: 20,
@@ -103,7 +103,10 @@ const Organizations = () => {
                 technologies?.length > 0 ? (
                     technologies.map((tech) => (
                         <div key={`organization_${tech.name}`}>
-                            <TechnologyItem technology={tech}/>
+                            <TechnologyItem
+                                technology={tech}
+                                handleUpdate={() => searchTechnologies(filterData)}
+                            />
                         </div>
                     ))
                 ) : (
@@ -115,4 +118,4 @@ const Organizations = () => {
     );
 };
 
-export default Organizations;
+export default Technologies;

@@ -79,7 +79,7 @@ func (tc *TechnologyController) GetAll(c *gin.Context) {
 	}
 
 	var technologies []models.Technology
-	if err := dataQuery.Find(&technologies).Error; err != nil {
+	if err := dataQuery.Order("id ASC").Find(&technologies).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении технологий", "details": err.Error()})
 		return
 	}
@@ -88,6 +88,7 @@ func (tc *TechnologyController) GetAll(c *gin.Context) {
 	var technologiesDTO []technologyDTO.GetAll
 	for _, tech := range technologies {
 		techDTO := technologyDTO.GetAll{
+			Id:          tech.ID,
 			Name:        tech.Name,
 			Description: tech.Description,
 		}
@@ -104,40 +105,40 @@ func (tc *TechnologyController) GetAll(c *gin.Context) {
 }
 
 // Обновление технологии
-//func (tc *TechnologyController) Update(c *gin.Context) {
-//	id := c.Param("id")
-//	var dto technology.TechnologyUpdateDTO
-//
-//	if err := c.ShouldBindJSON(&dto); err != nil {
-//		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных", "details": err.Error()})
-//		return
-//	}
-//
-//	var technology models.Technology
-//	if err := tc.DB.First(&technology, id).Error; err != nil {
-//		c.JSON(http.StatusNotFound, gin.H{"error": "Технология не найдена"})
-//		return
-//	}
-//
-//	// Обновление полей технологии
-//	technology = *dto.ToModel(&technology)
-//
-//	if err := tc.DB.Save(&technology).Error; err != nil {
-//		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при обновлении технологии", "details": err.Error()})
-//		return
-//	}
-//
-//	c.JSON(http.StatusOK, technology)
-//}
-//
-//// Удаление технологии
-//func (tc *TechnologyController) Delete(c *gin.Context) {
-//	id := c.Param("id")
-//
-//	if err := tc.DB.Delete(&models.Technology{}, id).Error; err != nil {
-//		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении технологии", "details": err.Error()})
-//		return
-//	}
-//
-//	c.JSON(http.StatusNoContent, nil)
-//}
+func (tc *TechnologyController) Update(c *gin.Context) {
+	id := c.Param("id")
+	var dto technologyDTO.Update
+
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных", "details": err.Error()})
+		return
+	}
+
+	var technology models.Technology
+	if err := tc.DB.First(&technology, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Технология не найдена"})
+		return
+	}
+
+	// Обновление полей технологии
+	technology = *dto.ToModel(&technology)
+
+	if err := tc.DB.Save(&technology).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при обновлении технологии", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, technology)
+}
+
+// // Удаление технологии
+func (tc *TechnologyController) Delete(c *gin.Context) {
+	id := c.Param("id")
+
+	if err := tc.DB.Delete(&models.Technology{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении технологии", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}

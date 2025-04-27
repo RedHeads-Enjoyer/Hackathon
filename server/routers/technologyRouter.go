@@ -20,7 +20,7 @@ func TechnologyRouter(router *gin.Engine, db *gorm.DB) {
 	{
 		protected.POST("", technologyController.Create)
 		//protected.GET("/:id", technologyController.GetByID)
-		//protected.PUT("/:id", technologyController.Update)
-		//protected.DELETE("/:id", technologyController.Delete)
+		protected.PUT("/:id", technologyController.Update)
+		protected.DELETE("/:id", technologyController.Delete)
 	}
 }

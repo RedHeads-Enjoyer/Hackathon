@@ -83,3 +83,25 @@
     background-color: var(--accent-color);
     border-radius: 3px;
 }
+
+/* Добавляем стили для отображения ошибок и обязательных полей */
+.required {
+    color: var(--accent-color);
+    user-select: none;
+}
+
+.errorMessage {
+    color: var(--error-text-color);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.textAreaContainer.error {
+    border-color: var(--error-border-color);
+    background-color: var(--error-bg-color);
+}
+
+.textAreaContainer.error textarea:invalid {
+    border-color: var(--error-border-color);
+    background-color: var(--error-bg-color);
+}

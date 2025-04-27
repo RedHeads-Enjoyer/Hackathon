@@ -7,11 +7,11 @@ type ButtonPropsType = {
     fullWidth?: boolean;
     disabled?: boolean;
     loading?: boolean;
-    children: React.ReactNode;
+    children?: React.ReactNode;
     type?: "button" | "submit" | "reset";
     className?: string;
     variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'ghost';
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'icon' | 'sm' | 'md' | 'lg';
     icon?: React.ReactNode;
     iconPosition?: 'left' | 'right';
 }
@@ -54,7 +54,7 @@ const Button: React.FC<ButtonPropsType> = ({
                     {icon && iconPosition === 'left' && (
                         <span className={classes.icon}>{icon}</span>
                     )}
-                    <span className={classes.children}>{children}</span>
+                    {children && <span className={classes.children}>{children}</span>}
                     {icon && iconPosition === 'right' && (
                         <span className={classes.icon}>{icon}</span>
                     )}

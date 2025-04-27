@@ -43,6 +43,7 @@
 .info {
     font-size: var(--default-font-size);
     color: var(--light-text-color);
+    white-space: pre-wrap;
     margin: 4px 0; /* Отступы между строками информации */
 }
 
@@ -90,4 +91,10 @@
 .cardUpdate {
     display: flex;
     justify-content: space-between;
+}
+
+.update_section {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
 }

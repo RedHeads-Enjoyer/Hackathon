@@ -50,6 +50,13 @@
 }
 
 /* Размеры кнопок */
+.button.icon {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    min-width: 40px;
+    height: 40px;
+}
+
 .button.sm {
     padding: 8px 16px;
     font-size: 0.875rem;

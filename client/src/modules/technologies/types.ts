@@ -1,4 +1,5 @@
 export type Technology = {
+    ID: number
     name: string,
     description: string
 }
