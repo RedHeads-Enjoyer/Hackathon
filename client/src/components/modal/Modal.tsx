@@ -4,10 +4,10 @@ import Button from "../button/Button.tsx";
 
 interface ModalProps {
     isOpen: boolean;
-    onConfirm: (e: React.FormEvent) => Promise<void>;
+    onConfirm: () => void;
     onReject: () => any;
     title: string;
-    text: string;
+    children?: React.ReactNode;
     rejectText: string;
     confirmText: string;
 }
@@ -19,10 +19,11 @@ const Modal: React.FC<ModalProps> = (props) => {
         <div className={classes.modalOverlay}>
             <div className={classes.modalContent}>
                 <h3 className={classes.modalTitle}>{props.title}</h3>
-                <p>{props.text}</p>
+                {props.children}
 
                 <div className={classes.modalActions}>
                     <Button
+                        variant={"ghost"}
                         onClick={props.onReject}
                     >
                         {props.rejectText}

@@ -3,7 +3,6 @@ package controllers
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 	"net/http"
 	"server/models"
@@ -12,6 +11,7 @@ import (
 	"server/models/DTO/userDTO"
 	"server/types"
 	"strconv"
+	"time"
 )
 
 type HackathonController struct {
@@ -24,174 +24,139 @@ func NewHackathonController(db *gorm.DB) *HackathonController {
 }
 
 // Создание хакатона
-func (hc *HackathonController) Create(c *gin.Context) {
-	dto := c.MustGet("hackathon_dto").(hackathonDTO.HackathonCreateDTO)
-
-	// Валидация данных
-	validate := validator.New()
-	if err := validate.Struct(dto); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка валидации", "details": err.Error()})
+// CreateHackathon - метод для создания хакатона
+func (hc *HackathonController) CreateHackathon(c *gin.Context) {
+	// Получаем ID пользователя из контекста
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима авторизация"})
 		return
 	}
 
-	// Извлечение ID организации из DTO или контекста
-	organizationID := dto.OrganizationID // Предполагается, что у вас есть поле OrganizationID в DTO
+	// Получаем данные из формы
+	var hackathonData struct {
+		Name           string    `form:"name" binding:"required"`
+		Description    string    `form:"description"`
+		RegDateFrom    time.Time `form:"reg_date_from" binding:"required"`
+		RegDateTo      time.Time `form:"reg_date_to" binding:"required"`
+		StartDate      time.Time `form:"start_date" binding:"required"`
+		EndDate        time.Time `form:"end_date" binding:"required"`
+		MaxTeams       *int      `form:"max_teams"`
+		MaxTeamSize    int       `form:"max_team_size" binding:"required"`
+		MinTeamSize    int       `form:"min_team_size" binding:"required"`
+		OrganizationID uint      `form:"organization_id" binding:"required"`
+		TechnologyIDs  []uint    `form:"technology_ids"`
+	}
 
-	// Проверка статуса организации
+	if err := c.ShouldBind(&hackathonData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Проверяем права на создание хакатона в этой организации
 	var organization models.Organization
-	if err := hc.DB.First(&organization, organizationID).Error; err != nil {
+	if err := hc.DB.First(&organization, hackathonData.OrganizationID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Организация не найдена"})
 		return
 	}
 
-	if organization.Status != 1 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Организация не имеет права создавать хакатоны"})
+	if organization.OwnerID != userID.(uint) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Нет прав для создания хакатона в этой организации"})
 		return
 	}
 
-	// Преобразование DTO в модель
-	hackathon := dto.ToModel()
-
-	tx := hc.DB.Begin()
-	if err := tx.Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при начале транзакции"})
-		return
-	}
-
-	// Сохранение хакатона в базе данных
-	if err := tx.Create(&hackathon).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании хакатона", "details": err.Error()})
-		return
-	}
-
-	// Создание критериев
-	for _, criteria := range dto.Criteria {
-		criteriaModel := criteria.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
-		if err := tx.Create(&criteriaModel).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании критерия", "details": err.Error()})
-			return
-		}
-		hackathon.Criteria = append(hackathon.Criteria, criteriaModel)
-	}
-
-	// Создание шагов
-	for _, step := range dto.Steps {
-		stepModel := step.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
-		if err := tx.Create(&stepModel).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании этапа", "details": err.Error()})
-			return
+	// Создаем хакатон в транзакции
+	var hackathon models.Hackathon
+	err := hc.DB.Transaction(func(tx *gorm.DB) error {
+		// Создаем запись хакатона
+		hackathon = models.Hackathon{
+			Name:           hackathonData.Name,
+			Description:    hackathonData.Description,
+			RegDateFrom:    hackathonData.RegDateFrom,
+			RegDateTo:      hackathonData.RegDateTo,
+			StartDate:      hackathonData.StartDate,
+			EndDate:        hackathonData.EndDate,
+			MaxTeams:       hackathonData.MaxTeams,
+			MaxTeamSize:    hackathonData.MaxTeamSize,
+			MinTeamSize:    hackathonData.MinTeamSize,
+			StatusID:       1, // Начальный статус (например, "Черновик")
+			OrganizationID: hackathonData.OrganizationID,
 		}
 
-		hackathon.Steps = append(hackathon.Steps, stepModel)
-	}
-
-	// Создание наград
-	for _, award := range dto.Awards {
-		awardModel := award.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
-		if err := tx.Create(&awardModel).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании награды", "details": err.Error()})
-			return
-		}
-		hackathon.Awards = append(hackathon.Awards, awardModel)
-	}
-
-	for _, techID := range dto.Technologies {
-		var technology models.Technology
-		if err := tx.First(&technology, techID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Технология не найдена", "details": err.Error()})
-			tx.Rollback()
-			return
+		if err := tx.Create(&hackathon).Error; err != nil {
+			return err
 		}
 
-		// Связываем технологию с хакатоном
-		if err := tx.Model(&hackathon).Association("Technologies").Append(&technology); err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при связывании технологии с хакатоном", "details": err.Error()})
-			return
+		// Добавляем связь создателя хакатона как организатора
+		userHackathon := models.BndUserHackathon{
+			UserID:        userID.(uint),
+			HackathonID:   hackathon.ID,
+			HackathonRole: 3,
 		}
-	}
 
-	//if file, err := c.FormFile("logo"); err == nil {
-	//	// Вызов метода для загрузки файла
-	//	newFile, err := hc.FileController.UploadFile(c, file, hackathon.ID, "user")
-	//	if err != nil {
-	//		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	//		return
-	//	}
-	//	// Обновляем поле профиля пользователя, если необходимо
-	//	hackathon.Logo = newFile // Или URL, если вы хотите хранить URL
-	//}
+		if err := tx.Create(&userHackathon).Error; err != nil {
+			return err
+		}
 
-	// Проверяем, были ли загружены файлы
-	//if err := c.Request.ParseMultipartForm(10 << 20); err != nil { // 10 MB limit
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка при парсинге формы", "details": err.Error()})
-	//	return
-	//}
-	//
-	//files := c.Request.MultipartForm.File["files"] // Получаем массив файлов по имени поля "files"
-	//if len(files) == 0 {
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": "Файлы не найдены"})
-	//	return
-	//}
+		// Загружаем логотип хакатона, если он есть
+		logoFile, err := c.FormFile("logo")
+		if err == nil && logoFile != nil {
+			file, err := hc.FileController.UploadFile(c, logoFile, hackathon.ID, "hackathon")
+			if err != nil {
+				return err
+			}
 
-	// Обработка каждого файла
-	//for _, file := range files {
-	//	newFile, err := hc.FileController.UploadFile(c, file, hackathon.ID, "hackathon")
-	//	if err != nil {
-	//		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	//		return
-	//	}
-	//	// Здесь вы можете сохранить информацию о загруженном файле в базу данных, если это необходимо
-	//	// Например, добавьте его в массив файлов хакатона
-	//	hackathon.Files = append(hackathon.Files, newFile) // Предполагается, что у вас есть поле Files в модели хакатона
-	//}
+			// Обновляем хакатон с привязкой к логотипу
+			if err := tx.Model(&hackathon).Association("Logo").Replace(file); err != nil {
+				return err
+			}
+		}
 
-	userClaims, exists := c.Get("user_claims")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		// Загружаем дополнительные файлы, если они есть
+		form, err := c.MultipartForm()
+		if err == nil && form != nil && form.File["files"] != nil {
+			for _, fileHeader := range form.File["files"] {
+				file, err := hc.FileController.UploadFile(c, fileHeader, hackathon.ID, "hackathon")
+				if err != nil {
+					return err
+				}
+
+				// Добавляем файл в Files хакатона
+				if err := tx.Model(&hackathon).Association("Files").Append(file); err != nil {
+					return err
+				}
+			}
+		}
+
+		// Добавляем технологии, если они указаны
+		if len(hackathonData.TechnologyIDs) > 0 {
+			var technologies []models.Technology
+			if err := tx.Where("id IN ?", hackathonData.TechnologyIDs).Find(&technologies).Error; err != nil {
+				return err
+			}
+
+			if err := tx.Model(&hackathon).Association("Technologies").Append(&technologies); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	claims, ok := userClaims.(*types.Claims)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
-		return
-	}
+	// Загружаем полные данные хакатона для ответа
+	var result models.Hackathon
+	hc.DB.Preload("Organization").
+		Preload("Logo").
+		Preload("Files").
+		Preload("Technologies").
+		First(&result, hackathon.ID)
 
-	userID := claims.UserID
-
-	// Проверка, не добавлен ли пользователь уже
-	var existingUser models.BndUserHackathon
-	if err := tx.Where("user_id = ? AND hackathon_id = ?", userID, hackathon.ID).First(&existingUser).Error; err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "Пользователь уже добавлен к хакатону"})
-		tx.Rollback()
-		return
-	}
-
-	// Добавление пользователя к хакатону
-	userHackathon := models.BndUserHackathon{
-		UserID:        userID,
-		HackathonID:   hackathon.ID,
-		HackathonRole: 3,
-	}
-
-	if err := tx.Create(&userHackathon).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при добавлении пользователя к хакатону", "details": err.Error()})
-		tx.Rollback()
-		return
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при подтверждении транзакции"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, hackathon)
+	c.JSON(http.StatusCreated, result)
 }
 
 // GetAll - Получение списка всех хакатонов

@@ -1,4 +1,4 @@
-import React, {FormEvent, useState} from 'react';
+import React, {useState} from 'react';
 import classes from './style.module.css';
 import PageLabel from "../../components/pageLabel/PageLabel.tsx";
 import Input from "../../components/input/Input.tsx";
@@ -45,8 +45,7 @@ const CreateOrganizationPage: React.FC = () => {
         }));
     };
 
-    const confirmPublish = async (e: FormEvent) => {
-        e.preventDefault();
+    const confirmPublish = async () => {
         setIsPublishModalOpen(false)
         setPublishLoadin(true);
         setPublishError(null);
@@ -61,7 +60,7 @@ const CreateOrganizationPage: React.FC = () => {
 
         try {
             await OrganizationAPI.create(formData);
-            navigate('/');
+            navigate('/organizations/my');
         } catch (err) {
             const errorMessage = (err as Error).message || "Ошибка при создании организации";
             setPublishError(errorMessage);
@@ -198,12 +197,13 @@ const CreateOrganizationPage: React.FC = () => {
             <Modal
                 isOpen={isPublishModalOpen}
                 title={"Подтверждение создание организации"}
-                text={"Проверьте все данные. Позже модератор будет проверять ваши данные."}
                 confirmText={"Подтверждаю"}
                 rejectText={"Отмена"}
                 onConfirm={confirmPublish}
                 onReject={() => setIsPublishModalOpen(false)}
-            />
+            >
+                <p>Проверьте все данные. Позже модератор будет проверять ваши данные.</p>
+            </Modal>
         </div>
     );
 };

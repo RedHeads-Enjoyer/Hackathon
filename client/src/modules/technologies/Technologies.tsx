@@ -1,53 +1,44 @@
 import React, {useEffect, useState} from 'react';
 import classes from './style.module.css';
 import PageLabel from "../../components/pageLabel/PageLabel.tsx";
-import {FilterUpdate, OrganizationFilterData, OrganizationSearchData} from "./types.ts";
+import {FilterUpdate, Technology, TechnologyFilterData} from "./types.ts";
 import Loader from "../../components/loader/Loader.tsx";
-import {OrganizationAPI} from "./organizationAPI.ts";
 import Error from "../../components/error/Error.tsx";
-import OrganizationItem from "./Components/OrganizationItem.tsx";
-import OrganizationFilter from "./Components/OrganizationsFilter.tsx";
+import TechnologiesFilter from "./components/TechnologiesFilter.tsx";
+import {technologiesAPI} from "./technologiesAPI.ts";
 
 
 const Organizations = () => {
-    const initialFilterData: OrganizationFilterData = {
-        INN: "",
-        OGRN: "",
-        contactEmail: "",
-        legalName: "",
-        status: 0,
-        website: "",
+    const initialFilterData: TechnologyFilterData = {
+        name: "",
         limit: 20,
         offset: 0,
         total: 0
     }
 
-    const initialOrganizationData: OrganizationSearchData = {
-        total: 0,
-        list: []
-    }
+    const initialTechnologyList: Technology[] = []
 
-    const [organizations, setOrganization] = useState<OrganizationSearchData>(initialOrganizationData);
+    const [technologies, setTechnologies] = useState<Technology[]>(initialTechnologyList);
     const [searchLoading, setSearhLoading] = useState<boolean>(true)
     const [searchError, setSearchError] = useState<null | string>()
-    const [filterData, setFilterData] = useState<OrganizationFilterData>(initialFilterData)
+    const [filterData, setFilterData] = useState<TechnologyFilterData>(initialFilterData)
 
     useEffect(() => {
-        searchOrganizations(filterData)
+        searchTechnologies(filterData)
     }, [filterData.offset])
 
     useEffect(() => {
         console.log(filterData)
     }, [filterData]);
 
-    const searchOrganizations = (filterData: OrganizationFilterData) => {
+    const searchTechnologies = (filterData: TechnologyFilterData) => {
         setSearhLoading(true)
         setSearchError(null);
-        setOrganization(initialOrganizationData)
-        OrganizationAPI.getAll(filterData)
+        setTechnologies(initialTechnologyList)
+        technologiesAPI.getAll(filterData)
             .then((data) => {
                 console.log(data)
-                setOrganization(prevState => ({
+                setTechnologies(prevState => ({
                     ...prevState,
                     list: data.list
                 }));
@@ -66,11 +57,11 @@ const Organizations = () => {
     }
 
     const handleFilterChange = (update: FilterUpdate | React.ChangeEvent<HTMLInputElement>) => {
-        let name: keyof OrganizationFilterData;
+        let name: keyof TechnologyFilterData;
         let value: any;
 
         if ('target' in update) {
-            name = update.target.name as keyof OrganizationFilterData;
+            name = update.target.name as keyof TechnologyFilterData;
             value = update.target.value;
         } else {
             name = update.name;
@@ -80,7 +71,7 @@ const Organizations = () => {
         setFilterData(prev => {
             const newState = {
                 ...prev,
-                [name]: name === 'status' || name === 'limit' || name === 'offset' ? Number(value) : value
+                [name]: name === 'limit' || name === 'offset' ? Number(value) : value
             };
 
             if (name !== 'offset') {
@@ -93,32 +84,33 @@ const Organizations = () => {
 
     const handleResetFilters = () => {
         setFilterData(initialFilterData)
-        searchOrganizations(initialFilterData)
+        searchTechnologies(initialFilterData)
     }
 
     const handleSearch = () => {
-        searchOrganizations(filterData)
+        searchTechnologies(filterData)
     }
 
 
     return (
         <div className={classes.page_wrapper}>
-            <PageLabel size={'h3'}>Организации</PageLabel>
-            <OrganizationFilter
+            <PageLabel size={'h3'}>Технологии</PageLabel>
+            <TechnologiesFilter
                 filterData={filterData}
                 setFilterData={handleFilterChange}
                 onResetFilters={handleResetFilters}
                 onSearch={handleSearch}
             />
             {searchLoading ? <Loader/> :
-                organizations.list?.length > 0 ? (
-                    organizations.list.map((org) => (
-                        <div key={`organization_${org.INN}`}>
-                            <OrganizationItem organization={org} statusChange/>
+                technologies?.length > 0 ? (
+                    technologies.map((tech) => (
+                        <div key={`organization_${tech.name}`}>
+                            {tech.name}
+                            {/*<OrganizationItem organization={org} statusChange/>*/}
                         </div>
                     ))
                 ) : (
-                    <div className={classes.noResults}><p>Организации не найдены</p></div>
+                    <div className={classes.noResults}><p>Технологии не найдены</p></div>
                 )
             }
             {searchError && <Error>{searchError}</Error>}

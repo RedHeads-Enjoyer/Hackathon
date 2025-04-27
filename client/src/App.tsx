@@ -12,13 +12,14 @@ import {useAppDispatch} from "./store/hooks.ts";
 // import StoreDebugger from "./components/storeDebugger/StoreDebugger.tsx";
 import NotFound from "./modules/auth/NotFound.tsx";
 import PermissionDenied from "./modules/auth/PermissionDenied.tsx";
-import CreateHackathonItem from "./modules/hackathonItem/CreateHackathonPage.tsx";
+import CreateHackathonPage from "./modules/hackathon/CreateHackathonPage.tsx";
 import {logout} from "./modules/auth/store/authSlice.ts";
 import UserEditForm from "./modules/user/UserEditForm.tsx";
 import UserList from "./modules/user/UserList.tsx";
 import CreateOrganizationPage from "./modules/organozaton/CreateOrganizationPage.tsx";
 import MyOrganizationsPage from "./modules/organozaton/MyOrganizationsPage.tsx";
 import Organizations from "./modules/organozaton/Organizations.tsx";
+import Technologies from "./modules/technologies/Technologies.tsx";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -46,7 +47,7 @@ function App() {
     }, [dispatch]);
 
     if (loading) {
-        return <div>Loading...</div>; // Можно заменить на компонент загрузки
+        return <div>Loading...</div>;
     }
 
     return (
@@ -57,13 +58,14 @@ function App() {
                     <Route path="/" element={<HackathonList />}/>
                     <Route path="/user/edit" element={<UserEditForm userId={1}/> } />
                     <Route path="/user/list" element={<UserList /> } />
-                    <Route path="/hackathon/create" element={<CreateHackathonItem />} />
+                    <Route path="/hackathon/create" element={<CreateHackathonPage />} />
                     <Route path={"/organization/create"} element={<CreateOrganizationPage/>}/>
                     <Route path={"/organizations/my"} element={<MyOrganizationsPage/>}/>
                 </Route>
 
                 <Route element={<ProtectedRoute roleLevel={2}><Outlet /></ProtectedRoute>}>
                     <Route path="/organizations" element={<Organizations />}/>
+                    <Route path="/technologies" element={<Technologies />}/>
                 </Route>
 
                 {/* Авторизация */}

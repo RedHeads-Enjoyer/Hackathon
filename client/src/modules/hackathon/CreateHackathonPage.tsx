@@ -308,25 +308,16 @@ const CreateHackathonPage: React.FC = () => {
             </div>
 
             {/* Модальное окно подтверждения */}
-            <Modal isOpen={isPublishModalOpen}>
-                <div className={classes.modalContent}>
-                    <h3 className={classes.modalTitle}>Подтверждение публикации</h3>
-                    <p>Вы уверены, что хотите опубликовать хакатон? После публикации изменить некоторые данные будет невозможно.</p>
+            <Modal
+                isOpen={isPublishModalOpen}
+                title={"Подтверждение публикации"}
+                text={"Вы уверены, что хотите опубликовать хакатон? После публикации изменить некоторые данные будет невозможно."}
+                onReject={() => setIsPublishModalOpen(false)}
+                onConfirm={confirmPublish}
+                rejectText={"Отмена"}
+                confirmText={"Подтвердить"}
+            />
 
-                    <div className={classes.modalActions}>
-                        <Button
-                            onClick={() => setIsPublishModalOpen(false)}
-                        >
-                            Отмена
-                        </Button>
-                        <Button
-                            onClick={confirmPublish}
-                        >
-                            Подтвердить публикацию
-                        </Button>
-                    </div>
-                </div>
-            </Modal>
         </div>
     );
 };

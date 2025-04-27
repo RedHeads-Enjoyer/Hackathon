@@ -3,8 +3,6 @@ import classes from './style.module.css';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from './imageUtils';
 import Modal from '../../components/modal/Modal.tsx';
-import Button from "../button/Button.tsx";
-import PageLabel from "../pageLabel/PageLabel.tsx";
 
 interface ImageUploaderProps {
     onImageChange: (croppedImage: string) => void;
@@ -94,34 +92,26 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageChange, initialIma
                 </div>
             )}
 
-            <Modal isOpen={isModalOpen}>
-                <div className={classes.modalContent}>
-                    <PageLabel>Обрежьте изображение</PageLabel>
-                    <div className={classes.cropContainer}>
-                        {originalImage && (
-                            <Cropper
-                                image={originalImage}
-                                crop={crop}
-                                zoom={zoom}
-                                aspect={1}
-                                onCropChange={setCrop}
-                                onCropComplete={onCropComplete}
-                                onZoomChange={setZoom}
-                            />
-                        )}
-                    </div>
-                    <div className={classes.modalControls}>
-                        <Button
-                            onClick={() => setIsModalOpen(false)}
-                        >
-                            Отмена
-                        </Button>
-                        <Button
-                            onClick={handleSave}
-                        >
-                            Сохранить
-                        </Button>
-                    </div>
+            <Modal
+                isOpen={isModalOpen}
+                title={"Обрежьте изображение"}
+                rejectText={"Отмена"}
+                confirmText={"Сохранить"}
+                onReject={() => setIsModalOpen(false)}
+                onConfirm={handleSave}
+            >
+                <div className={classes.cropContainer}>
+                    {originalImage && (
+                        <Cropper
+                            image={originalImage}
+                            crop={crop}
+                            zoom={zoom}
+                            aspect={1}
+                            onCropChange={setCrop}
+                            onCropComplete={onCropComplete}
+                            onZoomChange={setZoom}
+                        />
+                    )}
                 </div>
             </Modal>
         </div>

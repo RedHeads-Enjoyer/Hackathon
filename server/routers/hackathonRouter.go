@@ -27,7 +27,7 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	protected = router.Group("/hackathon")
 	protected.Use(middlewares.Auth(), middlewares.OrganizationOwnerBody(db))
 	{
-		protected.POST("", hackathonController.Create)
+		protected.POST("", hackathonController.CreateHackathon)
 	}
 
 	protected = router.Group("/hackathon")

@@ -27,11 +27,14 @@ function Header() {
                         {authState?.user.systemRole == 1 &&
                             <>
                                 <Link to={'/organizations/my'}>Мои организации</Link>
+                                <Link to={'/organization/create'}>Создать организацию</Link>
+                                <Link to={'/hackathon/create'}>Создать хакатон</Link>
                             </>
                         }
                         {(authState?.user.systemRole == 2 || authState?.user.systemRole == 3) &&
                             <>
                                 <Link to={'/organizations'}>Организации</Link>
+                                <Link to={'/technologies'}>Технологии</Link>
                             </>
                         }
                         <p>{authState?.user.username}</p>
