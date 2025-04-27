@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"server/models/DTO/technologyDTO"
 
@@ -30,6 +31,19 @@ func (tc *TechnologyController) Create(c *gin.Context) {
 	validate := validator.New()
 	if err := validate.Struct(dto); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка валидации", "details": err.Error()})
+		return
+	}
+
+	// Проверяем существование технологии с таким именем
+	var existingTechnology models.Technology
+	result := tc.DB.Where("name = ?", dto.Name).First(&existingTechnology)
+	if result.Error == nil {
+		// Технология с таким именем уже существует
+		c.JSON(http.StatusConflict, gin.H{"error": "Технология с таким названием уже существует"})
+		return
+	} else if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		// Произошла ошибка при проверке
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при проверке существования технологии", "details": result.Error.Error()})
 		return
 	}
 
@@ -104,7 +118,6 @@ func (tc *TechnologyController) GetAll(c *gin.Context) {
 	})
 }
 
-// Обновление технологии
 func (tc *TechnologyController) Update(c *gin.Context) {
 	id := c.Param("id")
 	var dto technologyDTO.Update
@@ -118,6 +131,21 @@ func (tc *TechnologyController) Update(c *gin.Context) {
 	if err := tc.DB.First(&technology, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Технология не найдена"})
 		return
+	}
+
+	// Проверка существования технологии с таким именем только если имя передано
+	if dto.Name != nil && *dto.Name != technology.Name {
+		var existingTechnology models.Technology
+		result := tc.DB.Where("name = ? AND id != ?", *dto.Name, id).First(&existingTechnology)
+		if result.Error == nil {
+			// Другая технология с таким именем уже существует
+			c.JSON(http.StatusConflict, gin.H{"error": "Технология с таким названием уже существует"})
+			return
+		} else if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// Произошла ошибка при проверке
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при проверке существования технологии", "details": result.Error.Error()})
+			return
+		}
 	}
 
 	// Обновление полей технологии

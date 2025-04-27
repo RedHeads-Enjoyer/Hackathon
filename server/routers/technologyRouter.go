@@ -19,7 +19,6 @@ func TechnologyRouter(router *gin.Engine, db *gorm.DB) {
 	protected.Use(middlewares.Auth(), middlewares.SystemRole(2))
 	{
 		protected.POST("", technologyController.Create)
-		//protected.GET("/:id", technologyController.GetByID)
 		protected.PUT("/:id", technologyController.Update)
 		protected.DELETE("/:id", technologyController.Delete)
 	}
