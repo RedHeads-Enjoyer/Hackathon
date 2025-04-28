@@ -12,7 +12,7 @@ import {useAppDispatch} from "./store/hooks.ts";
 // import StoreDebugger from "./components/storeDebugger/StoreDebugger.tsx";
 import NotFound from "./modules/auth/NotFound.tsx";
 import PermissionDenied from "./modules/auth/PermissionDenied.tsx";
-import CreateHackathonPage from "./modules/hackathon/CreateHackathonPage.tsx";
+import CreateHackathon from "./modules/hackathon/CreateHackathon.tsx";
 import {logout} from "./modules/auth/store/authSlice.ts";
 import UserEditForm from "./modules/user/UserEditForm.tsx";
 import UserList from "./modules/user/UserList.tsx";
@@ -59,7 +59,7 @@ function App() {
                     <Route path="/" element={<HackathonList />}/>
                     <Route path="/user/edit" element={<UserEditForm userId={1}/> } />
                     <Route path="/user/list" element={<UserList /> } />
-                    <Route path="/hackathon/create" element={<CreateHackathonPage />} />
+                    <Route path="/hackathon/create" element={<CreateHackathon />} />
                     <Route path={"/organization/create"} element={<CreateOrganizationPage/>}/>
                     <Route path={"/organizations/my"} element={<MyOrganizationsPage/>}/>
                 </Route>

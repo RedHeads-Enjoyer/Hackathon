@@ -1,5 +1,5 @@
 import {request} from "../../config.ts";
-import {OrganizationCreate, OrganizationFilterData, OrganizationSearchData} from "./types.ts";
+import {Option, OrganizationCreate, OrganizationFilterData, OrganizationSearchData} from "./types.ts";
 
 export const OrganizationAPI = {
     create: async (data: OrganizationCreate) =>
@@ -9,5 +9,7 @@ export const OrganizationAPI = {
     getAll: async (filterData: OrganizationFilterData) =>
         request<OrganizationSearchData>({method: 'POST', url: 'organizations', data: filterData}),
     setStatus: async (organizationId:number, status: number) =>
-        request<OrganizationSearchData>({method: 'PUT', url: `organizations/${organizationId}`, data: {status}})
+        request<OrganizationSearchData>({method: 'PUT', url: `organizations/${organizationId}`, data: {status}}),
+    getMyOptions: async () =>
+        request<Option[]>({method: 'GET', url: `organizations/my/options`})
 };

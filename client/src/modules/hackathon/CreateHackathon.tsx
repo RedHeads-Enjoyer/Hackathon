@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import classes from './hackathon.module.css';
 import PageLabel from "../../components/pageLabel/PageLabel.tsx";
 import Input from "../../components/input/Input.tsx";
@@ -9,11 +9,12 @@ import {Stage} from "../../components/stepsListWithDates/types.ts";
 import TechnologyStackInput from "../../components/technologyStackInput/TechnologyStackInput.tsx";
 import CriteriaEditor from "../../components/criteriaEditor/CriteriaEditor.tsx";
 import AwardsEditor from "../../components/awardsEditor/AwardsEditor.tsx";
-import SponsorsEditor from "../../components/sponsorsEditor/SponsorsEditor.tsx";
 import DatePicker from "../../components/datePicker/DatePicker.tsx";
-import Error from "../../components/error/Error.tsx";
 import Button from "../../components/button/Button.tsx";
 import Modal from "../../components/modal/Modal.tsx";
+import {Option} from "../organozaton/types.ts";
+import Select from "../../components/select/Select.tsx";
+import {OrganizationAPI} from "../organozaton/organizationAPI.ts";
 
 interface Criteria {
     id: string;
@@ -35,92 +36,51 @@ interface Sponsor {
     url: string;
 }
 
-const CreateHackathonPage: React.FC = () => {
+const CreateHackathon: React.FC = () => {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
         coverImage: null as string | null,
-        registrationStart: '',
-        registrationEnd: '',
-        hackathonStart: '',
-        goals: [''], //
-        stages: [] as Stage[], //
-        criteria: [] as Criteria[],
-        technologies: [] as string[], //
-        prizes: [] as Prize[], //
-        sponsors: [] as Sponsor[], //
+        regDateFrom: '',
+        regDateTo: '',
+        workDateFrom: '',
+        workDateTo: '',
+        evalDateFrom: '',
+        evalDateTo: '',
         minTeamSize: 1,
         maxTeamSize: 5,
+        organizationId: 0,
+        goals: [''],
+        stages: [] as Stage[],
+        criteria: [] as Criteria[],
+        technologies: [] as string[],
+        prizes: [] as Prize[],
+        sponsors: [] as Sponsor[],
+
     });
 
-    const [errors, setErrors] = useState<string[]>([]);
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+    const [myOrganizations, setMyOrganization] = useState<Option[]>([])
+    const [isMyOrganizationsLoading, setIsMyOrganizationsLoading] = useState<boolean>(true)
+    const [myOrganizationsError, setIsMyOrganizationsError] = useState<string | null>(null)
 
-    const validateForm = () => {
-        const newErrors: string[] = [];
-
-        // Основная информация
-        if (!formData.name.trim()) newErrors.push('Введите название хакатона');
-        if (!formData.description.trim()) newErrors.push('Введите описание хакатона');
-        if (!formData.coverImage) newErrors.push('Загрузите обложку хакатона');
-
-        // Даты
-        if (!formData.registrationStart) newErrors.push('Укажите начало регистрации');
-        if (!formData.registrationEnd) newErrors.push('Укажите окончание регистрации');
-        if (!formData.hackathonStart) newErrors.push('Укажите начало хакатона');
-
-        // Размер команды
-        if (!formData.minTeamSize || formData.minTeamSize <= 0) newErrors.push('Укажите минимальный размер команды');
-        if (!formData.maxTeamSize || formData.maxTeamSize <= 0) newErrors.push('Укажите максимальный размер команды');
-        if (formData.minTeamSize >= formData.maxTeamSize) newErrors.push('Минимальный размер должен быть меньше максимального');
-
-        // Этапы хакатона
-        if (formData.stages.length === 0) {
-            newErrors.push('Добавьте хотя бы один этап хакатона');
-        } else {
-            formData.stages.forEach((stage, index) => {
-                if (!stage.name.trim()) newErrors.push(`Укажите название этапа #${index + 1}`);
-                if (!stage.description.trim()) newErrors.push(`Введите описание этапа #${index + 1}`);
-                if (!stage.startDate) newErrors.push(`Укажите дату начала этапа #${index + 1}`);
-                if (!stage.endDate) newErrors.push(`Укажите дату окончания этапа #${index + 1}`);
-            });
-        }
-
-        // Критерии оценки
-        if (formData.criteria.length === 0) newErrors.push('Добавьте хотя бы один критерий оценки');
-
-        // Технологии
-        if (formData.technologies.length === 0) newErrors.push('Добавьте хотя бы одну технологию');
-
-        // Награды
-        if (formData.prizes.length === 0) newErrors.push('Добавьте хотя бы одну награду');
-
-        // Спонсоры
-        if (formData.sponsors.length === 0) newErrors.push('Добавьте хотя бы одного спонсора');
-
-        setErrors(newErrors);
-        return newErrors.length === 0;
-    };
+    useEffect(() => {
+        setIsMyOrganizationsLoading(true)
+        setIsMyOrganizationsError(null)
+        OrganizationAPI.getMyOptions()
+            .then((res) => {
+                setMyOrganization(res)
+            })
+            .catch(() => {
+                setIsMyOrganizationsError("Ошибка при получении организаций")
+            })
+            .finally( () => {
+                setIsMyOrganizationsLoading(false)
+            })
+    }, []);
 
     const handlePublishClick = () => {
-        if (validateForm()) {
             setIsPublishModalOpen(true);
-        }
-    };
-
-    const renderErrors = () => {
-        if (errors.length === 0) return null;
-
-        return (
-            <Error>
-                <div className={classes.error_title}>Необходимо исправить следующие ошибки:</div>
-                <ul className={classes.error_list}>
-                    {errors.map((error, index) => (
-                        <li key={index}>{error}</li>
-                    ))}
-                </ul>
-            </Error>
-        );
     };
 
 
@@ -130,6 +90,13 @@ const CreateHackathonPage: React.FC = () => {
         setIsPublishModalOpen(false);
         // Можно добавить редирект или уведомление об успехе
     };
+
+    const handleOrganizationChange = (n : number) => {
+        setFormData(prev => ({
+            ...prev,
+            organizationId: n
+        }));
+    }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -172,19 +139,13 @@ const CreateHackathonPage: React.FC = () => {
         }));
     };
 
-    const handleSponsorsChange = (sponsors: Sponsor[]) => {
-        setFormData(prev => ({
-            ...prev,
-            sponsors
-        }));
-    };
-
     const handleStagesChange = (stages: Stage[]) => {
         setFormData(prev => ({
             ...prev,
             stages
         }));
     };
+
 
     return (
         <div className={classes.page_wrapper}>
@@ -227,20 +188,43 @@ const CreateHackathonPage: React.FC = () => {
                 <div className={classes.dates_grid}>
                     <DatePicker
                         label="Начало регистрации"
-                        value={formData.registrationStart}
-                        onChange={(value) => handleDateChange('registrationStart', value)}
+                        value={formData.regDateFrom}
+                        onChange={(value) => handleDateChange('regDateFrom', value)}
+                        maxDate={formData.regDateTo || formData.workDateFrom || formData.workDateTo || formData.evalDateFrom || formData.evalDateTo}
                     />
                     <DatePicker
                         label="Окончание регистрации"
-                        value={formData.registrationEnd}
-                        onChange={(value) => handleDateChange('registrationEnd', value)}
-                        minDate={formData.registrationStart}
+                        value={formData.regDateTo}
+                        onChange={(value) => handleDateChange('regDateTo', value)}
+                        minDate={formData.regDateFrom}
+                        maxDate={formData.workDateFrom || formData.workDateTo || formData.evalDateFrom || formData.evalDateTo}
                     />
                     <DatePicker
-                        label="Начало хакатона"
-                        value={formData.hackathonStart}
-                        onChange={(value) => handleDateChange('hackathonStart', value)}
-                        minDate={formData.registrationEnd}
+                        label="Начало работы"
+                        value={formData.workDateFrom}
+                        onChange={(value) => handleDateChange('workDateFrom', value)}
+                        minDate={formData.regDateTo || formData.regDateFrom}
+                        maxDate={formData.workDateTo || formData.evalDateFrom || formData.evalDateTo}
+                    />
+                    <DatePicker
+                        label="Окончание работы"
+                        value={formData.workDateTo}
+                        onChange={(value) => handleDateChange('workDateTo', value)}
+                        minDate={formData.workDateFrom || formData.regDateTo || formData.regDateFrom}
+                        maxDate={formData.evalDateFrom || formData.evalDateTo}
+                    />
+                    <DatePicker
+                        label="Начало оценки"
+                        value={formData.evalDateFrom}
+                        onChange={(value) => handleDateChange('evalDateFrom', value)}
+                        minDate={formData.workDateTo || formData.workDateFrom || formData.regDateTo || formData.regDateFrom}
+                        maxDate={formData.evalDateTo}
+                    />
+                    <DatePicker
+                        label="Окончание оценки"
+                        value={formData.evalDateTo}
+                        onChange={(value) => handleDateChange('evalDateTo', value)}
+                        minDate={formData.evalDateFrom || formData.workDateTo || formData.workDateFrom || formData.regDateTo || formData.regDateFrom}
                     />
                 </div>
             </div>
@@ -291,12 +275,20 @@ const CreateHackathonPage: React.FC = () => {
                 onChange={handlePrizesChange}
             />
 
-            <SponsorsEditor
-                initialSponsors={formData.sponsors}
-                onChange={handleSponsorsChange}
-            />
-
-            {renderErrors()}
+            <div className={classes.info_block}>
+                <h4 className={classes.block_title}>Выбор организации</h4>
+                <Select
+                    label="Выбирите организацию"
+                    value={formData.organizationId}
+                    onChange={handleOrganizationChange}
+                    placeholder={"Выбирите организацию"}
+                    name="organizationId"
+                    options={myOrganizations}
+                    loading={isMyOrganizationsLoading}
+                    error={myOrganizationsError}
+                    horizontal
+                />
+            </div>
 
             {/* Кнопка публикации */}
             <div className={classes.publish_section}>
@@ -316,10 +308,11 @@ const CreateHackathonPage: React.FC = () => {
                 onConfirm={confirmPublish}
                 rejectText={"Отмена"}
                 confirmText={"Подтвердить"}
+
             />
 
         </div>
     );
 };
 
-export default CreateHackathonPage;
+export default CreateHackathon;

@@ -43,7 +43,7 @@ export type OrganizationSearchData = {
     total: number
 }
 
-export type SelectOption = {
+export type Option = {
     value: number
     label: string
 }

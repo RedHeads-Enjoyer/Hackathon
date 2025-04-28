@@ -42,18 +42,6 @@ func (dto *HackathonUpdateDTO) ToModel(existingHackathon models.Hackathon) model
 		existingHackathon.RegDateTo = *dto.RegDateTo
 	}
 
-	if dto.StartDate != nil {
-		existingHackathon.StartDate = *dto.StartDate
-	}
-
-	if dto.EndDate != nil {
-		existingHackathon.EndDate = *dto.EndDate
-	}
-
-	if dto.MaxTeams != nil {
-		existingHackathon.MaxTeams = dto.MaxTeams
-	}
-
 	if dto.MaxTeamSize != nil {
 		existingHackathon.MaxTeamSize = *dto.MaxTeamSize
 	}

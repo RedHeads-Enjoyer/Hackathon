@@ -35,10 +35,6 @@ func (dto *HackathonCreateDTO) ToModel() *models.Hackathon {
 
 		RegDateFrom: dto.RegDateFrom,
 		RegDateTo:   dto.RegDateTo,
-		StartDate:   dto.StartDate,
-		EndDate:     dto.EndDate,
-
-		MaxTeams:    dto.MaxTeams,
 		MinTeamSize: dto.MinTeamSize,
 		MaxTeamSize: dto.MaxTeamSize,
 

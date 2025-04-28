@@ -22,8 +22,8 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label,   minDa
                 onChange={(e) => onChange(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                min={minDate} // Передаем минимальную дату
-                max={maxDate} // Передаем максимальную дату
+                min={minDate}
+                max={maxDate}
                 className={classes.dateInput}
             />
             <div className={classes.calendarIcon}>

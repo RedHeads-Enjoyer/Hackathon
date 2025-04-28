@@ -362,3 +362,39 @@ func (oc *OrganizationController) GetMy(c *gin.Context) {
 		"offset": filterData.Offset,
 	})
 }
+
+func (oc *OrganizationController) GetMyOptions(c *gin.Context) {
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		c.Abort()
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		c.Abort()
+		return
+	}
+
+	// Базовый запрос с фильтрацией по статусу 1
+	query := oc.DB.Model(&models.Organization{}).
+		Where("\"ownerId\" = ?", claims.UserID).
+		Where("status = ?", 1) // Добавляем условие по статусу
+
+	// Добавляем сортировку по алфавиту
+	query = query.Order("legal_name ASC")
+
+	// Получаем только нужные поля
+	var options []organizationDTO.GetOption
+
+	// Используем алиасы, соответствующие полям структуры
+	if err := query.Select("id as value, legal_name as label").Find(&options).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении списка организаций"})
+		return
+	}
+
+	// Возвращаем результаты
+	c.JSON(http.StatusOK, options)
+}

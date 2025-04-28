@@ -11,14 +11,15 @@ type Hackathon struct {
 	Name        string `gorm:"size:50;unique;not null" json:"name"`
 	Description string `gorm:"size:255" json:"description"`
 
-	RegDateFrom time.Time `json:"reg_date_from,omitempty"`
-	RegDateTo   time.Time `json:"reg_date_to,omitempty"`
-	StartDate   time.Time `json:"start_date,omitempty"`
-	EndDate     time.Time `json:"end_date,omitempty"`
+	RegDateFrom  time.Time `json:"reg_date_from,omitempty"`
+	RegDateTo    time.Time `json:"reg_date_to,omitempty"`
+	WorkDateFrom time.Time `json:"work_date_from,omitempty"`
+	WorkDateTo   time.Time `json:"work_date_to,omitempty"`
+	EvalDateFrom time.Time `json:"eval_date_from,omitempty"`
+	EvalDateTo   time.Time `json:"eval_date_to,omitempty"`
 
-	MaxTeams    *int `json:"max_teams,omitempty"`
-	MaxTeamSize int  `json:"max_team_size,omitempty"`
-	MinTeamSize int  `json:"min_team_size,omitempty"`
+	MaxTeamSize int `json:"max_team_size,omitempty"`
+	MinTeamSize int `json:"min_team_size,omitempty"`
 
 	StatusID uint `gorm:"not null;default:1" json:"-"`
 	Status   int  `gorm:"not null" json:"status"`

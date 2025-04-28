@@ -74,9 +74,6 @@ func (hc *HackathonController) CreateHackathon(c *gin.Context) {
 			Description:    hackathonData.Description,
 			RegDateFrom:    hackathonData.RegDateFrom,
 			RegDateTo:      hackathonData.RegDateTo,
-			StartDate:      hackathonData.StartDate,
-			EndDate:        hackathonData.EndDate,
-			MaxTeams:       hackathonData.MaxTeams,
 			MaxTeamSize:    hackathonData.MaxTeamSize,
 			MinTeamSize:    hackathonData.MinTeamSize,
 			StatusID:       1, // Начальный статус (например, "Черновик")

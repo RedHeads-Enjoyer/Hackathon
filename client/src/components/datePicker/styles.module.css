@@ -53,6 +53,10 @@
     color: var(--accent-color);
 }
 
+.datePickerContainer input:hover {
+    border-color: var(--accent-light-color);
+}
+
 /* Кастомные стили для даты */
 .dateInput::-webkit-datetime-edit {
     color: var(--light-text-color);

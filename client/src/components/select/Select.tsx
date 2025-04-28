@@ -9,7 +9,7 @@ type SelectPropsType = {
     name?: string;
     placeholder?: string;
     label?: string;
-    error?: string;
+    error?: string | null;
     required?: boolean;
     loading?: boolean;
     horizontal?: boolean;
