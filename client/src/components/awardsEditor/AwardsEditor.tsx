@@ -184,7 +184,7 @@ const AwardsEditor: React.FC<{
                             value={formData.placeFrom}
                             onChange={() => {}} // Пустая функция, поле всегда read-only
                             min={1}
-                            disabled={true} // Всегда заблокировано
+                            disabled={true}
                             readOnly={true}
                         />
                         <div className={classes.inputHelperText}>

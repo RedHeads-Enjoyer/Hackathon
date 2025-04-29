@@ -15,6 +15,7 @@ import Modal from "../../components/modal/Modal.tsx";
 import SelectSearch from "../../components/searchSelect/SearchSelect.tsx";
 import {Link} from "react-router-dom";
 import {Option} from "../organozaton/types.ts";
+import FileUpload from "../../components/fileUpload/FileUpload.tsx";
 
 interface Criteria {
     id: string;
@@ -31,12 +32,32 @@ interface Award {
     additionally: string;
 }
 
+interface HackathonFormData {
+    name: string;
+    description: string;
+    coverImage: string | null;
+    regDateFrom: string;
+    regDateTo: string;
+    workDateFrom: string;
+    workDateTo: string;
+    evalDateFrom: string;
+    evalDateTo: string;
+    minTeamSize: number;
+    maxTeamSize: number;
+    organizationId: number;
+    goals: string[];
+    stages: Stage[];
+    criteria: Criteria[];
+    technologies: Option[];
+    awards: Award[];
+    documents: File[]; // Added documents field
+}
 
 const CreateHackathon: React.FC = () => {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<HackathonFormData>({
         name: '',
         description: '',
-        coverImage: null as string | null,
+        coverImage: null,
         regDateFrom: '',
         regDateTo: '',
         workDateFrom: '',
@@ -47,17 +68,26 @@ const CreateHackathon: React.FC = () => {
         maxTeamSize: 5,
         organizationId: 0,
         goals: [''],
-        stages: [] as Stage[],
-        criteria: [] as Criteria[],
-        technologies: [] as Option[],
-        awards: [] as Award[],
+        stages: [],
+        criteria: [],
+        technologies: [],
+        awards: [],
+        documents: [], // Initialize empty documents array
     });
 
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+    const [documentError, setDocumentError] = useState<string | null>(null);
+
     const handlePublishClick = () => {
+        // Validate documents if required
+        if (formData.documents.length === 0) {
+            setDocumentError("Пожалуйста, загрузите хотя бы один документ");
+            return;
+        }
+
+        setDocumentError(null);
         setIsPublishModalOpen(true);
     };
-
 
     const confirmPublish = () => {
         // Здесь логика публикации
@@ -114,6 +144,18 @@ const CreateHackathon: React.FC = () => {
         }));
     };
 
+    // Handler for file uploads
+    const handleFilesChange = (files: File[]) => {
+        setFormData(prev => ({
+            ...prev,
+            documents: files
+        }));
+
+        // Clear any error when files are uploaded
+        if (files.length > 0) {
+            setDocumentError(null);
+        }
+    };
 
     return (
         <div className={classes.page_wrapper}>
@@ -131,6 +173,7 @@ const CreateHackathon: React.FC = () => {
                             onChange={handleChange}
                             name="name"
                             placeholder="Введите название"
+                            required
                         />
                         <TextArea
                             label="Описание хакатона"
@@ -139,6 +182,7 @@ const CreateHackathon: React.FC = () => {
                             name="description"
                             placeholder="Опишите ваш хакатон"
                             minRows={4}
+                            required
                         />
 
                         <SelectSearch
@@ -151,6 +195,7 @@ const CreateHackathon: React.FC = () => {
                                 }))}
                             notFound={<p>Подтвержденная организация с таким названием не найдена. <Link to={"/organization/create"}>Создать организацию</Link></p>}
                             placeholder={"Введите название"}
+                            error={"asd"}
                             required
                         />
                     </div>
@@ -221,7 +266,8 @@ const CreateHackathon: React.FC = () => {
                         onChange={handleChange}
                         name="minTeamSize"
                         min={1}
-                        max={formData.maxTeamSize - 1}
+                        max={formData.maxTeamSize}
+                        required
                     />
                     <Input
                         label="Максимальный размер команды"
@@ -229,8 +275,9 @@ const CreateHackathon: React.FC = () => {
                         value={formData.maxTeamSize}
                         onChange={handleChange}
                         name="maxTeamSize"
-                        min={formData.minTeamSize + 1}
+                        min={formData.minTeamSize}
                         max={20}
+                        required
                     />
                 </div>
             </div>
@@ -256,6 +303,24 @@ const CreateHackathon: React.FC = () => {
                 onChange={handleAwardsChange}
             />
 
+            {/* Блок документов */}
+            <div className={classes.info_block}>
+                <h4 className={classes.block_title}>Документация хакатона</h4>
+                <FileUpload
+                    label="Документы проекта"
+                    required
+                    value={formData.documents}
+                    onChange={handleFilesChange}
+                    acceptedFileTypes=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                    maxFileSize={5 * 1024 * 1024} // 5MB
+                    maxFiles={5}
+                    placeholder="Перетащите файлы сюда или нажмите для выбора"
+                />
+                <div className={classes.file_help}>
+                    <p>Загрузите важные документы: положение о проведении, правила участия, требования к проектам и т.д.</p>
+                </div>
+            </div>
+
             {/* Кнопка публикации */}
             <div className={classes.publish_section}>
                 <Button
@@ -268,14 +333,16 @@ const CreateHackathon: React.FC = () => {
             {/* Модальное окно подтверждения */}
             <Modal
                 isOpen={isPublishModalOpen}
-                title={"Подтверждение публикации"}
-                text={"Вы уверены, что хотите опубликовать хакатон? После публикации изменить некоторые данные будет невозможно."}
-                onReject={() => setIsPublishModalOpen(false)}
                 onConfirm={confirmPublish}
-                rejectText={"Отмена"}
-                confirmText={"Подтвердить"}
-
-            />
+                onReject={() => setIsPublishModalOpen(false)}
+                title="Подтверждение публикации"
+                confirmText="Подтвердить"
+                rejectText="Отмена"
+            >
+                <p className={classes.modalText}>
+                    Вы уверены, что хотите опубликовать хакатон? После публикации изменить некоторые данные будет невозможно.
+                </p>
+            </Modal>
         </div>
     );
 };
