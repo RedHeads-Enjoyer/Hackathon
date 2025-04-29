@@ -133,6 +133,8 @@ const StepsListWithDates: React.FC<HackathonStagesProps> = ({ initialStages = []
                                     e.stopPropagation();
                                     confirmDelete(stage.id);
                                 }}
+                                size={"sm"}
+                                variant={"secondary"}
                             >
                                 Удалить
                             </Button>
@@ -176,19 +178,15 @@ const StepsListWithDates: React.FC<HackathonStagesProps> = ({ initialStages = []
                 ))}
             </div>
 
-            <Modal isOpen={!!stageToDelete}>
-                <div className={classes.modalContent}>
-                    <h4 className={classes.modalTitle}>Подтверждение удаления</h4>
-                    <p>Вы уверены, что хотите удалить этот этап? Это действие нельзя отменить.</p>
-                    <div className={classes.modalActions}>
-                        <Button  onClick={executeDelete}>
-                            Удалить
-                        </Button>
-                        <Button onClick={cancelDelete}>
-                            Отмена
-                        </Button>
-                    </div>
-                </div>
+            <Modal
+                isOpen={!!stageToDelete}
+                rejectText={"Отмена"}
+                confirmText={"Удалить"}
+                onReject={() => cancelDelete}
+                onConfirm={() => executeDelete}
+                title={"Подтверждение удаления"}
+            >
+                <p>Вы уверены, что хотите удалить этот этап? Это действие нельзя отменить.</p>
             </Modal>
         </div>
     );

@@ -15,6 +15,8 @@ type InputPropsType = {
     max?: number;
     maxLength?: number,
     required?: boolean;
+    onFocus?: () => void;
+    onBlur?: () => void;
 }
 
 const Input = (props: InputPropsType) => {
@@ -61,6 +63,8 @@ const Input = (props: InputPropsType) => {
                 min={props.type === 'number' ? props.min : undefined}
                 max={props.type === 'number' ? props.max : undefined}
                 required={props.required}
+                onFocus={props.onFocus}
+                onBlur={props.onBlur}
             />
             {props.error && <div className={classes.error_message}>{props.error}</div>}
         </div>

@@ -12,9 +12,8 @@ import AwardsEditor from "../../components/awardsEditor/AwardsEditor.tsx";
 import DatePicker from "../../components/datePicker/DatePicker.tsx";
 import Button from "../../components/button/Button.tsx";
 import Modal from "../../components/modal/Modal.tsx";
-import {Option} from "../organozaton/types.ts";
-import Select from "../../components/select/Select.tsx";
-import {OrganizationAPI} from "../organozaton/organizationAPI.ts";
+import SelectSearch from "../../components/searchSelect/SearchSelect.tsx";
+import {Link} from "react-router-dom";
 
 interface Criteria {
     id: string;
@@ -60,27 +59,8 @@ const CreateHackathon: React.FC = () => {
     });
 
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
-    const [myOrganizations, setMyOrganization] = useState<Option[]>([])
-    const [isMyOrganizationsLoading, setIsMyOrganizationsLoading] = useState<boolean>(true)
-    const [myOrganizationsError, setIsMyOrganizationsError] = useState<string | null>(null)
-
-    useEffect(() => {
-        setIsMyOrganizationsLoading(true)
-        setIsMyOrganizationsError(null)
-        OrganizationAPI.getMyOptions()
-            .then((res) => {
-                setMyOrganization(res)
-            })
-            .catch(() => {
-                setIsMyOrganizationsError("Ошибка при получении организаций")
-            })
-            .finally( () => {
-                setIsMyOrganizationsLoading(false)
-            })
-    }, []);
-
     const handlePublishClick = () => {
-            setIsPublishModalOpen(true);
+        setIsPublishModalOpen(true);
     };
 
 
@@ -91,15 +71,8 @@ const CreateHackathon: React.FC = () => {
         // Можно добавить редирект или уведомление об успехе
     };
 
-    const handleOrganizationChange = (n : number) => {
-        setFormData(prev => ({
-            ...prev,
-            organizationId: n
-        }));
-    }
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
+        const {name, value, type} = e.target;
         const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
 
         setFormData(prev => ({
@@ -171,6 +144,19 @@ const CreateHackathon: React.FC = () => {
                             name="description"
                             placeholder="Опишите ваш хакатон"
                             minRows={4}
+                        />
+
+                        <SelectSearch
+                            label={"Выберите организацию"}
+                            url={"organizations/my/options"}
+                            onChange={(option) =>
+                                setFormData(prev => ({
+                                    ...prev,
+                                    organizationId: option.value
+                                }))}
+                            notFound={<p>Подтвержденная организация с таким названием не найдена. <Link to={"/organization/create"}>Создать организацию</Link></p>}
+                            placeholder={"Введите название"}
+                            required
                         />
                     </div>
                     <div className={classes.image_info}>
@@ -275,21 +261,6 @@ const CreateHackathon: React.FC = () => {
                 onChange={handlePrizesChange}
             />
 
-            <div className={classes.info_block}>
-                <h4 className={classes.block_title}>Выбор организации</h4>
-                <Select
-                    label="Выбирите организацию"
-                    value={formData.organizationId}
-                    onChange={handleOrganizationChange}
-                    placeholder={"Выбирите организацию"}
-                    name="organizationId"
-                    options={myOrganizations}
-                    loading={isMyOrganizationsLoading}
-                    error={myOrganizationsError}
-                    horizontal
-                />
-            </div>
-
             {/* Кнопка публикации */}
             <div className={classes.publish_section}>
                 <Button
@@ -310,7 +281,6 @@ const CreateHackathon: React.FC = () => {
                 confirmText={"Подтвердить"}
 
             />
-
         </div>
     );
 };

@@ -378,10 +378,23 @@ func (oc *OrganizationController) GetMyOptions(c *gin.Context) {
 		return
 	}
 
+	// Parse search options from request body
+	var searchOption organizationDTO.SearchOption
+	if err := c.ShouldBindJSON(&searchOption); err != nil {
+		// If there's an error parsing, we'll just proceed with empty search
+		// This allows the endpoint to work both with and without search parameters
+		searchOption.Name = ""
+	}
+
 	// Базовый запрос с фильтрацией по статусу 1
 	query := oc.DB.Model(&models.Organization{}).
 		Where("\"ownerId\" = ?", claims.UserID).
 		Where("status = ?", 1) // Добавляем условие по статусу
+
+	// Add search condition if search parameter is provided
+	if searchOption.Name != "" {
+		query = query.Where("legal_name ILIKE ?", "%"+searchOption.Name+"%")
+	}
 
 	// Добавляем сортировку по алфавиту
 	query = query.Order("legal_name ASC")

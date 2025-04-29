@@ -1,0 +1,107 @@
+.input_container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+}
+
+.label {
+    color: var(--light-text-color);
+    font-size: var(--default-font-size);
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.input_container input {
+    padding: 12px 16px;
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--input-border-color);
+    border-radius: 6px;
+    color: var(--light-text-color);
+    font-size: var(--default-font-size);
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.input_container input:hover {
+    border-color: var(--accent-light-color);
+}
+
+.input_container input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-shadow-color);
+    outline: none;
+}
+
+.input_container.error input {
+    border-color: var(--error-border-color);
+    background-color: var(--error-bg-color);
+}
+
+/* Options container */
+.options_container {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--input-border-color);
+    border-radius: 6px;
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 2px;
+}
+
+/* Option item */
+.option_item {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--light-text-color);
+    font-size: var(--default-font-size);
+}
+
+.option_item:hover {
+    background-color: var(--accent-shadow-color);
+}
+
+.option_item:active {
+    background-color: var(--accent-light-color);
+}
+
+/* Not found message */
+.not_found {
+    padding: 16px;
+    text-align: center;
+    color: var(--placeholder-color);
+    font-size: var(--default-font-size);
+}
+
+/* Loading container */
+.loader_container {
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+}
+
+/* Scrollbar styling for the options container */
+.options_container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.options_container::-webkit-scrollbar-track {
+    background: var(--input-bg-color);
+    border-radius: 4px;
+}
+
+.options_container::-webkit-scrollbar-thumb {
+    background-color: var(--input-border-color);
+    border-radius: 4px;
+}
+
+.options_container::-webkit-scrollbar-thumb:hover {
+    background-color: var(--accent-light-color);
+}  

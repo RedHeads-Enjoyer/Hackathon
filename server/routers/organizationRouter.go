@@ -20,7 +20,7 @@ func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
 	protected.Use(middlewares.Auth(), middlewares.SystemRoleLover(1))
 	{
 		protected.POST("/my", organizationController.GetMy)
-		protected.GET("/my/options", organizationController.GetMyOptions)
+		protected.POST("/my/options", organizationController.GetMyOptions)
 	}
 
 	protected = router.Group("/organizations")
