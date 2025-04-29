@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import classes from './hackathon.module.css';
 import PageLabel from "../../components/pageLabel/PageLabel.tsx";
 import Input from "../../components/input/Input.tsx";
@@ -14,6 +14,7 @@ import Button from "../../components/button/Button.tsx";
 import Modal from "../../components/modal/Modal.tsx";
 import SelectSearch from "../../components/searchSelect/SearchSelect.tsx";
 import {Link} from "react-router-dom";
+import {Option} from "../organozaton/types.ts";
 
 interface Criteria {
     id: string;
@@ -22,18 +23,14 @@ interface Criteria {
     maxScore: number;
 }
 
-interface Prize {
+interface Award {
     id: string;
     placeFrom: number;
     placeTo: number;
-    description: string;
+    moneyAmount: number,
+    additionally: string;
 }
 
-interface Sponsor {
-    id: string;
-    name: string;
-    url: string;
-}
 
 const CreateHackathon: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -52,10 +49,8 @@ const CreateHackathon: React.FC = () => {
         goals: [''],
         stages: [] as Stage[],
         criteria: [] as Criteria[],
-        technologies: [] as string[],
-        prizes: [] as Prize[],
-        sponsors: [] as Sponsor[],
-
+        technologies: [] as Option[],
+        awards: [] as Award[],
     });
 
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
@@ -105,10 +100,10 @@ const CreateHackathon: React.FC = () => {
         }));
     };
 
-    const handlePrizesChange = (prizes: Prize[]) => {
+    const handleAwardsChange = (awards: Award[]) => {
         setFormData(prev => ({
             ...prev,
-            prizes
+            awards
         }));
     };
 
@@ -257,8 +252,8 @@ const CreateHackathon: React.FC = () => {
             />
 
             <AwardsEditor
-                initialAwards={formData.prizes}
-                onChange={handlePrizesChange}
+                initialAwards={formData.awards}
+                onChange={handleAwardsChange}
             />
 
             {/* Кнопка публикации */}

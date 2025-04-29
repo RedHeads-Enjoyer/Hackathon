@@ -8,7 +8,8 @@ interface Award {
     id: string;
     placeFrom: number;
     placeTo: number;
-    description: string;
+    moneyAmount: number;
+    additionally: string;
 }
 
 const AwardsEditor: React.FC<{
@@ -20,7 +21,8 @@ const AwardsEditor: React.FC<{
     const [formData, setFormData] = useState<Omit<Award, 'id'>>({
         placeFrom: 1,
         placeTo: 1,
-        description: '',
+        moneyAmount: 0,
+        additionally: '',
     });
     const [deleteConfirm, setDeleteConfirm] = useState<{
         show: boolean;
@@ -39,46 +41,8 @@ const AwardsEditor: React.FC<{
         }
     }, [awards, editingId]);
 
-    const handleChange = (field: keyof Award, value: string | number) => {
+    const handleChange = (field: keyof Omit<Award, 'id'>, value: string | number) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
-    // Проверка на последовательность диапазонов
-    const validateSequence = (newAward: Omit<Award, 'id'>): boolean => {
-        const sortedAwards = [...awards].sort((a, b) => a.placeFrom - b.placeFrom);
-
-        // Если это новая награда
-        if (!editingId) {
-            const lastAward = sortedAwards[sortedAwards.length - 1];
-            if (lastAward && newAward.placeFrom !== lastAward.placeTo + 1) {
-                alert(`Следующая награда должна начинаться с ${lastAward.placeTo + 1} места`);
-                return false;
-            }
-            return true;
-        }
-
-        // Если это редактирование существующей награды
-        const editingIndex = sortedAwards.findIndex(a => a.id === editingId);
-
-        // Проверка предыдущей награды
-        if (editingIndex > 0) {
-            const prevAward = sortedAwards[editingIndex - 1];
-            if (newAward.placeFrom !== prevAward.placeTo + 1) {
-                alert(`Награда должна начинаться с ${prevAward.placeTo + 1} места`);
-                return false;
-            }
-        }
-
-        // Проверка следующей награды
-        if (editingIndex < sortedAwards.length - 1) {
-            const nextAward = sortedAwards[editingIndex + 1];
-            if (newAward.placeTo + 1 !== nextAward.placeFrom) {
-                alert(`Награда должна заканчиваться на ${nextAward.placeFrom - 1} месте`);
-                return false;
-            }
-        }
-
-        return true;
     };
 
     const getNextAvailablePlace = (): number => {
@@ -87,18 +51,49 @@ const AwardsEditor: React.FC<{
         return sortedAwards[sortedAwards.length - 1].placeTo + 1;
     };
 
+    // Проверка, является ли награда последней
+    const isLastAward = (award: Award): boolean => {
+        if (awards.length === 0) return false;
+        const sortedAwards = [...awards].sort((a, b) => a.placeFrom - b.placeFrom);
+        return award.id === sortedAwards[sortedAwards.length - 1].id;
+    };
+
+    // Упрощенная валидация - ИСПРАВЛЕНО
+    const validateForm = (): boolean => {
+        if (formData.placeTo < formData.placeFrom) {
+            alert('"Место до" не может быть меньше "Место от"');
+            return false;
+        }
+
+        if (formData.moneyAmount < 0) {
+            alert('Денежная сумма не может быть отрицательной');
+            return false;
+        }
+
+        // При редактировании проверяем, чтобы не редактировались места для не-последних наград
+        if (editingId) {
+            // Находим текущую редактируемую награду
+            const award = awards.find(a => a.id === editingId);
+            if (!award) return false;
+
+            // Если это не последняя награда, проверяем, что placeFrom и placeTo не изменились
+            if (!isLastAward(award)) {
+                const originalPlaceFrom = award.placeFrom;
+                const originalPlaceTo = award.placeTo;
+
+                // Проверяем только изменение мест, а не всех полей
+                if (formData.placeFrom !== originalPlaceFrom || formData.placeTo !== originalPlaceTo) {
+                    alert('Для не-последней награды нельзя менять диапазон мест');
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    };
+
     const saveAward = () => {
-        if (!formData.description) {
-            alert('Введите описание награды');
-            return;
-        }
-
-        if (formData.placeFrom > formData.placeTo) {
-            alert('"Место от" не может быть больше "Место до"');
-            return;
-        }
-
-        if (!validateSequence(formData)) return;
+        if (!validateForm()) return;
 
         const updatedAwards = editingId
             ? awards.map((a) =>
@@ -119,46 +114,47 @@ const AwardsEditor: React.FC<{
         setFormData({
             placeFrom: award.placeFrom,
             placeTo: award.placeTo,
-            description: award.description,
+            moneyAmount: award.moneyAmount,
+            additionally: award.additionally || '',
         });
-    };
-
-    const confirmDelete = () => {
-        if (!editingId) return;
-        setDeleteConfirm({ show: true, awardId: editingId });
     };
 
     const deleteAward = () => {
         if (!deleteConfirm.awardId) return;
 
-        const updatedAwards = awards.filter(
-            (a) => a.id !== deleteConfirm.awardId
-        );
+        // Находим удаляемую награду
+        const sortedAwards = [...awards].sort((a, b) => a.placeFrom - b.placeFrom);
+        const deletedIndex = sortedAwards.findIndex(a => a.id === deleteConfirm.awardId);
 
-        // После удаления нужно перенумеровать следующие награды
-        const sortedAwards = [...updatedAwards].sort((a, b) => a.placeFrom - b.placeFrom);
-        const deletedIndex = awards.findIndex(a => a.id === deleteConfirm.awardId);
-
-        if (deletedIndex < sortedAwards.length) {
-            const prevAward = deletedIndex > 0 ? sortedAwards[deletedIndex - 1] : null;
-            let currentPlace = prevAward ? prevAward.placeTo + 1 : 1;
-
-            for (let i = deletedIndex; i < sortedAwards.length; i++) {
-                const range = sortedAwards[i].placeTo - sortedAwards[i].placeFrom;
-                sortedAwards[i].placeFrom = currentPlace;
-                sortedAwards[i].placeTo = currentPlace + range;
-                currentPlace += range + 1;
-            }
+        if (deletedIndex === -1) {
+            setDeleteConfirm({ show: false, awardId: null });
+            return;
         }
 
-        setAwards(sortedAwards);
-        onChange(sortedAwards);
+        // Можно удалять только последнюю награду
+        if (deletedIndex !== sortedAwards.length - 1) {
+            alert("Можно удалять только последнюю награду. Чтобы удалить эту награду, сначала удалите все награды после неё.");
+            setDeleteConfirm({ show: false, awardId: null });
+            return;
+        }
+
+        // Удаляем награду
+        const updatedAwards = awards.filter(a => a.id !== deleteConfirm.awardId);
+
+        setAwards(updatedAwards);
+        onChange(updatedAwards);
         setDeleteConfirm({ show: false, awardId: null });
         resetForm();
     };
 
     const resetForm = () => {
         setEditingId(null);
+        setFormData(() => ({
+            placeFrom: getNextAvailablePlace(),
+            placeTo: getNextAvailablePlace(),
+            moneyAmount: 0,
+            additionally: ''
+        }));
     };
 
     const formatPlace = (placeFrom: number, placeTo: number): string => {
@@ -167,20 +163,33 @@ const AwardsEditor: React.FC<{
             : `${placeFrom}-${placeTo} места`;
     };
 
+    const formatMoney = (amount: number): string => {
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'RUB',
+            minimumFractionDigits: 0
+        }).format(amount);
+    };
+
     return (
         <div className={classes.container}>
             <h3 className={classes.title}>Награды</h3>
 
-            <div className={awards.length !== 0 ? classes.form : ""}>
+            <div className={classes.form}>
                 <div className={classes.placesRow}>
                     <div className={classes.placeInput}>
                         <Input
                             label="Место от"
                             type="number"
                             value={formData.placeFrom}
-                            onChange={(e) => handleChange('placeFrom', Number(e.target.value))}
+                            onChange={() => {}} // Пустая функция, поле всегда read-only
                             min={1}
+                            disabled={true} // Всегда заблокировано
+                            readOnly={true}
                         />
+                        <div className={classes.inputHelperText}>
+                            Устанавливается автоматически
+                        </div>
                     </div>
                     <div className={classes.placeInput}>
                         <Input
@@ -189,24 +198,36 @@ const AwardsEditor: React.FC<{
                             value={formData.placeTo}
                             onChange={(e) => handleChange('placeTo', Number(e.target.value))}
                             min={formData.placeFrom}
+                            // Блокируем изменение для всех наград, кроме последней при редактировании
+                            disabled={editingId && !isLastAward({ ...formData, id: editingId } as Award)}
                         />
                     </div>
                 </div>
 
                 <div className={classes.inputContainer}>
                     <Input
-                        label="Описание награды"
+                        label="Денежная сумма (₽)"
+                        type="number"
+                        value={formData.moneyAmount}
+                        onChange={(e) => handleChange('moneyAmount', Number(e.target.value))}
+                        min={0}
+                        required
+                    />
+                </div>
+
+                <div className={classes.inputContainer}>
+                    <Input
+                        label="Дополнительно"
                         type="text"
-                        value={formData.description}
-                        onChange={(e) => handleChange('description', e.target.value)}
-                        placeholder="Например, Бесплатный курс"
+                        value={formData.additionally}
+                        onChange={(e) => handleChange('additionally', e.target.value)}
+                        placeholder="Например, Бесплатный курс (необязательно)"
                     />
                 </div>
 
                 <div className={classes.actions}>
                     <Button
                         onClick={saveAward}
-                        disabled={!formData.description}
                         className={classes.mainButton}
                     >
                         {editingId ? 'Сохранить' : 'Добавить награду'}
@@ -221,8 +242,10 @@ const AwardsEditor: React.FC<{
                                 Отмена
                             </Button>
                             <Button
-                                onClick={confirmDelete}
+                                onClick={() => setDeleteConfirm({ show: true, awardId: editingId })}
                                 className={classes.secondaryButton}
+                                // Блокируем кнопку удаления для всех, кроме последней награды
+                                disabled={!isLastAward({ ...formData, id: editingId } as Award)}
                             >
                                 Удалить
                             </Button>
@@ -230,6 +253,15 @@ const AwardsEditor: React.FC<{
                     )}
                 </div>
             </div>
+
+            {awards.length > 0 && (
+                <div className={classes.awardsHeader}>
+                    <h4 className={classes.awardsListTitle}>Список наград</h4>
+                    <div className={classes.awardsHelp}>
+                        Для редактирования кликните на награду. Удалять можно только последнюю награду.
+                    </div>
+                </div>
+            )}
 
             <div className={classes.awardsList}>
                 {awards
@@ -239,39 +271,40 @@ const AwardsEditor: React.FC<{
                             key={award.id}
                             className={`${classes.awardCard} ${
                                 editingId === award.id ? classes.active : ''
-                            }`}
+                            } ${isLastAward(award) ? classes.lastAward : ''}`}
                             onClick={() => editAward(award)}
                         >
                             <div className={classes.awardPlace}>
                                 {formatPlace(award.placeFrom, award.placeTo)}
                             </div>
-                            <div className={classes.awardDescription}>
-                                {award.description}
+                            <div className={classes.awardMoney}>
+                                {formatMoney(award.moneyAmount)}
                             </div>
+                            {award.additionally && (
+                                <div className={classes.awardAdditionally}>
+                                    {award.additionally}
+                                </div>
+                            )}
+                            {!isLastAward(award) && editingId === award.id && (
+                                <div className={classes.editingRestriction}>
+                                    Для этой награды можно изменить только сумму и дополнения
+                                </div>
+                            )}
                         </div>
                     ))}
             </div>
 
             <Modal
                 isOpen={deleteConfirm.show}
+                onConfirm={deleteAward}
+                onReject={() => setDeleteConfirm({ show: false, awardId: null })}
+                confirmText="Удалить"
+                rejectText="Отмена"
+                title="Удалить награду?"
             >
-                <div className={classes.modalContent}>
-                    <h4 className={classes.modalTitle}>Удалить награду?</h4>
-                    <p className={classes.modalText}>
-                        Вы уверены, что хотите удалить эту награду? Это действие нельзя отменить.
-                    </p>
-                    <div className={classes.modalActions}>
-                        <Button onClick={deleteAward}>
-                            Удалить
-                        </Button>
-                        <Button
-                            
-                            onClick={() => setDeleteConfirm({ show: false, awardId: null })}
-                        >
-                            Отмена
-                        </Button>
-                    </div>
-                </div>
+                <p className={classes.modalText}>
+                    Вы уверены, что хотите удалить эту награду? Это действие нельзя отменить.
+                </p>
             </Modal>
         </div>
     );
