@@ -3,7 +3,6 @@ import classes from './styles.module.css';
 import Input from "../input/Input.tsx";
 import {Option} from "../../modules/organozaton/types.ts";
 import {request} from "../../config.ts";
-import Error from "../error/Error.tsx";
 import Loader from "../loader/Loader.tsx";
 
 type SearchSelectPropsType = {
@@ -14,14 +13,14 @@ type SearchSelectPropsType = {
     error?: string;
     required?: boolean;
     notFound: React.ReactNode;
-    clearable?: boolean; // New optional prop
+    clearable?: boolean;
 }
 
 const SearchSelect = (props: SearchSelectPropsType) => {
     const [search, setSearch] = useState<string>("")
     const [confirmedText, setConfirmedText] = useState<string>("")
     const [options, setOptions] = useState<Option[]>([])
-    const [error, setError] = useState<string | null>(null)
+    const [searchError, setSearchError] = useState<string | null>(null)
     const [loading, setLoading] = useState<boolean>(false)
     const [isOpen, setIsOpen] = useState<boolean>(false)
     // Flag to prevent search when programmatically setting text
@@ -45,14 +44,14 @@ const SearchSelect = (props: SearchSelectPropsType) => {
         if (search.trim()) {
             timeoutIdRef.current = setTimeout(() => {
                 setLoading(true);
-                setError(null);
+                setSearchError(null);
                 setIsOpen(true);
                 request<Option[]>({method: 'POST', url: props.url, data: {name: search}})
                     .then((data) => {
                         setOptions(data);
                     })
                     .catch(() => {
-                        setError("Ошибка поиска");
+                        setSearchError("Ошибка поиска");
                     })
                     .finally(() => {
                         setLoading(false);
@@ -121,10 +120,11 @@ const SearchSelect = (props: SearchSelectPropsType) => {
         }
     };
 
-    const isError = props.error;
+    // Combine external error with search error
+    const displayError = props.error || searchError;
 
     return (
-        <div className={`${classes.input_container} ${isError ? classes.error : ''}`} ref={containerRef}>
+        <div className={classes.select_container} ref={containerRef}>
             <Input
                 label={props.label}
                 type="text"
@@ -132,7 +132,7 @@ const SearchSelect = (props: SearchSelectPropsType) => {
                 onChange={handleInputChange}
                 placeholder={props.placeholder}
                 required={props.required}
-                error={props.error}
+                error={displayError || undefined}
                 onFocus={handleInputFocus}
                 onBlur={() => {
                     setTimeout(() => {
@@ -143,12 +143,11 @@ const SearchSelect = (props: SearchSelectPropsType) => {
                     }, 150);
                 }}
             />
-            {error && <Error>{error}</Error>}
 
             {isOpen && (
                 <div className={classes.options_container}>
                     {loading ? (
-                            <div className={classes.option_item}>
+                        <div className={classes.loader_item}>
                             <Loader />
                         </div>
                     ) : options.length === 0 ? (

@@ -53,6 +53,10 @@ interface HackathonFormData {
     documents: File[]; // Added documents field
 }
 
+interface HackathonFormErrors {
+    name?: string | undefined
+}
+
 const CreateHackathon: React.FC = () => {
     const [formData, setFormData] = useState<HackathonFormData>({
         name: '',
@@ -79,21 +83,27 @@ const CreateHackathon: React.FC = () => {
     const [documentError, setDocumentError] = useState<string | null>(null);
 
     const handlePublishClick = () => {
-        // Validate documents if required
-        if (formData.documents.length === 0) {
-            setDocumentError("Пожалуйста, загрузите хотя бы один документ");
-            return;
-        }
-
-        setDocumentError(null);
         setIsPublishModalOpen(true);
     };
 
+    const [formErrors, setFormErrors] = useState<HackathonFormErrors>({});
+
+    const validateForm = () => {
+        const errors: HackathonFormErrors = {};
+        if (!formData.name) {
+            errors.name = "Название хакатона не может быть пустым";
+        }
+        return errors;
+    };
+
     const confirmPublish = () => {
-        // Здесь логика публикации
-        console.log('Хакатон опубликован:', formData);
         setIsPublishModalOpen(false);
-        // Можно добавить редирект или уведомление об успехе
+
+        const validationErrors = validateForm();
+        if (Object.keys(validationErrors).length > 0) {
+            setFormErrors(validationErrors);
+            return;
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -105,6 +115,11 @@ const CreateHackathon: React.FC = () => {
             [name]: type === 'number' ? Number(value) :
                 type === 'checkbox' ? checked :
                     value
+        }));
+
+        setFormErrors(prev => ({
+            ...prev,
+            [name]: undefined
         }));
     };
 
@@ -174,6 +189,7 @@ const CreateHackathon: React.FC = () => {
                             name="name"
                             placeholder="Введите название"
                             required
+                            error={formErrors.name}
                         />
                         <TextArea
                             label="Описание хакатона"
@@ -195,7 +211,6 @@ const CreateHackathon: React.FC = () => {
                                 }))}
                             notFound={<p>Подтвержденная организация с таким названием не найдена. <Link to={"/organization/create"}>Создать организацию</Link></p>}
                             placeholder={"Введите название"}
-                            error={"asd"}
                             required
                         />
                     </div>

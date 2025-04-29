@@ -25,27 +25,22 @@ const Input = (props: InputPropsType) => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-
-        // Check maxLength constraint
         if (props.maxLength && value.length > props.maxLength) {
             return;
         }
 
         if (props.type === 'number') {
-            // Allow: empty string, minus sign, digits, and at most one decimal point
-            // This regex matches valid number patterns including negative numbers and decimals
             const isValidInput = value === '' || value === '-' || /^-?\d*\.?\d*$/.test(value);
 
             if (isValidInput) {
+
                 props.onChange(e);
             }
         } else if (props.type === 'textNumber') {
-            // For textNumber, only allow digits
-            if (value === '' || /^\d+$/.test(value)) {
+                if (value === '' || /^\d+$/.test(value)) {
                 props.onChange(e);
             }
         } else {
-            // For other types, no validation needed
             props.onChange(e);
         }
     };
@@ -55,21 +50,17 @@ const Input = (props: InputPropsType) => {
         if (props.type === 'number' && e.target.value !== '' && e.target.value !== '-') {
             const numValue = parseFloat(e.target.value);
 
-            // Only apply constraints if we have a valid number
             if (!isNaN(numValue)) {
                 let constrainedValue = numValue;
 
-                // Apply min constraint if specified
                 if (props.min !== undefined && numValue < props.min) {
                     constrainedValue = props.min;
                 }
 
-                // Apply max constraint if specified
                 if (props.max !== undefined && numValue > props.max) {
                     constrainedValue = props.max;
                 }
 
-                // If value changed due to constraints, update it
                 if (constrainedValue !== numValue) {
                     const syntheticEvent = Object.create(e);
                     syntheticEvent.target = { ...e.target, value: constrainedValue.toString() };
@@ -78,7 +69,7 @@ const Input = (props: InputPropsType) => {
             }
         }
 
-        // Call the original onBlur if provided
+
         if (props.onBlur) {
             props.onBlur();
         }
