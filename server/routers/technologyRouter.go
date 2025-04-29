@@ -15,7 +15,13 @@ func TechnologyRouter(router *gin.Engine, db *gorm.DB) {
 		public.POST("", technologyController.GetAll)
 	}
 
-	protected := router.Group("/technology")
+	protected := router.Group("/technologies")
+	protected.Use(middlewares.Auth())
+	{
+		protected.POST("/options", technologyController.GetOptions)
+	}
+
+	protected = router.Group("/technology")
 	protected.Use(middlewares.Auth(), middlewares.SystemRole(2))
 	{
 		protected.POST("", technologyController.Create)

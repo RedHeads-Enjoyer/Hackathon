@@ -182,8 +182,8 @@ const StepsListWithDates: React.FC<HackathonStagesProps> = ({ initialStages = []
                 isOpen={!!stageToDelete}
                 rejectText={"Отмена"}
                 confirmText={"Удалить"}
-                onReject={() => cancelDelete}
-                onConfirm={() => executeDelete}
+                onReject={() => cancelDelete()}
+                onConfirm={() => executeDelete()}
                 title={"Подтверждение удаления"}
             >
                 <p>Вы уверены, что хотите удалить этот этап? Это действие нельзя отменить.</p>

@@ -170,3 +170,39 @@ func (tc *TechnologyController) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, nil)
 }
+
+// GetOptions возвращает список технологий для компонента выбора с поиском
+func (tc *TechnologyController) GetOptions(c *gin.Context) {
+	// Parse search options from request body
+	var searchOption technologyDTO.SearchOption
+	if err := c.ShouldBindJSON(&searchOption); err != nil {
+		searchOption.Name = ""
+	}
+
+	// Build query
+	query := tc.DB.Model(&models.Technology{})
+
+	// Apply case-insensitive search filter
+	if searchOption.Name != "" {
+		// Choose one of these approaches based on your database:
+
+		// Option 1: For PostgreSQL
+		query = query.Where("name ILIKE ?", "%"+searchOption.Name+"%")
+
+		// Option 2: For MySQL/MariaDB/SQLite
+		// query = query.Where("LOWER(name) LIKE LOWER(?)", "%"+searchOption.Name+"%")
+	}
+
+	// Execute the query
+	var options []technologyDTO.GetOption
+	if err := query.Select("id as value, name as label").
+		Order("name ASC").
+		Limit(10).
+		Find(&options).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении списка технологий"})
+		return
+	}
+
+	// Return the results
+	c.JSON(http.StatusOK, options)
+}

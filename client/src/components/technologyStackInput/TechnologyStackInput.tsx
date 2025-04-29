@@ -1,81 +1,51 @@
 import React, { useState, useId } from 'react';
 import classes from './style.module.css';
-import Button from '../button/Button';
-import Input from '../input/Input';
 import Modal from '../modal/Modal';
+import SearchSelect from "../searchSelect/SearchSelect.tsx";
+import {Option} from "../../modules/organozaton/types.ts";
 
 interface TechnologyStackInputProps {
-    initialTechnologies?: string[];
-    onChange: (technologies: string[]) => void;
+    initialTechnologies?: Array<Option>;
+    onChange: (technologies: Array<Option>) => void;
 }
 
 const TechnologyStackInput: React.FC<TechnologyStackInputProps> = ({
                                                                        initialTechnologies = [],
                                                                        onChange
                                                                    }) => {
-    const [technologies, setTechnologies] = useState<string[]>(initialTechnologies);
-    const [currentTech, setCurrentTech] = useState('');
-    const [editingTech, setEditingTech] = useState<string | null>(null);
+    const [technologies, setTechnologies] = useState<Array<Option>>(initialTechnologies);
     const [deleteConfirm, setDeleteConfirm] = useState<{
         show: boolean;
-        techToDelete: string | null;
+        techToDelete: Option | null;
     }>({ show: false, techToDelete: null });
+
     const idGenerator = useId();
 
-    const addTechnology = () => {
-        if (!currentTech.trim()) return;
-
-        if (editingTech) {
-            // Редактирование существующей технологии
-            const updatedTechs = technologies.map(tech =>
-                tech === editingTech ? currentTech.trim() : tech
-            );
+    const addTechnology = (option: Option) => {
+        // Check if technology already exists
+        if (!technologies.some(tech => tech.value === option.value)) {
+            const updatedTechs = [...technologies, option];
             setTechnologies(updatedTechs);
             onChange(updatedTechs);
-            resetForm();
-        } else {
-            // Добавление новой технологии
-            if (!technologies.includes(currentTech.trim())) {
-                const updatedTechs = [...technologies, currentTech.trim()];
-                setTechnologies(updatedTechs);
-                onChange(updatedTechs);
-                setCurrentTech('');
-            }
         }
     };
 
-    const editTechnology = (tech: string) => {
-        setEditingTech(tech);
-        setCurrentTech(tech);
-    };
-
-    const confirmDelete = () => {
-        if (!editingTech) return;
-        setDeleteConfirm({ show: true, techToDelete: editingTech });
+    const requestDeleteTechnology = (tech: Option) => {
+        setDeleteConfirm({ show: true, techToDelete: tech });
     };
 
     const deleteTechnology = () => {
         if (!deleteConfirm.techToDelete) return;
 
+        // Store in a variable to help TypeScript understand it's not null
+        const techToDelete = deleteConfirm.techToDelete;
+
         const updatedTechs = technologies.filter(
-            tech => tech !== deleteConfirm.techToDelete
+            tech => tech.value !== techToDelete.value
         );
         setTechnologies(updatedTechs);
         onChange(updatedTechs);
         setDeleteConfirm({ show: false, techToDelete: null });
-        resetForm();
-    };
-
-    const resetForm = () => {
-        setEditingTech(null);
-        setCurrentTech('');
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            addTechnology();
-        }
     };
 
     return (
@@ -84,40 +54,14 @@ const TechnologyStackInput: React.FC<TechnologyStackInputProps> = ({
 
             <div className={technologies.length !== 0 ? classes.form : ""}>
                 <div className={classes.inputContainer}>
-                    <Input
-                        type="text"
-                        value={currentTech}
-                        onChange={(e) => setCurrentTech(e.target.value)}
-                        placeholder="Например, React или TypeScript"
-                        onKeyDown={handleKeyDown}
+                    <SearchSelect
+                        label={"Выберите технологию"}
+                        url={"/technologies/options"}
+                        onChange={addTechnology}
+                        notFound={<p>Технология не найдена.</p>}
+                        placeholder={"Введите название технологии"}
+                        clearable={true}
                     />
-                </div>
-
-                <div className={classes.actions}>
-                    <Button
-                        onClick={addTechnology}
-                        disabled={!currentTech.trim()}
-                        className={classes.mainButton}
-                    >
-                        {editingTech ? 'Сохранить' : 'Добавить'}
-                    </Button>
-
-                    {editingTech && (
-                        <>
-                            <Button
-                                onClick={resetForm}
-                                className={classes.secondaryButton}
-                            >
-                                Отмена
-                            </Button>
-                            <Button
-                                onClick={confirmDelete}
-                                className={classes.secondaryButton}
-                            >
-                                Удалить
-                            </Button>
-                        </>
-                    )}
                 </div>
             </div>
 
@@ -125,13 +69,11 @@ const TechnologyStackInput: React.FC<TechnologyStackInputProps> = ({
                 <div className={classes.techList}>
                     {technologies.map((tech) => (
                         <div
-                            key={`${idGenerator}-${tech}`}
-                            className={`${classes.techItem} ${
-                                editingTech === tech ? classes.active : ''
-                            }`}
-                            onClick={() => editTechnology(tech)}
+                            key={`${idGenerator}-${tech.value}`}
+                            className={classes.techItem}
+                            onClick={() => requestDeleteTechnology(tech)}
                         >
-                            {tech}
+                            {tech.label}
                         </div>
                     ))}
                 </div>
@@ -139,23 +81,15 @@ const TechnologyStackInput: React.FC<TechnologyStackInputProps> = ({
 
             <Modal
                 isOpen={deleteConfirm.show}
+                onConfirm={deleteTechnology}
+                onReject={() => setDeleteConfirm({ show: false, techToDelete: null })}
+                confirmText="Удалить"
+                rejectText="Отмена"
+                title="Удалить технологию?"
             >
-                <div className={classes.modalContent}>
-                    <h4 className={classes.modalTitle}>Удалить технологию?</h4>
-                    <p className={classes.modalText}>
-                        Вы уверены, что хотите удалить "{deleteConfirm.techToDelete}" из списка?
-                    </p>
-                    <div className={classes.modalActions}>
-                        <Button onClick={deleteTechnology}>
-                            Удалить
-                        </Button>
-                        <Button
-                            onClick={() => setDeleteConfirm({ show: false, techToDelete: null })}
-                        >
-                            Отмена
-                        </Button>
-                    </div>
-                </div>
+                <p className={classes.modalText}>
+                    Вы уверены, что хотите удалить "{deleteConfirm.techToDelete?.label}" из списка?
+                </p>
             </Modal>
         </div>
     );

@@ -152,7 +152,7 @@ const SearchSelect = (props: SearchSelectPropsType) => {
                             <Loader />
                         </div>
                     ) : options.length === 0 ? (
-                        <>{props.notFound}</>
+                        <div className={classes.not_found}>{props.notFound}</div>
                     ) : (
                         options.map((option) => (
                             <div

@@ -97,8 +97,14 @@ const CriteriaEditor: React.FC<{
                             label={"Минимальный балл"}
                             type="number"
                             value={formData.minScore}
-                            onChange={(e) => handleChange('minScore', Number(e.target.value))}
-                            min={0}
+                            onChange={(e) => {
+                                // Check if it's a valid number before converting
+                                if (e.target.value === '' || e.target.value === '-') {
+                                    handleChange('minScore', e.target.value);
+                                } else {
+                                    handleChange('minScore', Number(e.target.value));
+                                }
+                            }}
                             max={formData.maxScore - 1}
                         />
                     </div>
@@ -107,7 +113,13 @@ const CriteriaEditor: React.FC<{
                             label={"Максимальный балл"}
                             type="number"
                             value={formData.maxScore}
-                            onChange={(e) => handleChange('maxScore', Number(e.target.value))}
+                            onChange={(e) => {
+                                if (e.target.value === '' || e.target.value === '-') {
+                                    handleChange('maxScore', e.target.value);
+                                } else {
+                                    handleChange('maxScore', Number(e.target.value));
+                                }
+                            }}
                             min={formData.minScore + 1}
                             max={100}
                         />
@@ -152,7 +164,7 @@ const CriteriaEditor: React.FC<{
                         onClick={() => editCriterion(criterion)}
                     >
                         <div className={classes.scoreRange}>
-                            {criterion.minScore} - {criterion.maxScore} баллов
+                            {criterion.minScore < 0 ? `(${criterion.minScore})` : criterion.minScore} - {criterion.maxScore < 0 ? `(${criterion.maxScore})` : criterion.maxScore} баллов
                         </div>
                         <div className={classes.criterionName}>{criterion.name}</div>
                     </div>
