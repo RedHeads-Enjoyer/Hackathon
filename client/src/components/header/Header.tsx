@@ -29,6 +29,7 @@ function Header() {
                                 <Link to={'/organizations/my'}>Мои организации</Link>
                                 <Link to={'/organization/create'}>Создать организацию</Link>
                                 <Link to={'/hackathon/create'}>Создать хакатон</Link>
+                                <Link to={'/hackathons'}>Хакатоны</Link>
                             </>
                         }
                         {(authState?.user.systemRole == 2 || authState?.user.systemRole == 3) &&
@@ -36,6 +37,7 @@ function Header() {
                                 <Link to={'/organizations'}>Организации</Link>
                                 <Link to={'/technologies'}>Технологии</Link>
                                 <Link to={'/technology/create'}>Создать технологию</Link>
+                                <Link to={'/hackathons'}>Хакатоны</Link>
                             </>
                         }
                         <p>{authState?.user.username}</p>

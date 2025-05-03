@@ -10,13 +10,9 @@
 
   --font-weight-weight: 600;
 
-  --accent-color: rgb(239, 192, 0);
-  --accent-light-color: rgb(255, 212, 35);
-  --accent-dark-color: rgb(188, 151, 0);
   --default-backgroud-color: rgb(51,51,51);
   --accent-backgroud-color: rgb(30,30,30);
   --default-text-color: white;
-  --error-border-color: #ef0000;
   --error-content-color: #ffefef;
   --default-placeholedr-color: #aaa;
   --default-font-size: 14px;
@@ -31,53 +27,31 @@
   --accent-shadow-color: rgba(255, 193, 7, 0.2);
 
   --light-text-color: #f5f5f5;
-  --muted-text-color: #b0b0b0;
   --placeholder-color: #8a8a8a;
 
-  --error-border-color: #f44336;
   --error-text-color: #ff6b6b;
   --error-bg-color: rgba(244, 67, 54, 0.1);
 
   --success-color: #4caf50;
 
   /* Размеры */
-  --default-font-size: 14px;
-  --border-radius: 6px;
   --transition-duration: 0.3s;
 
-  --disabled-bg-color: #2a2a2a;
   --scrollbar-thumb-color: rgba(255, 193, 7, 0.5);
 
-  --border-radius: 8px;
-  --card-bg-color: #1e1e1e;
-  --input-bg-color: #2a2a2a;
-  --input-border-color: #3d3d3d;
 
   --border-radius: 6px;
   --disabled-bg-color: #3a3a3a;
   --button-active-shadow: 0 0 0 3px rgba(255, 193, 7, 0.3);
 
-  --dark-bg-color: #121212;
-  --card-bg-color: #1e1e1e;
-  --input-border-color: #333;
-  --error-bg-color: rgba(244, 67, 54, 0.1);
-  --error-text-color: #ff6b6b;
-  --muted-text-color: #aaa;
+
   --header-bg-color: #1a1a1a;
   --header-border-color: #2a2a2a;
-  --light-text-color: #f5f5f5;
-  --input-bg-color: #2a2a2a;
-  --input-border-color: #3d3d3d;
-  --light-text-color: #f5f5f5;
+
   --muted-text-color: #888;
-  --accent-color: #ffc107;
-  --border-radius: 6px;
-  --border-radius: 8px;
+
   --border-radius-lg: 12px;
-  --card-bg-color: #1e1e1e;
-  --input-bg-color: #2a2a2a;
-  --input-border-color: #3d3d3d;
-  --light-text-color: #f5f5f5;
+
   --dark-text-color: #121212;
   --secondary-text-color: #6c757d; /* Серый для дат */
   --border-color: #dee2e6; /* Светло-серый для границ */

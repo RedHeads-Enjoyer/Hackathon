@@ -1,6 +1,5 @@
 import {BrowserRouter as Router, Routes, Route, Outlet} from 'react-router-dom';
 import Header from "./components/header/Header.tsx";
-import HackathonList from "./modules/hackathonList/HackathonList.tsx";
 import Register from "./modules/auth/Register";
 import Login from "./modules/auth/Login";
 import Logout from "./modules/auth/Logout";
@@ -21,6 +20,7 @@ import MyOrganizationsPage from "./modules/organozaton/MyOrganizationsPage.tsx";
 import Organizations from "./modules/organozaton/Organizations.tsx";
 import Technologies from "./modules/technologies/Technologies.tsx";
 import CreateTechnologyPage from "./modules/technologies/CreateTechnologyPage.tsx";
+import HackathonList from "./modules/hackathon/HackathonList.tsx";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -56,7 +56,7 @@ function App() {
             <Header/>
             <Routes>
                 <Route element={<ProtectedRoute roleLevel={1}><Outlet /></ProtectedRoute>}>
-                    <Route path="/" element={<HackathonList />}/>
+                    <Route path="/hackathons" element={<HackathonList />}/>
                     <Route path="/user/edit" element={<UserEditForm userId={1}/> } />
                     <Route path="/user/list" element={<UserList /> } />
                     <Route path="/hackathon/create" element={<CreateHackathon />} />

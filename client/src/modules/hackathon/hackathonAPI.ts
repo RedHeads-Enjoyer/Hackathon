@@ -1,5 +1,5 @@
 import {request} from "../../config.ts";
-import {HackathonFormData} from "./types.ts";
+import {HackathonFilterData, HackathonFormData, HackathonSearchData} from "./types.ts";
 
 export const hackathonAPI = {
     create: async (data: HackathonFormData) => {
@@ -67,5 +67,7 @@ export const hackathonAPI = {
 
 
         return request<number>({ method: 'POST', url: '/hackathon', data: formData})
-    }
+    },
+    getAll: async (filterData: HackathonFilterData) =>
+        request<HackathonSearchData>({method: 'POST', url: 'hackathons', data: filterData}),
 };

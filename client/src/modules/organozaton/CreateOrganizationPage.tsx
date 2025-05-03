@@ -116,94 +116,98 @@ const CreateOrganizationPage: React.FC = () => {
         <div className={classes.page_wrapper}>
             <PageLabel size={'h3'}>Создание организации</PageLabel>
 
-            <div className={classes.text_info}>
-                <Input
-                    label="Полное название"
-                    type="text"
-                    value={formData.legalName}
-                    onChange={handleChange}
-                    name="legalName"
-                    placeholder="Введите полное название"
-                    required
-                    error={formErrors.legalName}
-                />
-            </div>
+            <div className={classes.info_block}>
+                <div className={classes.text_info}>
+                    <Input
+                        label="Полное название"
+                        type="text"
+                        value={formData.legalName}
+                        onChange={handleChange}
+                        name="legalName"
+                        placeholder="Введите полное название"
+                        required
+                        error={formErrors.legalName}
+                    />
+                </div>
 
-            <div className={classes.text_info}>
-                <Input
-                    label="ИНН"
-                    type="textNumber"
-                    value={formData.INN}
-                    onChange={handleChange}
-                    name="INN"
-                    placeholder="Введите ИНН"
-                    maxLength={12}
-                    required
-                    error={formErrors.INN}
-                />
-            </div>
+                <div className={classes.text_info}>
+                    <Input
+                        label="ИНН"
+                        type="textNumber"
+                        value={formData.INN}
+                        onChange={handleChange}
+                        name="INN"
+                        placeholder="Введите ИНН"
+                        maxLength={12}
+                        required
+                        error={formErrors.INN}
+                    />
+                </div>
 
-            <div className={classes.text_info}>
-                <Input
-                    label="ОГРН"
-                    type="textNumber"
-                    value={formData.OGRN}
-                    onChange={handleChange}
-                    name="OGRN"
-                    placeholder="Введите ОГРН"
-                    maxLength={13}
-                    required
-                    error={formErrors.OGRN}
-                />
-            </div>
+                <div className={classes.text_info}>
+                    <Input
+                        label="ОГРН"
+                        type="textNumber"
+                        value={formData.OGRN}
+                        onChange={handleChange}
+                        name="OGRN"
+                        placeholder="Введите ОГРН"
+                        maxLength={13}
+                        required
+                        error={formErrors.OGRN}
+                    />
+                </div>
 
-            <div className={classes.text_info}>
-                <Input
-                    label="Контактный email"
-                    type="email"
-                    value={formData.contactEmail}
-                    onChange={handleChange}
-                    name="contactEmail"
-                    placeholder="Введите контактный email"
-                    required
-                    error={formErrors.contactEmail}
-                />
-            </div>
+                <div className={classes.text_info}>
+                    <Input
+                        label="Контактный email"
+                        type="email"
+                        value={formData.contactEmail}
+                        onChange={handleChange}
+                        name="contactEmail"
+                        placeholder="Введите контактный email"
+                        required
+                        error={formErrors.contactEmail}
+                    />
+                </div>
 
-            <div className={classes.text_info}>
-                <Input
-                    label="Вебсайт"
-                    type="text"
-                    value={formData.website}
-                    onChange={handleChange}
-                    name="website"
-                    placeholder="Введите ссылку"
-                    required
-                    error={formErrors.website}
-                />
-            </div>
+                <div className={classes.text_info}>
+                    <Input
+                        label="Вебсайт"
+                        type="text"
+                        value={formData.website}
+                        onChange={handleChange}
+                        name="website"
+                        placeholder="Введите ссылку"
+                        required
+                        error={formErrors.website}
+                    />
+                </div>
 
-            <div className={classes.publish_section}>
-                <Button
-                    onClick={handlePublishClick}
-                    loading={publishLoadnig}
+                <div className={classes.publish_section}>
+                    <Button
+                        onClick={handlePublishClick}
+                        loading={publishLoadnig}
+                    >
+                        Опубликовать хакатон
+                    </Button>
+                </div>
+
+                {publishError && <Error>{publishError}</Error>}
+
+                <Modal
+                    isOpen={isPublishModalOpen}
+                    title={"Подтверждение создание организации"}
+                    confirmText={"Подтверждаю"}
+                    rejectText={"Отмена"}
+                    onConfirm={confirmPublish}
+                    onReject={() => setIsPublishModalOpen(false)}
                 >
-                    Опубликовать хакатон
-                </Button>
+                    <p>Проверьте все данные. Позже модератор будет проверять ваши данные.</p>
+                </Modal>
             </div>
 
-            {publishError && <Error>{publishError}</Error>}
 
-            <Modal
-                isOpen={isPublishModalOpen}
-                title={"Подтверждение создание организации"}
-                confirmText={"Подтверждаю"}
-                rejectText={"Отмена"}
-                onConfirm={confirmPublish}
-                onReject={() => setIsPublishModalOpen(false)}
-            >
-                <p>Проверьте все данные. Позже модератор будет проверять ваши данные.</p>
-            </Modal>
         </div>
     );
 };
