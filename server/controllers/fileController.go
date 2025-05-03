@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"server/models"
+	"strings"
 )
 
 type FileController struct {
@@ -37,9 +38,15 @@ func (fc *FileController) UploadFile(c *gin.Context, file *multipart.FileHeader,
 		return nil, errors.New("требуется авторизация")
 	}
 
+	// Проверка максимального размера файла (например, 10MB)
+	const maxFileSize = 10 * 1024 * 1024 // 10MB в байтах
+	if file.Size > maxFileSize {
+		return nil, errors.New("размер файла превышает допустимый предел")
+	}
+
 	// Создаем директорию если её нет
 	if err := os.MkdirAll(fc.Config.StoragePath, os.ModePerm); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка создания директории: %w", err)
 	}
 
 	// Генерируем уникальное имя для файла
@@ -50,16 +57,42 @@ func (fc *FileController) UploadFile(c *gin.Context, file *multipart.FileHeader,
 
 	// Сохраняем файл
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка сохранения файла: %w", err)
 	}
+
+	// Определяем тип файла более надежным способом
+	var fileType string
+
+	// Сначала пробуем получить из заголовка
+	fileType = file.Header.Get("Content-Type")
+
+	// Если тип не определен или generic, определяем его по расширению
+	if fileType == "" || fileType == "application/octet-stream" {
+		fileType = getFileTypeByExtension(fileExt)
+	}
+
+	// Если все еще не определен, пробуем определить по содержимому
+	if fileType == "" || fileType == "application/octet-stream" {
+		openedFile, err := file.Open()
+		if err == nil {
+			defer openedFile.Close()
+			buffer := make([]byte, 512) // Используем первые 512 байт для определения типа
+			if _, err := openedFile.Read(buffer); err == nil {
+				fileType = http.DetectContentType(buffer)
+			}
+		}
+	}
+
+	// Создаем URL с учетом сервера и путей
+	fileURL := fmt.Sprintf("%s/api/files/%s%s", fc.Config.StoragePath, fileUUID, fileExt)
 
 	// Создаем запись о файле в БД
 	fileRecord := models.File{
 		Name:         file.Filename,
 		StoredName:   storedName,
-		URL:          "/api/files/" + fileUUID,
+		URL:          fileURL,
 		Size:         file.Size,
-		Type:         file.Header.Get("Content-Type"),
+		Type:         fileType,
 		OwnerType:    ownerType,
 		OwnerID:      ownerID,
 		UploadedByID: userID.(uint),
@@ -68,12 +101,43 @@ func (fc *FileController) UploadFile(c *gin.Context, file *multipart.FileHeader,
 	if err := fc.DB.Create(&fileRecord).Error; err != nil {
 		// Удаляем файл при ошибке записи в БД
 		os.Remove(filePath)
-		return nil, err
+		return nil, fmt.Errorf("ошибка создания записи в БД: %w", err)
 	}
 
 	return &fileRecord, nil
 }
 
+// Функция для определения типа файла по расширению
+func getFileTypeByExtension(ext string) string {
+	switch strings.ToLower(ext) {
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".png":
+		return "image/png"
+	case ".gif":
+		return "image/gif"
+	case ".pdf":
+		return "application/pdf"
+	case ".doc":
+		return "application/msword"
+	case ".docx":
+		return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+	case ".xls":
+		return "application/vnd.ms-excel"
+	case ".xlsx":
+		return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	case ".zip":
+		return "application/zip"
+	case ".txt":
+		return "text/plain"
+	case ".mp4":
+		return "video/mp4"
+	case ".mp3":
+		return "audio/mpeg"
+	default:
+		return "application/octet-stream"
+	}
+}
 func (fc *FileController) GetFile(c *gin.Context) {
 	fileUUID := c.Param("id")
 

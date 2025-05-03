@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
@@ -32,7 +31,6 @@ func Auth() gin.HandlerFunc {
 		}
 
 		c.Set("user_claims", claims)
-		fmt.Println("middleware:", claims.SystemRole)
 		c.Next()
 	}
 }

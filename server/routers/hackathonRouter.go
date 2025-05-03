@@ -8,7 +8,7 @@ import (
 )
 
 func HackathonRouter(router *gin.Engine, db *gorm.DB) {
-	hackathonController := controllers.NewHackathonController(db)
+	hackathonController := controllers.NewHackathonController(db, controllers.NewFileController(db))
 	inviteTeamController := controllers.NewTeamInviteController(db)
 	public := router.Group("/hackathon")
 	{
@@ -25,7 +25,7 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	}
 
 	protected = router.Group("/hackathon")
-	protected.Use(middlewares.Auth(), middlewares.OrganizationOwnerBody(db))
+	protected.Use(middlewares.Auth())
 	{
 		protected.POST("", hackathonController.CreateHackathon)
 	}

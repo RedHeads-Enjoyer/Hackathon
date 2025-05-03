@@ -15,66 +15,12 @@ import DatePicker from "../../components/datePicker/DatePicker.tsx";
 import Button from "../../components/button/Button.tsx";
 import Modal from "../../components/modal/Modal.tsx";
 import SelectSearch from "../../components/searchSelect/SearchSelect.tsx";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {Option} from "../organozaton/types.ts";
 import FileUpload from "../../components/fileUpload/FileUpload.tsx";
-
-interface Criteria {
-    id: string;
-    name: string;
-    minScore: number;
-    maxScore: number;
-}
-
-interface Award {
-    id: string;
-    placeFrom: number;
-    placeTo: number;
-    moneyAmount: number,
-    additionally: string;
-}
-
-interface HackathonFormData {
-    name: string;
-    description: string;
-    coverImage: File | null;
-    regDateFrom: string;
-    regDateTo: string;
-    workDateFrom: string;
-    workDateTo: string;
-    evalDateFrom: string;
-    evalDateTo: string;
-    minTeamSize: number;
-    maxTeamSize: number;
-    organizationId: number;
-    goals: string[];
-    stages: Stage[];
-    criteria: Criteria[];
-    technologies: Option[];
-    awards: Award[];
-    documents: File[]; // Added documents field
-}
-
-interface HackathonFormErrors {
-    name?: string | undefined,
-    description?: string | undefined,
-    organizationId?: string | undefined,
-    coverImage?: string | undefined,
-    regDateFrom?: string | undefined,
-    regDateTo?: string | undefined,
-    workDateFrom?: string | undefined;
-    workDateTo?: string | undefined;
-    evalDateFrom?: string | undefined;
-    evalDateTo?: string | undefined;
-    minTeamSize?: string | undefined;
-    maxTeamSize?: string | undefined;
-    stages?: string | undefined,
-    stagesInvalid?: boolean,
-    criteriaInvalid?: boolean,
-    technologiesInvalid?: boolean,
-    awardsInvalid?: boolean,
-    documents?: string | undefined,
-}
+import {Award, Criteria, HackathonFormData, HackathonFormErrors} from "./types.ts";
+import Error from "../../components/error/Error.tsx";
+import {hackathonAPI} from "./hackathonAPI.ts";
 
 const CreateHackathon: React.FC = () => {
     const [formData, setFormData] = useState<HackathonFormData>({
@@ -99,6 +45,9 @@ const CreateHackathon: React.FC = () => {
     });
 
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+    const navigate = useNavigate()
+    const [createHackathonLoading, setCreateHackathonLoading] = useState<boolean>(false)
+    const [createHackathonError, setCreateHackathonError] = useState<string | null>(null)
 
     const stagesRef = useRef<StepsListWithDatesRef>(null);
     const criteriaRef = useRef<CriteriaEditorRef>(null);
@@ -200,13 +149,27 @@ const CreateHackathon: React.FC = () => {
         return errors;
     };
 
-    const confirmPublish = () => {
+    const confirmPublish = async () => {
         setIsPublishModalOpen(false);
 
         const validationErrors = validateForm();
         if (Object.keys(validationErrors).length > 0) {
             setFormErrors(validationErrors);
             return;
+        }
+
+        setCreateHackathonLoading(true)
+
+        console.log(formData)
+
+        try {
+            await hackathonAPI.create(formData);
+            navigate('/');
+        } catch (err) {
+            const errorMessage = (err as Error).message || "Ошибка при создании хакатона";
+            setCreateHackathonError(errorMessage);
+        } finally {
+            setCreateHackathonLoading(false);
         }
     };
 
@@ -498,10 +461,15 @@ const CreateHackathon: React.FC = () => {
             <div className={classes.publish_section}>
                 <Button
                     onClick={handlePublishClick}
+                    loading={createHackathonLoading}
                 >
                     Опубликовать хакатон
                 </Button>
             </div>
+
+            {createHackathonError && <Error>{createHackathonError}</Error>}
+
+
 
             {/* Модальное окно подтверждения */}
             <Modal

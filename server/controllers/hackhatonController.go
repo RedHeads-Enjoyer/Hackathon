@@ -1,8 +1,11 @@
 package controllers
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 	"net/http"
 	"server/models"
@@ -11,7 +14,7 @@ import (
 	"server/models/DTO/userDTO"
 	"server/types"
 	"strconv"
-	"time"
+	_ "time"
 )
 
 type HackathonController struct {
@@ -19,141 +22,310 @@ type HackathonController struct {
 	FileController *FileController
 }
 
-func NewHackathonController(db *gorm.DB) *HackathonController {
-	return &HackathonController{DB: db}
+func NewHackathonController(db *gorm.DB, fileController *FileController) *HackathonController {
+	return &HackathonController{
+		DB:             db,
+		FileController: fileController, // Убедитесь, что это не nil
+	}
 }
 
 // Создание хакатона
 // CreateHackathon - метод для создания хакатона
+// CreateHackathon - метод для создания хакатона
 func (hc *HackathonController) CreateHackathon(c *gin.Context) {
-	// Получаем ID пользователя из контекста
-	userID, exists := c.Get("userID")
+	fmt.Println("Начало обработки запроса CreateHackathon")
+
+	// Получаем claims пользователя из контекста, установленные middleware Auth()
+	userClaims, exists := c.Get("user_claims")
 	if !exists {
+		fmt.Println("Ошибка: Отсутствует user_claims в контексте")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима авторизация"})
 		return
 	}
 
-	// Получаем данные из формы
-	var hackathonData struct {
-		Name           string    `form:"name" binding:"required"`
-		Description    string    `form:"description"`
-		RegDateFrom    time.Time `form:"reg_date_from" binding:"required"`
-		RegDateTo      time.Time `form:"reg_date_to" binding:"required"`
-		StartDate      time.Time `form:"start_date" binding:"required"`
-		EndDate        time.Time `form:"end_date" binding:"required"`
-		MaxTeams       *int      `form:"max_teams"`
-		MaxTeamSize    int       `form:"max_team_size" binding:"required"`
-		MinTeamSize    int       `form:"min_team_size" binding:"required"`
-		OrganizationID uint      `form:"organization_id" binding:"required"`
-		TechnologyIDs  []uint    `form:"technology_ids"`
+	// Приводим claims к нужному типу
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		fmt.Println("Ошибка: Невозможно привести user_claims к типу *types.Claims")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+	fmt.Printf("User ID: %d, System Role: %d\n", claims.UserID, claims.SystemRole)
+
+	// Парсим multipart форму
+	fmt.Println("Парсинг multipart формы")
+	if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
+		fmt.Printf("Ошибка при парсинге формы: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка при парсинге формы: " + err.Error()})
+		return
 	}
 
-	if err := c.ShouldBind(&hackathonData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Получаем JSON данные из поля 'data'
+	hackathonDataJSON := c.Request.FormValue("data")
+	if hackathonDataJSON == "" {
+		fmt.Println("Ошибка: Отсутствуют данные в поле 'data'")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствуют данные хакатона (поле 'data')"})
+		return
+	}
+	fmt.Println("Получены данные JSON:", hackathonDataJSON[:100]+"...") // Логируем первые 100 символов
+
+	// Десериализуем JSON в нашу DTO структуру
+	var dto hackathonDTO.CreateDTO
+	if err := json.Unmarshal([]byte(hackathonDataJSON), &dto); err != nil {
+		fmt.Printf("Ошибка при разборе JSON: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка при разборе JSON: " + err.Error()})
+		return
+	}
+	fmt.Printf("Десериализованная DTO: Name=%s, OrgID=%d, Stages=%d, Criteria=%d, Awards=%d\n",
+		dto.Name, dto.OrganizationID, len(dto.Steps), len(dto.Criteria), len(dto.Awards))
+
+	// Валидируем DTO
+	fmt.Println("Валидация DTO")
+	validate := validator.New()
+	if err := validate.Struct(dto); err != nil {
+		fmt.Printf("Ошибка валидации: %v\n", err)
+		validationErrors, ok := err.(validator.ValidationErrors)
+		if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка валидации", "details": err.Error()})
+			return
+		}
+
+		// Преобразуем validator.ValidationErrors в понятный формат
+		errorDetails := make([]map[string]interface{}, 0)
+		for _, e := range validationErrors {
+			errorDetails = append(errorDetails, map[string]interface{}{
+				"field":   e.Field(),
+				"tag":     e.Tag(),
+				"value":   e.Value(),
+				"param":   e.Param(),
+				"message": fmt.Sprintf("Поле '%s' не прошло валидацию: %s", e.Field(), e.Tag()),
+			})
+		}
+
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка валидации", "details": errorDetails})
 		return
 	}
 
 	// Проверяем права на создание хакатона в этой организации
+	fmt.Printf("Поиск организации с ID=%d\n", dto.OrganizationID)
 	var organization models.Organization
-	if err := hc.DB.First(&organization, hackathonData.OrganizationID).Error; err != nil {
+	if err := hc.DB.First(&organization, dto.OrganizationID).Error; err != nil {
+		fmt.Printf("Ошибка при поиске организации: %v\n", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Организация не найдена"})
 		return
 	}
+	fmt.Printf("Найдена организация: ID=%d, OwnerID=%d\n", organization.ID, organization.OwnerID)
 
-	if organization.OwnerID != userID.(uint) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Нет прав для создания хакатона в этой организации"})
-		return
+	// Проверяем, что пользователь является владельцем организации
+	if organization.OwnerID != claims.UserID {
+		fmt.Printf("Пользователь ID=%d не является владельцем организации ID=%d\n", claims.UserID, organization.ID)
+		// Дополнительно можно проверить, является ли пользователь администратором
+		if claims.SystemRole != 3 { // Предполагаю, что 3 - это роль администратора
+			fmt.Printf("Пользователь не имеет роли администратора (роль=%d)\n", claims.SystemRole)
+			c.JSON(http.StatusForbidden, gin.H{"error": "Нет прав для создания хакатона в этой организации"})
+			return
+		}
+		fmt.Println("Пользователь имеет права администратора, доступ разрешен")
 	}
 
 	// Создаем хакатон в транзакции
+	fmt.Println("Начало транзакции создания хакатона")
 	var hackathon models.Hackathon
 	err := hc.DB.Transaction(func(tx *gorm.DB) error {
-		// Создаем запись хакатона
-		hackathon = models.Hackathon{
-			Name:           hackathonData.Name,
-			Description:    hackathonData.Description,
-			RegDateFrom:    hackathonData.RegDateFrom,
-			RegDateTo:      hackathonData.RegDateTo,
-			MaxTeamSize:    hackathonData.MaxTeamSize,
-			MinTeamSize:    hackathonData.MinTeamSize,
-			StatusID:       1, // Начальный статус (например, "Черновик")
-			OrganizationID: hackathonData.OrganizationID,
-		}
+		// Преобразуем DTO в модель
+		fmt.Println("Преобразование DTO в модель хакатона")
+		hackathon = *dto.ToModel()
+		fmt.Printf("Созданная модель: ID=%d, Name=%s\n", hackathon.ID, hackathon.Name)
 
+		// Создаем запись хакатона
+		fmt.Println("Сохранение хакатона в БД")
 		if err := tx.Create(&hackathon).Error; err != nil {
+			fmt.Printf("Ошибка при создании хакатона: %v\n", err)
 			return err
 		}
+		fmt.Printf("Хакатон создан с ID=%d\n", hackathon.ID)
 
 		// Добавляем связь создателя хакатона как организатора
+		fmt.Println("Добавление связи с организатором")
 		userHackathon := models.BndUserHackathon{
-			UserID:        userID.(uint),
+			UserID:        claims.UserID,
 			HackathonID:   hackathon.ID,
-			HackathonRole: 3,
+			HackathonRole: 3, // Роль организатора
 		}
 
 		if err := tx.Create(&userHackathon).Error; err != nil {
+			fmt.Printf("Ошибка при создании связи с организатором: %v\n", err)
 			return err
 		}
+		fmt.Println("Связь с организатором создана")
 
 		// Загружаем логотип хакатона, если он есть
+		c.Set("userID", claims.UserID)
 		logoFile, err := c.FormFile("logo")
-		if err == nil && logoFile != nil {
+		if err != nil {
+			fmt.Printf("Логотип не найден: %v\n", err)
+		} else if logoFile != nil {
+			fmt.Printf("Найден логотип: %s, размер: %d\n", logoFile.Filename, logoFile.Size)
 			file, err := hc.FileController.UploadFile(c, logoFile, hackathon.ID, "hackathon")
 			if err != nil {
+				fmt.Printf("Ошибка при загрузке логотипа: %v\n", err)
 				return err
 			}
+			fmt.Printf("Логотип загружен, ID файла=%v\n", file.ID)
 
 			// Обновляем хакатон с привязкой к логотипу
 			if err := tx.Model(&hackathon).Association("Logo").Replace(file); err != nil {
+				fmt.Printf("Ошибка при связывании логотипа с хакатоном: %v\n", err)
 				return err
 			}
+			fmt.Println("Логотип привязан к хакатону")
 		}
 
 		// Загружаем дополнительные файлы, если они есть
+		fmt.Println("Проверка наличия дополнительных файлов")
 		form, err := c.MultipartForm()
-		if err == nil && form != nil && form.File["files"] != nil {
-			for _, fileHeader := range form.File["files"] {
+		if err != nil {
+			fmt.Printf("Ошибка при получении MultipartForm: %v\n", err)
+		} else if form != nil && form.File["files"] != nil {
+			fmt.Printf("Найдено %d дополнительных файлов\n", len(form.File["files"]))
+			for i, fileHeader := range form.File["files"] {
+				fmt.Printf("Обработка файла %d: %s, размер: %d\n", i+1, fileHeader.Filename, fileHeader.Size)
 				file, err := hc.FileController.UploadFile(c, fileHeader, hackathon.ID, "hackathon")
 				if err != nil {
+					fmt.Printf("Ошибка при загрузке файла: %v\n", err)
 					return err
 				}
+				fmt.Printf("Файл загружен, ID файла=%v\n", file.ID)
 
 				// Добавляем файл в Files хакатона
 				if err := tx.Model(&hackathon).Association("Files").Append(file); err != nil {
+					fmt.Printf("Ошибка при связывании файла с хакатоном: %v\n", err)
 					return err
 				}
+				fmt.Printf("Файл %d привязан к хакатону\n", i+1)
 			}
+		} else {
+			fmt.Println("Дополнительные файлы не найдены")
 		}
 
-		// Добавляем технологии, если они указаны
-		if len(hackathonData.TechnologyIDs) > 0 {
+		// Добавляем технологии
+		if len(dto.Technologies) > 0 {
+			fmt.Printf("Добавление %d технологий\n", len(dto.Technologies))
 			var technologies []models.Technology
-			if err := tx.Where("id IN ?", hackathonData.TechnologyIDs).Find(&technologies).Error; err != nil {
+			if err := tx.Where("id IN ?", dto.Technologies).Find(&technologies).Error; err != nil {
+				fmt.Printf("Ошибка при поиске технологий: %v\n", err)
 				return err
 			}
+			fmt.Printf("Найдено %d технологий в БД\n", len(technologies))
 
 			if err := tx.Model(&hackathon).Association("Technologies").Append(&technologies); err != nil {
+				fmt.Printf("Ошибка при связывании технологий с хакатоном: %v\n", err)
 				return err
 			}
+			fmt.Println("Технологии привязаны к хакатону")
+		} else {
+			fmt.Println("Нет технологий для добавления")
 		}
 
+		// Создаем и связываем этапы хакатона
+		if len(dto.Steps) > 0 {
+			fmt.Printf("Создание %d этапов хакатона\n", len(dto.Steps))
+			for i, stepDTO := range dto.Steps {
+				step := models.HackathonStep{
+					HackathonID: hackathon.ID,
+					Name:        stepDTO.Name,
+					Description: stepDTO.Description,
+					StartDate:   stepDTO.StartDate,
+					EndDate:     stepDTO.EndDate,
+				}
+				fmt.Printf("Создание этапа %d: %s, %s - %s\n", i+1, step.Name,
+					step.StartDate.Format("2006-01-02"), step.EndDate.Format("2006-01-02"))
+
+				if err := tx.Create(&step).Error; err != nil {
+					fmt.Printf("Ошибка при создании этапа: %v\n", err)
+					return err
+				}
+				fmt.Printf("Этап %d создан\n", i+1)
+			}
+		} else {
+			fmt.Println("Нет этапов для создания")
+		}
+
+		// Создаем и связываем критерии оценки
+		if len(dto.Criteria) > 0 {
+			fmt.Printf("Создание %d критериев оценки\n", len(dto.Criteria))
+			for i, criterionDTO := range dto.Criteria {
+				criterion := models.Criteria{
+					HackathonID: hackathon.ID,
+					Name:        criterionDTO.Name,
+					MinScore:    criterionDTO.MinScore,
+					MaxScore:    criterionDTO.MaxScore,
+				}
+				fmt.Printf("Создание критерия %d: %s, мин=%v, макс=%v\n", i+1, criterion.Name, criterion.MinScore, criterion.MaxScore)
+
+				if err := tx.Create(&criterion).Error; err != nil {
+					fmt.Printf("Ошибка при создании критерия: %v\n", err)
+					return err
+				}
+				fmt.Printf("Критерий %d создан\n", i+1)
+			}
+		} else {
+			fmt.Println("Нет критериев для создания")
+		}
+
+		// Создаем и связываем награды
+		if len(dto.Awards) > 0 {
+			fmt.Printf("Создание %d наград\n", len(dto.Awards))
+			for i, awardDTO := range dto.Awards {
+				award := models.Award{
+					HackathonID:  hackathon.ID,
+					PlaceFrom:    awardDTO.PlaceFrom,
+					PlaceTo:      awardDTO.PlaceTo,
+					MoneyAmount:  awardDTO.MoneyAmount,
+					Additionally: awardDTO.Additionally,
+				}
+				fmt.Printf("Создание награды %d: места %d-%d, сумма %.2f\n", i+1, award.PlaceFrom, award.PlaceTo, award.MoneyAmount)
+
+				if err := tx.Create(&award).Error; err != nil {
+					fmt.Printf("Ошибка при создании награды: %v\n", err)
+					return err
+				}
+				fmt.Printf("Награда %d создана\n", i+1)
+			}
+		} else {
+			fmt.Println("Нет наград для создания")
+		}
+
+		fmt.Println("Все операции в транзакции выполнены успешно")
 		return nil
 	})
 
 	if err != nil {
+		fmt.Printf("ОШИБКА ТРАНЗАКЦИИ: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	fmt.Println("Транзакция успешно завершена")
 
 	// Загружаем полные данные хакатона для ответа
+	fmt.Printf("Загрузка данных хакатона ID=%d для ответа\n", hackathon.ID)
 	var result models.Hackathon
-	hc.DB.Preload("Organization").
+	if err := hc.DB.Preload("Organization").
 		Preload("Logo").
 		Preload("Files").
 		Preload("Technologies").
-		First(&result, hackathon.ID)
+		Preload("Steps").
+		Preload("Criteria").
+		Preload("Awards").
+		First(&result, hackathon.ID).Error; err != nil {
+		fmt.Printf("Ошибка при загрузке результата: %v\n", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при загрузке данных хакатона: " + err.Error()})
+		return
+	}
+	fmt.Println("Данные хакатона успешно загружены, отправка ответа")
 
 	c.JSON(http.StatusCreated, result)
+	fmt.Println("Запрос CreateHackathon успешно обработан")
 }
 
 // GetAll - Получение списка всех хакатонов

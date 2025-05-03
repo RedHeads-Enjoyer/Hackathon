@@ -2,14 +2,14 @@ package awardDTO
 
 import "server/models"
 
-type AwardCreateDTO struct {
+type Create struct {
 	PlaceFrom    int     `json:"place_from" validate:"required,min=1"`
 	PlaceTo      int     `json:"place_to" validate:"required,min=1,gtefield=PlaceFrom"`
-	MoneyAmount  float64 `json:"money_amount" validate:"required,min=0"`
+	MoneyAmount  float64 `json:"money_amount" validate:"min=0"`
 	Additionally string  `json:"additionally" validate:"max=500"`
 }
 
-func (dto *AwardCreateDTO) ToModel(hackathonID uint) *models.Award {
+func (dto *Create) ToModel(hackathonID uint) *models.Award {
 	return &models.Award{
 		MoneyAmount:  dto.MoneyAmount,
 		Additionally: dto.Additionally,
