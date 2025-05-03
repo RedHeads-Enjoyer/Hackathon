@@ -58,6 +58,14 @@ interface HackathonFormErrors {
     description?: string | undefined,
     organizationId?: string | undefined,
     coverImage?: string | undefined,
+    regDateFrom?: string | undefined,
+    regDateTo?: string | undefined,
+    workDateFrom?: string | undefined;
+    workDateTo?: string | undefined;
+    evalDateFrom?: string | undefined;
+    evalDateTo?: string | undefined;
+    minTeamSize?: string | undefined;
+    maxTeamSize?: string | undefined;
 }
 
 const CreateHackathon: React.FC = () => {
@@ -109,7 +117,45 @@ const CreateHackathon: React.FC = () => {
             errors.coverImage = "Изображение не может быть пустым";
         }
 
+        if (!formData.regDateFrom) {
+            errors.regDateFrom = "Дата не может быть пустой";
+        }
 
+        if (!formData.regDateTo) {
+            errors.regDateTo = "Дата не может быть пустой";
+        }
+
+        if (!formData.evalDateFrom) {
+            errors.evalDateFrom = "Дата не может быть пустой";
+        }
+
+        if (!formData.evalDateTo) {
+            errors.evalDateTo = "Дата не может быть пустой";
+        }
+
+        if (!formData.workDateFrom) {
+            errors.workDateFrom = "Дата не может быть пустой";
+        }
+
+        if (!formData.workDateTo) {
+            errors.workDateTo = "Дата не может быть пустой";
+        }
+
+        if (!formData.minTeamSize) {
+            errors.minTeamSize = "Размер команды не может быть пустым";
+        }
+
+        if (formData.minTeamSize && formData.minTeamSize == 0) {
+            errors.minTeamSize = "Размер команды не может быть 0";
+        }
+
+        if (!formData.maxTeamSize) {
+            errors.maxTeamSize = "Размер команды не может быть пустым";
+        }
+
+        if (formData.maxTeamSize && formData.maxTeamSize == 0) {
+            errors.maxTeamSize = "Размер команды не может быть 0";
+        }
 
         return errors;
     };
@@ -145,6 +191,11 @@ const CreateHackathon: React.FC = () => {
         setFormData(prev => ({
             ...prev,
             [name]: value
+        }));
+
+        setFormErrors(prev => ({
+            ...prev,
+            [name]: undefined
         }));
     };
 
@@ -266,6 +317,8 @@ const CreateHackathon: React.FC = () => {
                         value={formData.regDateFrom}
                         onChange={(value) => handleDateChange('regDateFrom', value)}
                         maxDate={formData.regDateTo || formData.workDateFrom || formData.workDateTo || formData.evalDateFrom || formData.evalDateTo}
+                        error={formErrors.regDateFrom}
+                        required
                     />
                     <DatePicker
                         label="Окончание регистрации"
@@ -273,6 +326,8 @@ const CreateHackathon: React.FC = () => {
                         onChange={(value) => handleDateChange('regDateTo', value)}
                         minDate={formData.regDateFrom}
                         maxDate={formData.workDateFrom || formData.workDateTo || formData.evalDateFrom || formData.evalDateTo}
+                        error={formErrors.regDateTo}
+                        required
                     />
                     <DatePicker
                         label="Начало работы"
@@ -280,6 +335,8 @@ const CreateHackathon: React.FC = () => {
                         onChange={(value) => handleDateChange('workDateFrom', value)}
                         minDate={formData.regDateTo || formData.regDateFrom}
                         maxDate={formData.workDateTo || formData.evalDateFrom || formData.evalDateTo}
+                        error={formErrors.workDateFrom}
+                        required
                     />
                     <DatePicker
                         label="Окончание работы"
@@ -287,6 +344,8 @@ const CreateHackathon: React.FC = () => {
                         onChange={(value) => handleDateChange('workDateTo', value)}
                         minDate={formData.workDateFrom || formData.regDateTo || formData.regDateFrom}
                         maxDate={formData.evalDateFrom || formData.evalDateTo}
+                        error={formErrors.workDateTo}
+                        required
                     />
                     <DatePicker
                         label="Начало оценки"
@@ -294,12 +353,16 @@ const CreateHackathon: React.FC = () => {
                         onChange={(value) => handleDateChange('evalDateFrom', value)}
                         minDate={formData.workDateTo || formData.workDateFrom || formData.regDateTo || formData.regDateFrom}
                         maxDate={formData.evalDateTo}
+                        error={formErrors.evalDateFrom}
+                        required
                     />
                     <DatePicker
                         label="Окончание оценки"
                         value={formData.evalDateTo}
                         onChange={(value) => handleDateChange('evalDateTo', value)}
                         minDate={formData.evalDateFrom || formData.workDateTo || formData.workDateFrom || formData.regDateTo || formData.regDateFrom}
+                        error={formErrors.evalDateTo}
+                        required
                     />
                 </div>
             </div>
@@ -316,6 +379,7 @@ const CreateHackathon: React.FC = () => {
                         name="minTeamSize"
                         min={1}
                         max={formData.maxTeamSize}
+                        error={formErrors.minTeamSize}
                         required
                     />
                     <Input
@@ -326,6 +390,7 @@ const CreateHackathon: React.FC = () => {
                         name="maxTeamSize"
                         min={formData.minTeamSize}
                         max={20}
+                        error={formErrors.maxTeamSize}
                         required
                     />
                 </div>

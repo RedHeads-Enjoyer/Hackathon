@@ -10,4 +10,5 @@ export interface Stage {
 export interface HackathonStagesProps {
     initialStages?: Stage[];
     onChange: (stages: Stage[]) => void;
+    required?: boolean
 }

@@ -7,15 +7,32 @@ interface DatePickerProps {
     label?: string;
     minDate?: string;
     maxDate?: string;
+    required?: boolean; // новое свойство для обязательности
+    error?: string; // новое свойство для ошибки
 }
 
-const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label,   minDate,
-                                                   maxDate  }) => {
+const DatePicker: React.FC<DatePickerProps> = ({
+                                                   value,
+                                                   onChange,
+                                                   label,
+                                                   minDate,
+                                                   maxDate,
+                                                   required = false,
+                                                   error
+                                               }) => {
     const [isFocused, setIsFocused] = useState(false);
 
+    // Добавляем класс ошибки, если она есть
+    const containerClass = `${classes.datePickerContainer} ${isFocused ? classes.focused : ''} ${error ? classes.error : ''}`;
+
     return (
-        <div className={`${classes.datePickerContainer} ${isFocused ? classes.focused : ''}`}>
-            {label && <label className={classes.label}>{label}</label>}
+        <div className={containerClass}>
+            {label && (
+                <label className={classes.label}>
+                    {label}
+                    {required && <span className={classes.required}>*</span>}
+                </label>
+            )}
             <input
                 type="date"
                 value={value}
@@ -25,6 +42,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label,   minDa
                 min={minDate}
                 max={maxDate}
                 className={classes.dateInput}
+                required={required}
             />
             <div className={classes.calendarIcon}>
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -34,6 +52,9 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label,   minDa
                     <path d="M3 10H21" stroke="currentColor" strokeWidth="2"/>
                 </svg>
             </div>
+
+            {/* Отображаем сообщение об ошибке */}
+            {error && <div className={classes.errorMessage}>{error}</div>}
         </div>
     );
 };

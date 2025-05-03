@@ -70,3 +70,44 @@
     color: var(--accent-color);
     padding: 0 4px;
 }
+
+/* Стили для обязательных полей */
+.required {
+    color: var(--accent-color);
+    user-select: none;
+    margin-left: 2px;
+}
+
+/* Стили для сообщения об ошибке */
+.errorMessage {
+    color: var(--error-text-color);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Стили для поля с ошибкой */
+.datePickerContainer.error .dateInput {
+    border-color: var(--error-border-color);
+    background-color: var(--error-bg-color);
+}
+
+/* Стили для наведения на поле с ошибкой */
+.datePickerContainer.error .dateInput:hover {
+    border-color: var(--accent-color);
+}
+
+/* Стили для фокуса на поле с ошибкой */
+.datePickerContainer.error.focused .dateInput {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
+}
+
+/* Иконка календаря при ошибке */
+.datePickerContainer.error .calendarIcon {
+    color: var(--error-text-color);
+}
+
+/* Иконка календаря при фокусе на поле с ошибкой */
+.datePickerContainer.error.focused .calendarIcon {
+    color: var(--accent-color);
+}

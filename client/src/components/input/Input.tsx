@@ -31,14 +31,24 @@ const Input = (props: InputPropsType) => {
         }
 
         if (props.type === 'number') {
-            const isValidInput = value === '' || value === '-' || /^-?\d*\.?\d*$/.test(value);
+            // Для числового поля размера команды разрешаем только положительные целые числа
+            // Удалено '.' из регулярного выражения, т.к. размер команды - целое число
+            const isValidInput = value === '' || /^[0-9]*$/.test(value);
 
             if (isValidInput) {
-
+                // Проверяем, не выходит ли за пределы min/max при вводе
+                if (value !== '') {
+                    const numValue = parseInt(value);
+                    if ((props.max !== undefined && numValue > props.max) ||
+                        (props.min !== undefined && numValue < props.min)) {
+                        // Просто не обновляем значение, если оно выходит за пределы
+                        return;
+                    }
+                }
                 props.onChange(e);
             }
         } else if (props.type === 'textNumber') {
-                if (value === '' || /^\d+$/.test(value)) {
+            if (value === '' || /^\d+$/.test(value)) {
                 props.onChange(e);
             }
         } else {
@@ -48,29 +58,39 @@ const Input = (props: InputPropsType) => {
 
     // Handle blur to validate against min/max
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-        if (props.type === 'number' && e.target.value !== '' && e.target.value !== '-') {
-            const numValue = parseFloat(e.target.value);
+        if (props.type === 'number' && e.target.value !== '') {
+            const numValue = parseInt(e.target.value);
 
             if (!isNaN(numValue)) {
                 let constrainedValue = numValue;
 
+                // Ограничиваем значение нижней границей
                 if (props.min !== undefined && numValue < props.min) {
                     constrainedValue = props.min;
                 }
 
+                // Ограничиваем значение верхней границей
                 if (props.max !== undefined && numValue > props.max) {
                     constrainedValue = props.max;
                 }
 
+                // Если значение изменилось после ограничений, создаем синтетическое событие
                 if (constrainedValue !== numValue) {
-                    const syntheticEvent = Object.create(e);
-                    syntheticEvent.target = { ...e.target, value: constrainedValue.toString() };
+                    const syntheticEvent = {
+                        ...e,
+                        target: {
+                            ...e.target,
+                            value: constrainedValue.toString(),
+                            name: e.target.name
+                        }
+                    } as React.ChangeEvent<HTMLInputElement>;
+
                     props.onChange(syntheticEvent);
                 }
             }
         }
 
-
+        // Вызываем пользовательский обработчик onBlur, если он существует
         if (props.onBlur) {
             props.onBlur();
         }
