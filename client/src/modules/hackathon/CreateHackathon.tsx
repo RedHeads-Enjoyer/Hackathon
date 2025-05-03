@@ -151,16 +151,17 @@ const CreateHackathon: React.FC = () => {
 
     const confirmPublish = async () => {
         setIsPublishModalOpen(false);
+        setCreateHackathonError(null);
 
         const validationErrors = validateForm();
         if (Object.keys(validationErrors).length > 0) {
             setFormErrors(validationErrors);
+            // Устанавливаем общее сообщение об ошибке
+            setCreateHackathonError("Пожалуйста, исправьте ошибки в форме перед публикацией хакатона");
             return;
         }
 
-        setCreateHackathonLoading(true)
-
-        console.log(formData)
+        setCreateHackathonLoading(true);
 
         try {
             await hackathonAPI.create(formData);
@@ -207,6 +208,11 @@ const CreateHackathon: React.FC = () => {
             ...prev,
             criteria
         }));
+
+        setFormErrors(prev => ({
+            ...prev,
+            criteriaInvalid: false
+        }));
     };
 
     const handleImageCrop = (croppedImage: File) => {
@@ -234,6 +240,13 @@ const CreateHackathon: React.FC = () => {
             stages
         }));
     };
+
+    const handleTechnologyChange = (tech: Array<Option>) => {
+        setFormData(prev => ({
+            ...prev,
+            technologies: tech
+        }))
+    }
 
     const handleOrganizationIdChange  = (option: Option) => {
         setFormData(prev => ({
@@ -417,7 +430,7 @@ const CreateHackathon: React.FC = () => {
             <TechnologyStackInput
                 ref={techRef}
                 initialTechnologies={formData.technologies}
-                onChange={(techs) => setFormData({...formData, technologies: techs})}
+                onChange={handleTechnologyChange}
                 required
             />
 
@@ -457,6 +470,13 @@ const CreateHackathon: React.FC = () => {
                 </div>
             </div>
 
+            {/* Отображаем ошибку в верхней части формы */}
+            {createHackathonError && (
+                <div className={classes.error_container}>
+                    <Error>{createHackathonError}</Error>
+                </div>
+            )}
+
             {/* Кнопка публикации */}
             <div className={classes.publish_section}>
                 <Button
@@ -466,8 +486,6 @@ const CreateHackathon: React.FC = () => {
                     Опубликовать хакатон
                 </Button>
             </div>
-
-            {createHackathonError && <Error>{createHackathonError}</Error>}
 
 
 

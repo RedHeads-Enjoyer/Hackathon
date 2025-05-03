@@ -47,6 +47,10 @@ const TechnologyStackInput = forwardRef<TechnologyStackInputRef, TechnologyStack
             const updatedTechs = [...technologies, option];
             setTechnologies(updatedTechs);
             onChange(updatedTechs);
+
+            if (showError) {
+                setShowError(false);
+            }
         }
     };
 

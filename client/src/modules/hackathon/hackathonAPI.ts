@@ -66,6 +66,6 @@ export const hackathonAPI = {
         });
 
 
-        return request<any>({ method: 'POST', url: '/hackathon', data: formData})
+        return request<number>({ method: 'POST', url: '/hackathon', data: formData})
     }
 };

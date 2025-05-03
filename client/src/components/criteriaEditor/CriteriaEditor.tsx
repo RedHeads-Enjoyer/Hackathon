@@ -67,6 +67,10 @@ const CriteriaEditor = forwardRef<CriteriaEditorRef, CriteriaEditorProps>(
             setCriteria(updatedCriteria);
             onChange(updatedCriteria);
 
+            if (showError) {
+                setShowError(false);
+            }
+
             resetForm();
         };
 
