@@ -84,3 +84,14 @@
     color: var(--accent-color);
     user-select: none;
 }
+
+.input_container.error input {
+    border-color: var(--error-border-color);
+    background-color: var(--error-bg-color);
+}
+
+/* Стиль для наведения на инпут с ошибкой */
+.input_container.error input:hover {
+    border-color: var(--accent-color);
+    background-color: var(--error-bg-color);
+}

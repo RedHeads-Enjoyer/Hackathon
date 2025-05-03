@@ -17,6 +17,7 @@ type InputPropsType = {
     required?: boolean;
     onFocus?: () => void;
     onBlur?: () => void;
+    disabled?: boolean;
 }
 
 const Input = (props: InputPropsType) => {
@@ -95,6 +96,7 @@ const Input = (props: InputPropsType) => {
                 onFocus={props.onFocus}
                 onBlur={handleBlur}
                 inputMode={props.type === 'number' ? 'numeric' : undefined}
+                disabled={props.disabled}
                 className={`${props.type === 'number' ? classes.number_input : ''}`}
             />
             {props.error && <div className={classes.error_message}>{props.error}</div>}

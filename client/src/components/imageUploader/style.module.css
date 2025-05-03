@@ -1,3 +1,4 @@
+/* 1. Основные контейнеры */
 .container {
     width: 100%;
     max-width: 300px;
@@ -8,6 +9,7 @@
     display: none;
 }
 
+/* 2. Область загрузки */
 .uploadArea {
     width: 100%;
     height: 300px;
@@ -36,7 +38,7 @@
     z-index: 1;
 }
 
-.placeholder span {
+.placeholder > span {
     font-size: 48px;
     display: block;
     margin-bottom: 12px;
@@ -47,10 +49,11 @@
     color: var(--accent-color);
 }
 
-.uploadArea:hover .placeholder span {
+.uploadArea:hover .placeholder > span {
     transform: scale(1.1);
 }
 
+/* 3. Контейнер предпросмотра и оверлей редактирования */
 .previewContainer {
     position: relative;
     width: 300px;
@@ -59,11 +62,10 @@
     overflow: hidden;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: box-shadow 0.3s ease;
 }
 
 .previewContainer:hover {
-    transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
@@ -109,6 +111,7 @@
     opacity: 1;
 }
 
+/* 4. Модальное окно и обрезка */
 .modalContent {
     padding: 24px;
     width: 100%;
@@ -133,4 +136,34 @@
     justify-content: flex-end;
     gap: 12px;
     margin-top: 16px;
+}
+
+/* 5. Стили для обязательных полей */
+.required {
+    color: var(--accent-color);
+    user-select: none;
+    font-size: 14px;
+    display: inline;
+    margin-left: 2px;
+}
+
+.uploadArea:hover .placeholder .required {
+    color: var(--accent-color); /* Сохраняем цвет при наведении */
+}
+
+/* 6. Состояния ошибки */
+.errorMessage {
+    color: var(--error-text-color);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.errorArea {
+    border-color: var(--error-border-color);
+    background-color: var(--error-bg-color);
+}
+
+.errorArea:hover {
+    border-color: var(--accent-color);
+    background-color: var(--error-bg-color); /* Сохраняем фон ошибки при наведении */
 }

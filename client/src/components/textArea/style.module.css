@@ -100,8 +100,3 @@
     border-color: var(--error-border-color);
     background-color: var(--error-bg-color);
 }
-
-.textAreaContainer.error textarea:invalid {
-    border-color: var(--error-border-color);
-    background-color: var(--error-bg-color);
-}

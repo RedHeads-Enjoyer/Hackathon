@@ -7,9 +7,16 @@ import Modal from '../../components/modal/Modal.tsx';
 interface ImageUploaderProps {
     onImageChange: (croppedImage: string) => void;
     initialImage?: string | null;
+    required?: boolean; // добавлен параметр обязательности
+    error?: string; // добавлен параметр текста ошибки
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageChange, initialImage = null }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({
+                                                         onImageChange,
+                                                         initialImage = null,
+                                                         required = false,
+                                                         error = ''
+                                                     }) => {
     const [originalImage, setOriginalImage] = useState<string | null>(null);
     const [croppedImage, setCroppedImage] = useState<string | null>(initialImage);
     const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -18,7 +25,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageChange, initialIma
     const [isModalOpen, setIsModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Сбрасываем значение input при клике, чтобы можно было выбирать тот же файл снова
+    // Остальной код компонента не изменяется
     const handleUploadClick = () => {
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -62,8 +69,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageChange, initialIma
         handleUploadClick();
     };
 
+    // Определяем класс для контейнера с учетом ошибки
+    const containerClass = error ? `${classes.container} ${classes.error}` : classes.container;
+    const uploadAreaClass = error ? `${classes.uploadArea} ${classes.errorArea}` : classes.uploadArea;
+
     return (
-        <div className={classes.container}>
+        <div className={containerClass}>
             <input
                 type="file"
                 ref={fileInputRef}
@@ -84,13 +95,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageChange, initialIma
                     </div>
                 </div>
             ) : (
-                <div className={classes.uploadArea} onClick={handleUploadClick}>
+                <div className={uploadAreaClass} onClick={handleUploadClick}>
                     <div className={classes.placeholder}>
                         <span>+</span>
-                        <p>Загрузить изображение</p>
+                        <p>
+                            Загрузить изображение
+                            {required && <span className={classes.required}>*</span>}
+                        </p>
+
                     </div>
                 </div>
             )}
+
+            {error && <div className={classes.errorMessage}>{error}</div>}
 
             <Modal
                 isOpen={isModalOpen}

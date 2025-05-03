@@ -54,7 +54,9 @@ interface HackathonFormData {
 }
 
 interface HackathonFormErrors {
-    name?: string | undefined
+    name?: string | undefined,
+    description?: string | undefined,
+    organizationId?: string | undefined,
 }
 
 const CreateHackathon: React.FC = () => {
@@ -76,7 +78,7 @@ const CreateHackathon: React.FC = () => {
         criteria: [],
         technologies: [],
         awards: [],
-        documents: [], // Initialize empty documents array
+        documents: [],
     });
 
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
@@ -92,6 +94,14 @@ const CreateHackathon: React.FC = () => {
         const errors: HackathonFormErrors = {};
         if (!formData.name) {
             errors.name = "Название хакатона не может быть пустым";
+        }
+
+        if (!formData.description) {
+            errors.description = "Описание хакатона не может быть пустым";
+        }
+
+        if (formData.organizationId == 0) {
+            errors.organizationId = "Организация не может быть пустой";
         }
         return errors;
     };
@@ -159,6 +169,18 @@ const CreateHackathon: React.FC = () => {
         }));
     };
 
+    const handleOrganizationIdChange  = (option: Option) => {
+        setFormData(prev => ({
+            ...prev,
+            organizationId: option.value
+        }))
+
+        setFormErrors(prev => ({
+            ...prev,
+            organizationId: undefined
+        }));
+    }
+
     // Handler for file uploads
     const handleFilesChange = (files: File[]) => {
         setFormData(prev => ({
@@ -199,25 +221,25 @@ const CreateHackathon: React.FC = () => {
                             placeholder="Опишите ваш хакатон"
                             minRows={4}
                             required
+                            error={formErrors.description}
                         />
 
                         <SelectSearch
                             label={"Выберите организацию"}
                             url={"organizations/my/options"}
-                            onChange={(option) =>
-                                setFormData(prev => ({
-                                    ...prev,
-                                    organizationId: option.value
-                                }))}
+                            onChange={handleOrganizationIdChange}
                             notFound={<p>Подтвержденная организация с таким названием не найдена. <Link to={"/organization/create"}>Создать организацию</Link></p>}
                             placeholder={"Введите название"}
                             required
+                            error={formErrors.organizationId}
                         />
                     </div>
                     <div className={classes.image_info}>
                         <ImageUploader
                             onImageChange={handleImageCrop}
                             initialImage={formData.coverImage}
+                            required
+                            error={'asd'}
                         />
                     </div>
                 </div>
