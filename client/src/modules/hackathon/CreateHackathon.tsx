@@ -6,7 +6,9 @@ import TextArea from "../../components/textArea/TextArea.tsx";
 import ImageUploader from "../../components/imageUploader/ImageUploader.tsx";
 import StepsListWithDates, {StepsListWithDatesRef} from "../../components/stepsListWithDates/StepsListWithDates.tsx";
 import {Stage} from "../../components/stepsListWithDates/types.ts";
-import TechnologyStackInput from "../../components/technologyStackInput/TechnologyStackInput.tsx";
+import TechnologyStackInput, {
+    TechnologyStackInputRef
+} from "../../components/technologyStackInput/TechnologyStackInput.tsx";
 import CriteriaEditor, {CriteriaEditorRef} from "../../components/criteriaEditor/CriteriaEditor.tsx";
 import AwardsEditor from "../../components/awardsEditor/AwardsEditor.tsx";
 import DatePicker from "../../components/datePicker/DatePicker.tsx";
@@ -69,6 +71,7 @@ interface HackathonFormErrors {
     stages?: string | undefined,
     stagesInvalid?: boolean,
     criteriaInvalid?: boolean,
+    technologiesInvalid?: boolean,
 }
 
 const CreateHackathon: React.FC = () => {
@@ -98,6 +101,7 @@ const CreateHackathon: React.FC = () => {
 
     const stagesRef = useRef<StepsListWithDatesRef>(null);
     const criteriaRef = useRef<CriteriaEditorRef>(null);
+    const techRef = useRef<TechnologyStackInputRef>(null);
 
     const handlePublishClick = () => {
         setIsPublishModalOpen(true);
@@ -175,6 +179,11 @@ const CreateHackathon: React.FC = () => {
         const criteriaValid = criteriaRef.current?.validate() ?? false;
         if (!criteriaValid) {
             errors.criteriaInvalid = true;
+        }
+
+        const techValid = techRef.current?.validate() ?? false;
+        if (!techValid) {
+            errors.technologiesInvalid = true;
         }
 
         return errors;
@@ -432,8 +441,10 @@ const CreateHackathon: React.FC = () => {
             />
 
             <TechnologyStackInput
+                ref={techRef}
                 initialTechnologies={formData.technologies}
                 onChange={(techs) => setFormData({...formData, technologies: techs})}
+                required
             />
 
             <AwardsEditor
