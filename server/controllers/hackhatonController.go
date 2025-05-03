@@ -262,7 +262,7 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 	// Базовый запрос для получения данных с предзагрузкой связанных данных
 	// Также фильтруем по статусу = 1
 	dataQuery := hc.DB.Model(&models.Hackathon{}).
-		Where("status = ?", 1).
+		Where("status = ?", 0).
 		Preload("Organization").
 		Preload("Technologies").
 		Preload("Awards").

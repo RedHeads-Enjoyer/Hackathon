@@ -7,6 +7,7 @@ import {hackathonAPI} from "./hackathonAPI.ts";
 import Loader from "../../components/loader/Loader.tsx";
 import OrganizationItem from "../organozaton/Components/OrganizationItem.tsx";
 import Error from "../../components/error/Error.tsx";
+import HackathonItem from "./components/HackathonItem.tsx";
 
 
 const HackathonList = () => {
@@ -19,7 +20,7 @@ const HackathonList = () => {
         minTeamSize: 1,
         technologyId: 0,
         totalAward: 0,
-        limit: 20,
+        limit: 2,
         total: 0,
         offset: 0,
     }
@@ -108,13 +109,15 @@ const HackathonList = () => {
             />
             {searchLoading ? <Loader/> :
                 hackathons.list?.length > 0 ? (
-                    hackathons.list.map((hack) => (
-                        <div key={`hack_${hack.name}`}>
-                            {hack.name}
-                        </div>
-                    ))
+                    <div className={classes.hackathonsGrid}>
+                        {hackathons.list.map((hack) => (
+                            <div key={`hack_${hack.id}`} className={classes.hackathonCard}>
+                                <HackathonItem hackathon={hack} />
+                            </div>
+                        ))}
+                    </div>
                 ) : (
-                    <div className={classes.noResults}><p>Организации не найдены</p></div>
+                    <div className={classes.noResults}><p>Хакатоны не найдены</p></div>
                 )
             }
 

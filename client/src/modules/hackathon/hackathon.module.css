@@ -230,3 +230,368 @@
 .statusSelector {
     display: flex;
 }
+
+/* HackathonItem.module.css */
+/* HackathonItem.module.css */
+.card {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--card-bg-color); /* Темный фон */
+    border: 1px solid var(--input-border-color);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    height: 100%;
+    min-height: 320px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    border-color: var(--accent-light-color);
+}
+
+.header {
+    display: flex;
+    padding: 20px;
+    gap: 16px;
+}
+
+.logoWrapper {
+    display: flex;
+    align-items: center;
+}
+
+.logoContainer {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--input-bg-color);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholderLogo {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--accent-dark-color), var(--accent-color));
+    color: var(--dark-text-color);
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.titleArea {
+    flex-grow: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--light-text-color);
+    margin: 0 0 4px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.organization {
+    color: var(--secondary-text-color);
+    font-size: 14px;
+    margin: 0 0 12px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.progressContainer {
+    margin-top: auto;
+}
+
+.progressLabel {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: var(--secondary-text-color);
+}
+
+.progressPercent {
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
+.progressBar {
+    height: 6px;
+    background-color: var(--input-bg-color);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress_upcoming {
+    background-color: var(--accent-color);
+}
+
+.progress_registration {
+    background-color: var(--success-color);
+}
+
+.progress_work {
+    background-color: var(--button-warning-color);
+}
+
+.progress_evaluation {
+    background-color: #9b59b6; /* Фиолетовый */
+}
+
+.progress_finished {
+    background-color: var(--success-color);
+}
+
+.statusSection {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px 16px;
+}
+
+.statusBadge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+}
+
+.status_upcoming {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: var(--accent-color);
+}
+
+.status_registration {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: var(--success-color);
+}
+
+.status_work {
+    background-color: rgba(255, 179, 0, 0.15);
+    color: var(--button-warning-color);
+}
+
+.status_evaluation {
+    background-color: rgba(155, 89, 182, 0.15);
+    color: #bb86fc; /* Фиолетовый */
+}
+
+.status_finished {
+    background-color: rgba(200, 200, 200, 0.1);
+    color: var(--muted-text-color);
+}
+
+.awardBadge {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
+.awardIcon {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    color: var(--accent-color);
+}
+
+.datesSection {
+    padding: 0 20px 16px;
+    border-bottom: 1px solid var(--input-border-color);
+}
+
+.dateBlock {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.dateBlock:last-child {
+    margin-bottom: 0;
+}
+
+.dateIcon {
+    font-size: 16px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dateContent {
+    flex-grow: 1;
+}
+
+.dateTitle {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--light-text-color);
+    margin: 0 0 2px;
+}
+
+.dateRange {
+    font-size: 12px;
+    color: var(--secondary-text-color);
+    margin: 0;
+}
+
+.statsSection {
+    display: flex;
+    justify-content: space-around;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--input-border-color);
+}
+
+.statItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.statIcon {
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.statValue {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--light-text-color);
+}
+
+.statLabel {
+    font-size: 12px;
+    color: var(--secondary-text-color);
+}
+
+.techSection {
+    padding: 16px 20px;
+    margin-top: auto;
+}
+
+.techList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.techTag {
+    background-color: var(--input-bg-color);
+    color: var(--accent-color);
+    padding: 4px 10px;
+    border-radius: var(--border-radius);
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.moreTechTag {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: var(--accent-color);
+    padding: 4px 10px;
+    border-radius: var(--border-radius);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+@media (max-width: 576px) {
+    .header {
+        padding: 16px;
+    }
+
+    .logoContainer {
+        width: 50px;
+        height: 50px;
+    }
+
+    .statsSection {
+        padding: 12px 16px;
+    }
+
+    .datesSection {
+        padding: 0 16px 12px;
+    }
+
+    .techSection {
+        padding: 12px 16px;
+    }
+
+    .statusSection {
+        padding: 0 16px 12px;
+    }
+}
+
+.hackathonsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    width: 100%;
+}
+
+.hackathonCard {
+    height: 100%;
+}
+
+.noResults {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    width: 100%;
+    color: var(--secondary-text-color);
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--input-border-color);
+}
+
+.noResults p {
+    font-size: 16px;
+    margin: 0;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .hackathonsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Если на очень широких экранах нужно ограничить количество колонок */
+@media (min-width: 1600px) {
+    .hackathonsGrid {
+        grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+        margin: 0 auto;
+    }
+}
