@@ -69,11 +69,10 @@ export type HackathonSearchData = {
 }
 
 export type HackathonFilterData = {
-    status: number,
     name: string,
     startDate: string,
     endDate: string,
-    technologyIds: number[],
+    technologyId: number,
     totalAward: number,
     organizationId: number,
     minTeamSize: number,

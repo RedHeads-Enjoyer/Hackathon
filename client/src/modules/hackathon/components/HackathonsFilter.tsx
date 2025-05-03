@@ -4,8 +4,8 @@ import {FilterUpdate, HackathonFilterData} from '../types.ts';
 import Input from "../../../components/input/Input.tsx";
 import Button from "../../../components/button/Button.tsx";
 import Pagination from "../../../components/pagination/Pagination.tsx";
-import Select from "../../../components/select/Select.tsx";
-import {statusOptions} from "../storage.ts";
+import SelectSearch from "../../../components/searchSelect/SearchSelect.tsx";
+import DatePicker from "../../../components/datePicker/DatePicker.tsx";
 
 type HackathonFilterProps = {
     filterData: HackathonFilterData;
@@ -45,56 +45,100 @@ const HackathonFilter = ({filterData, setFilterData, onResetFilters, onSearch}: 
                 <div className={classes.expandedFilters}>
                     <div className={classes.filters}>
                         <Input
-                            label="Полное название"
+                            label="Название"
                             type="text"
-                            value={filterData.legalName}
+                            value={filterData.name}
                             onChange={(e) => setFilterData(e)}
-                            name="legalName"
-                            placeholder="Введите полное название"
+                            name="name"
+                            placeholder="Введите название"
+                        />
+
+                        <div>
+                            <SelectSearch
+                                label={"Выберите организацию"}
+                                url={"organizations/my/options"}
+                                onChange={(value) => setFilterData({
+                                    name: 'organizationId',
+                                    value: value.value
+                                })}
+                                notFound={<p>Подтвержденная организация с таким названием не найдена.</p>}
+                                placeholder={"Любая"}
+                            />
+                        </div>
+
+                        <div>
+                            <SelectSearch
+                                label={"Выберите технологию"}
+                                url={"technologies/options"}
+                                onChange={(value) => setFilterData({
+                                    name: 'technologyId',
+                                    value: value.value
+                                })}
+                                notFound={<p>Технология с таким названием не найдена.</p>}
+                                placeholder={"Любая"}
+                            />
+                        </div>
+
+                        <DatePicker
+                            label="Начало регистрации от"
+                            value={filterData.startDate}
+                            onChange={(value) => setFilterData({
+                                name: 'startDate',
+                                value: value
+                            })}
+                            maxDate={filterData.endDate}
+                        />
+
+                        <DatePicker
+                            label="Завершение оценки до"
+                            value={filterData.endDate}
+                            onChange={(value) => setFilterData({
+                                name: 'endDate',
+                                value: value
+                            })}
+                            minDate={filterData.startDate}
                         />
 
                         <Input
-                            label="Email"
-                            type="text"
-                            value={filterData.contactEmail}
-                            onChange={(e) => setFilterData(e)}
-                            name="contactEmail"
-                            placeholder="Введите email"
-                        />
-                        <Input
-                            label="ИНН"
-                            type="textNumber"
-                            value={filterData.INN}
-                            onChange={(e) => setFilterData(e)}
-                            name="INN"
-                            placeholder="Введите ИНН"
-                        />
-                        <Input
-                            label="ОГРН"
-                            type="textNumber"
-                            value={filterData.OGRN}
-                            onChange={(e) => setFilterData(e)}
-                            name="OGRN"
-                            placeholder="Введите ОГРН"
-                        />
-                        <Input
-                            label="Вебсайт"
-                            type="text"
-                            value={filterData.website}
-                            onChange={(e) => setFilterData(e)}
-                            name="website"
-                            placeholder="Введите ссылку"
-                        />
-                        <Select
-                            label="Статус организации"
-                            options={statusOptions}
-                            value={filterData.status}
+                            label="Минимальный размер команды от"
+                            type="number"
+                            value={filterData.minTeamSize}
                             onChange={(value) => setFilterData({
-                                name: 'status',
-                                value: value
+                                name: 'minTeamSize',
+                                value: value.target.value
                             })}
-                            placeholder="Выберите статус"
+                            name="minTeamSize"
+                            min={1}
+                            max={filterData.maxTeamSize}
                         />
+
+                        <Input
+                            label="Максимальный размер команды до"
+                            type="number"
+                            value={filterData.maxTeamSize}
+                            onChange={(value) => setFilterData({
+                                name: 'maxTeamSize',
+                                value: value.target.value
+                            })}
+                            name="maxTeamSize"
+                            min={filterData.minTeamSize}
+                        />
+
+                        <Input
+                            label="Призовой фонд от (₽)"
+                            type="number"
+                            value={filterData.totalAward}
+                            onChange={(value) => setFilterData({
+                                name: 'totalAward',
+                                value: value.target.value
+                            })}
+                            name="totalAward"
+                            min={filterData.minTeamSize}
+                        />
+
+
+
+
                     </div>
                     <div className={classes.filterControls}>
                         <Button onClick={onResetFilters}>Сбросить фильтры</Button>

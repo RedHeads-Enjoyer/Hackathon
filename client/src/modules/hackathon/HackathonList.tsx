@@ -8,14 +8,14 @@ import {hackathonAPI} from "./hackathonAPI.ts";
 
 const HackathonList = () => {
     const initialFilterData: HackathonFilterData = {
-        startDate: "",
-        endDate: "",
-        maxTeamSize: 0,
-        minTeamSize: 0,
         name: "",
         organizationId: 0,
-        status: 0,
-        technologyIds: [],
+
+        startDate: "",
+        endDate: "",
+        maxTeamSize: 5,
+        minTeamSize: 1,
+        technologyId: 0,
         totalAward: 0,
 
         limit: 20,
@@ -76,7 +76,7 @@ const HackathonList = () => {
         setFilterData(prev => {
             const newState = {
                 ...prev,
-                [name]: name === 'status' || name === 'limit' || name === 'offset' ? Number(value) : value
+                [name]: name === 'limit' || name === 'offset' ? Number(value) : value
             };
 
             if (name !== 'offset') {

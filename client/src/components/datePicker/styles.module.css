@@ -111,3 +111,82 @@
 .datePickerContainer.error.focused .calendarIcon {
     color: var(--accent-color);
 }
+
+.inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.clearButton {
+    position: absolute;
+    right: 30px; /* Позиционирование перед иконкой календаря */
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.clearButton:hover {
+    opacity: 1;
+}
+
+.clearButton svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Обновление стиля для .calendarIcon */
+.calendarIcon {
+    position: absolute;
+    right: 10px;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* Чтобы клики проходили сквозь икону */
+}
+
+/* Обновите стили для .dateInput, чтобы учесть кнопку очистки */
+.dateInput {
+    width: 100%;
+    padding-right: 50px; /* Увеличиваем отступ справа для кнопок */
+}
+
+/* Обновленные стили для кнопки очистки даты */
+.clearButton {
+    position: absolute;
+    right: 30px; /* Позиционирование перед иконкой календаря */
+    background: #6c757d; /* Серый фон для кнопки */
+    border: none;
+    border-radius: 50%; /* Круглая кнопка */
+    cursor: pointer;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.clearButton:hover {
+    background-color: #495057; /* Темнее при наведении */
+}
+
+.clearButton svg {
+    width: 10px; /* Немного уменьшаем размер иконки */
+    height: 10px;
+}
+
+.clearButton svg path {
+    stroke: white; /* Делаем линии иконки белыми */
+}
