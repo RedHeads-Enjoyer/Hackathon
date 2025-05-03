@@ -3,24 +3,8 @@ import React, { useMemo } from 'react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import classes from '../hackathon.module.css';
-
-interface HackathonShortInfo {
-    id: number;
-    name: string;
-    organizationName: string;
-    regDateFrom: string;
-    regDateTo: string;
-    workDateFrom: string;
-    workDateTo: string;
-    evalDateFrom: string;
-    evalDateTo: string;
-    logoUrl?: string;
-    technologies: string[];
-    totalAward: number;
-    minTeamSize: number;
-    maxTeamSize: number;
-    usersCount: number;
-}
+import {HackathonShortInfo} from "../types.ts";
+import ApiImage from "../../../components/apiImage/ApiImage.tsx";
 
 interface HackathonItemProps {
     hackathon: HackathonShortInfo;
@@ -38,7 +22,7 @@ const HackathonItem: React.FC<HackathonItemProps> = ({ hackathon, onClick }) => 
         workDateTo,
         evalDateFrom,
         evalDateTo,
-        logoUrl,
+        logoId,
         technologies,
         totalAward,
         minTeamSize,
@@ -129,13 +113,13 @@ const HackathonItem: React.FC<HackathonItemProps> = ({ hackathon, onClick }) => 
             <div className={classes.header}>
                 <div className={classes.logoWrapper}>
                     <div className={classes.logoContainer}>
-                        {logoUrl ? (
-                            <img src={logoUrl} alt={name} className={classes.logo} />
-                        ) : (
-                            <div className={classes.placeholderLogo}>
-                                {name.substring(0, 2).toUpperCase()}
-                            </div>
-                        )}
+                        <ApiImage
+                            fileId={logoId}
+                            alt={`${name} логотип`}
+                            className={classes.logo}
+                            placeholderClassName={classes.placeholderLogo}
+                            placeholderContent={name.substring(0, 3).toUpperCase()}
+                        />
                     </div>
                 </div>
 

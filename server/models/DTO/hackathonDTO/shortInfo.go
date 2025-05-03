@@ -16,7 +16,7 @@ type ShortInfo struct {
 	EvalDateFrom time.Time `json:"evalDateFrom"`
 	EvalDateTo   time.Time `json:"evalDateTo"`
 
-	LogoURL      string   `json:"logoUrl,omitempty"`
+	LogoId       uint     `json:"logoId,omitempty"`
 	Technologies []string `json:"technologies"`
 	TotalAward   float64  `json:"totalAward"`
 	MinTeamSize  int      `json:"minTeamSize"`

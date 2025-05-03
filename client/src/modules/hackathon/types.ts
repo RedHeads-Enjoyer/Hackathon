@@ -62,7 +62,7 @@ export type FilterUpdate = {
     value: any;
 };
 
-interface HackathonShortInfo {
+export type HackathonShortInfo = {
     id: number;
     name: string;
     organizationName: string;
@@ -72,7 +72,7 @@ interface HackathonShortInfo {
     workDateTo: string;
     evalDateFrom: string;
     evalDateTo: string;
-    logoUrl?: string;
+    logoId?: number;
     technologies: string[];
     totalAward: number;
     minTeamSize: number;

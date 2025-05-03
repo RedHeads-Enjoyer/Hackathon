@@ -5,7 +5,6 @@ import {FilterUpdate, HackathonFilterData, HackathonSearchData} from "./types.ts
 import React, {useEffect, useState} from "react";
 import {hackathonAPI} from "./hackathonAPI.ts";
 import Loader from "../../components/loader/Loader.tsx";
-import OrganizationItem from "../organozaton/Components/OrganizationItem.tsx";
 import Error from "../../components/error/Error.tsx";
 import HackathonItem from "./components/HackathonItem.tsx";
 
@@ -20,7 +19,7 @@ const HackathonList = () => {
         minTeamSize: 1,
         technologyId: 0,
         totalAward: 0,
-        limit: 2,
+        limit: 20,
         total: 0,
         offset: 0,
     }
@@ -47,13 +46,17 @@ const HackathonList = () => {
         setHackathons(initialHackathonData)
         hackathonAPI.getAll(filterData)
             .then((data) => {
-                setHackathons(prevState => ({
-                    ...prevState,
-                    list: data.list
-                }));
+                setHackathons({
+                    list: data.list,
+                    total: data.total,
+                    limit: filterData.limit,
+                    offset: filterData.offset
+                });
                 setFilterData(prevState => ({
                     ...prevState,
-                    total: data.total
+                    total: data.total,
+                    limit: filterData.limit,
+                    offset: filterData.offset
                 }));
                 setSearhLoading(false)
             })
@@ -78,9 +81,13 @@ const HackathonList = () => {
         }
 
         setFilterData(prev => {
+            // Список полей, которые должны быть числами
+            const numericFields = ['limit', 'offset', 'minTeamSize', 'maxTeamSize', 'totalAward', 'technologyId', 'organizationId'];
+
             const newState = {
                 ...prev,
-                [name]: name === 'limit' || name === 'offset' ? Number(value) : value
+                // Преобразуем в число все поля из списка numericFields
+                [name]: numericFields.includes(name) ? Number(value) : value
             };
 
             if (name !== 'offset') {

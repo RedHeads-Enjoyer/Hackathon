@@ -12,6 +12,7 @@ func Router() *gin.Engine {
 	AuthRouter(r, initializers.DB)
 	TechnologyRouter(r, initializers.DB)
 	OrganizationRouter(r, initializers.DB)
+	FileRouter(r, initializers.DB)
 
 	// Не доделано
 	HackathonRouter(r, initializers.DB)

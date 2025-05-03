@@ -1,4 +1,4 @@
-import {request} from "../../config.ts";
+import {request, requestFile} from "../../config.ts";
 import {HackathonFilterData, HackathonFormData, HackathonSearchData} from "./types.ts";
 
 export const hackathonAPI = {
@@ -70,4 +70,8 @@ export const hackathonAPI = {
     },
     getAll: async (filterData: HackathonFilterData) =>
         request<HackathonSearchData>({method: 'POST', url: 'hackathons', data: filterData}),
+    getBlobFile: async (fileId: number): Promise<Blob> => {
+        return requestFile(fileId);
+    }
+
 };

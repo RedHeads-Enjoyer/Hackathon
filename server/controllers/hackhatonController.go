@@ -257,7 +257,7 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 
 	// Базовый запрос для подсчета общего количества
 	// Добавляем фильтр по статусу = 1
-	countQuery := hc.DB.Model(&models.Hackathon{}).Where("status = ?", 1)
+	countQuery := hc.DB.Model(&models.Hackathon{}).Where("status = ?", 0)
 
 	// Базовый запрос для получения данных с предзагрузкой связанных данных
 	// Также фильтруем по статусу = 1
@@ -365,9 +365,9 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 		}
 
 		// Определяем URL логотипа
-		var logoURL string
+		var logoId uint
 		if h.Logo != nil {
-			logoURL = h.Logo.URL
+			logoId = h.Logo.ID
 		}
 
 		// Подсчет пользователей с ролью 1 в хакатоне
@@ -392,7 +392,7 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 			WorkDateTo:       h.WorkDateTo,
 			EvalDateFrom:     h.EvalDateFrom,
 			EvalDateTo:       h.EvalDateTo,
-			LogoURL:          logoURL,
+			LogoId:           logoId,
 			Technologies:     technologies,
 			TotalAward:       totalAward,
 			MinTeamSize:      h.MinTeamSize,

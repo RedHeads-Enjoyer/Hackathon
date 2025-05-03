@@ -139,52 +139,52 @@ func getFileTypeByExtension(ext string) string {
 	}
 }
 func (fc *FileController) GetFile(c *gin.Context) {
-	fileUUID := c.Param("id")
+	fileUUID := c.Param("file_id")
 
 	// Находим файл по UUID
 	var file models.File
-	if err := fc.DB.Where("stored_name LIKE ?", fileUUID+"%").First(&file).Error; err != nil {
+	if err := fc.DB.Where("id = ?", fileUUID).First(&file).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Файл не найден"})
 		return
 	}
 
 	// Проверяем права доступа (упрощенно)
 	// В реальном приложении здесь должна быть более сложная логика проверки прав
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима авторизация"})
-		return
-	}
-
-	hasAccess := false
+	//userID, exists := c.Get("userID")
+	//if !exists {
+	//	c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима авторизация"})
+	//	return
+	//}
+	//
+	//hasAccess := false
 
 	// Пользователь, загрузивший файл, всегда имеет доступ
-	if file.UploadedByID == userID.(uint) {
-		hasAccess = true
-	} else {
-		// Проверка прав в зависимости от типа владельца
-		switch file.OwnerType {
-		case "hackathon":
-			var count int64
-			fc.DB.Model(&models.BndUserHackathon{}).
-				Where("user_id = ? AND hackathon_id = ?", userID, file.OwnerID).
-				Count(&count)
-			hasAccess = count > 0
-		case "team":
-			var count int64
-			fc.DB.Model(&models.BndUserTeam{}).
-				Where("user_id = ? AND team_id = ?", userID, file.OwnerID).
-				Count(&count)
-			hasAccess = count > 0
-		case "user":
-			hasAccess = file.OwnerID == userID.(uint)
-		}
-	}
-
-	if !hasAccess {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Нет доступа к файлу"})
-		return
-	}
+	//if file.UploadedByID == userID.(uint) {
+	//	hasAccess = true
+	//} else {
+	//	// Проверка прав в зависимости от типа владельца
+	//	switch file.OwnerType {
+	//	case "hackathon":
+	//		var count int64
+	//		fc.DB.Model(&models.BndUserHackathon{}).
+	//			Where("user_id = ? AND hackathon_id = ?", userID, file.OwnerID).
+	//			Count(&count)
+	//		hasAccess = count > 0
+	//	case "team":
+	//		var count int64
+	//		fc.DB.Model(&models.BndUserTeam{}).
+	//			Where("user_id = ? AND team_id = ?", userID, file.OwnerID).
+	//			Count(&count)
+	//		hasAccess = count > 0
+	//	case "user":
+	//		hasAccess = file.OwnerID == userID.(uint)
+	//	}
+	//}
+	//
+	//if !hasAccess {
+	//	c.JSON(http.StatusForbidden, gin.H{"error": "Нет доступа к файлу"})
+	//	return
+	//}
 
 	// Формируем путь к файлу
 	filePath := filepath.Join(fc.Config.StoragePath, file.StoredName)
