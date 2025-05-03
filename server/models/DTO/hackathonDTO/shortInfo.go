@@ -1,15 +1,25 @@
 package hackathonDTO
 
+import "time"
+
 type ShortInfo struct {
-	Name string `json:"name"`
+	ID               uint   `json:"id"`
+	Name             string `json:"name"`
+	Description      string `json:"description"`
+	OrganizationName string `json:"organizationName"` // заменили organization_name на organizationName
 
-	OrganizationId   uint `json:"organizationId"`
-	OrganizationName uint `json:"organizationName"`
+	// Даты в camelCase
+	RegDateFrom  time.Time `json:"regDateFrom"`
+	RegDateTo    time.Time `json:"regDateTo"`
+	WorkDateFrom time.Time `json:"workDateFrom"`
+	WorkDateTo   time.Time `json:"workDateTo"`
+	EvalDateFrom time.Time `json:"evalDateFrom"`
+	EvalDateTo   time.Time `json:"evalDateTo"`
 
-	StartDate    string  `json:"startDate"`
-	EndDate      string  `json:"endDate"`
-	MinTeamSize  int     `json:"minTeamSize"`
-	MaxTeamSize  int     `json:"maxTeamSize"`
-	TechnologyId uint    `json:"technologyId"`
-	TotalAward   float64 `json:"totalAward"`
+	LogoURL      string   `json:"logoUrl,omitempty"`
+	Technologies []string `json:"technologies"`
+	TotalAward   float64  `json:"totalAward"`
+	MinTeamSize  int      `json:"minTeamSize"`
+	MaxTeamSize  int      `json:"maxTeamSize"`
+	UserCount    int      `json:"usersCount"`
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
+	"log"
 	"net/http"
 	"server/models"
 	"server/models/DTO/hackathonDTO"
@@ -14,6 +15,7 @@ import (
 	"server/models/DTO/userDTO"
 	"server/types"
 	"strconv"
+	"time"
 	_ "time"
 )
 
@@ -254,49 +256,62 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 	}
 
 	// Базовый запрос для подсчета общего количества
-	countQuery := hc.DB.Model(&models.Hackathon{})
+	// Добавляем фильтр по статусу = 1
+	countQuery := hc.DB.Model(&models.Hackathon{}).Where("status = ?", 1)
 
-	// Базовый запрос для получения данных
-	dataQuery := hc.DB.Model(&models.Hackathon{})
+	// Базовый запрос для получения данных с предзагрузкой связанных данных
+	// Также фильтруем по статусу = 1
+	dataQuery := hc.DB.Model(&models.Hackathon{}).
+		Where("status = ?", 1).
+		Preload("Organization").
+		Preload("Technologies").
+		Preload("Awards").
+		Preload("Logo")
 
-	// Применение фильтров к обоим запросам
+	// Применение дополнительных фильтров к обоим запросам
 	applyFilters := func(query *gorm.DB) *gorm.DB {
 		if filterData.Name != "" {
-			query = query.Where("name LIKE ?", "%"+filterData.Name+"%")
+			query = query.Where("hackathons.name LIKE ?", "%"+filterData.Name+"%")
 		}
 
 		if filterData.OrganizationId != 0 {
-			query = query.Where("organization_id = ?", filterData.OrganizationId)
+			query = query.Where("hackathons.organization_id = ?", filterData.OrganizationId)
 		}
 
-		// Фильтры по датам - используем ParseTime для корректной обработки дат
 		if filterData.StartDate != "" {
-			query = query.Where("reg_date_to >= ? OR work_date_to >= ? OR eval_date_to >= ?",
-				filterData.StartDate, filterData.StartDate, filterData.StartDate)
+			startDate, err := time.Parse("2006-01-02", filterData.StartDate)
+			if err == nil {
+				query = query.Where("hackathons.reg_date_to >= ? OR hackathons.work_date_to >= ? OR hackathons.eval_date_to >= ?",
+					startDate, startDate, startDate)
+			}
 		}
 
 		if filterData.EndDate != "" {
-			query = query.Where("reg_date_from <= ? OR work_date_from <= ? OR eval_date_from <= ?",
-				filterData.EndDate, filterData.EndDate, filterData.EndDate)
+			endDate, err := time.Parse("2006-01-02", filterData.EndDate)
+			if err == nil {
+				query = query.Where("hackathons.reg_date_from <= ? OR hackathons.work_date_from <= ? OR hackathons.eval_date_from <= ?",
+					endDate, endDate, endDate)
+			}
 		}
 
 		if filterData.MinTeamSize > 0 {
-			query = query.Where("min_team_size >= ?", filterData.MinTeamSize)
+			query = query.Where("hackathons.min_team_size >= ?", filterData.MinTeamSize)
 		}
 
 		if filterData.MaxTeamSize > 0 {
-			query = query.Where("max_team_size <= ?", filterData.MaxTeamSize)
+			query = query.Where("hackathons.max_team_size <= ?", filterData.MaxTeamSize)
 		}
 
 		if filterData.TotalAward > 0 {
-			// Здесь нужна подтаблица или связь, зависит от структуры БД
-			query = query.Where("(SELECT SUM(amount) FROM awards WHERE hackathon_id = hackathons.id) >= ?", filterData.TotalAward)
+			// Подзапрос для суммы наград
+			query = query.Where("(SELECT SUM(money_amount) FROM awards WHERE hackathon_id = hackathons.id) >= ?", filterData.TotalAward)
 		}
 
 		if filterData.TechnologyId > 0 {
-			// Для технологий нужна связь многие-ко-многим
+			// Для технологий используем связь многие-ко-многим
 			query = query.Joins("JOIN hackathon_technologies ht ON ht.hackathon_id = hackathons.id").
-				Where("ht.technology_id = ?", filterData.TechnologyId)
+				Where("ht.technology_id = ?", filterData.TechnologyId).
+				Group("hackathons.id") // Группировка для избежания дубликатов
 		}
 
 		return query
@@ -312,40 +327,91 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 		return
 	}
 
-	// Применение пагинации только к запросу данных
+	// Применение пагинации
 	if filterData.Limit > 0 {
 		dataQuery = dataQuery.Limit(filterData.Limit)
 	} else {
-		// Значение по умолчанию, если лимит не указан
-		dataQuery = dataQuery.Limit(20)
+		dataQuery = dataQuery.Limit(20) // Значение по умолчанию
 	}
 
 	if filterData.Offset > 0 {
 		dataQuery = dataQuery.Offset(filterData.Offset)
 	}
 
-	// Добавление сортировки (например, по дате создания)
-	dataQuery = dataQuery.Order("created_at DESC")
+	// Сортировка по дате создания
+	dataQuery = dataQuery.Order("hackathons.created_at DESC")
 
+	// Получаем хакатоны с предзагруженными связями
 	var hackathons []models.Hackathon
 	if err := dataQuery.Find(&hackathons).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении хакатонов", "details": err.Error()})
 		return
 	}
 
-	// Преобразование в DTO, если нужно
-	// var hackathonsDTO []hackathonDTO.HackathonResponseDTO
-	// for _, h := range hackathons {
-	//    hackathonsDTO = append(hackathonsDTO, convertToDTO(h))
-	// }
+	// Преобразуем в DTO с краткой информацией
+	hackathonInfoList := make([]hackathonDTO.ShortInfo, 0, len(hackathons))
+
+	for _, h := range hackathons {
+		// Рассчитываем сумму наград
+		var totalAward float64
+		for _, award := range h.Awards {
+			totalAward += award.MoneyAmount
+		}
+
+		// Собираем названия технологий
+		technologies := make([]string, 0, len(h.Technologies))
+		for _, tech := range h.Technologies {
+			technologies = append(technologies, tech.Name)
+		}
+
+		// Определяем URL логотипа
+		var logoURL string
+		if h.Logo != nil {
+			logoURL = h.Logo.URL
+		}
+
+		// Подсчет пользователей с ролью 1 в хакатоне
+		var userCount int64
+		if err := hc.DB.Model(&models.BndUserHackathon{}).
+			Where("hackathon_id = ? AND hackathon_role = ?", h.ID, 1).
+			Count(&userCount).Error; err != nil {
+			// В случае ошибки просто логируем её и устанавливаем 0
+			log.Printf("Ошибка при подсчете пользователей хакатона %d: %v", h.ID, err)
+			userCount = 0
+		}
+
+		// Создаем ShortInfo с camelCase именами полей (обновлено в соответствии с DTO)
+		info := hackathonDTO.ShortInfo{
+			ID:               h.ID,
+			Name:             h.Name,
+			Description:      h.Description,
+			OrganizationName: h.Organization.LegalName,
+			RegDateFrom:      h.RegDateFrom,
+			RegDateTo:        h.RegDateTo,
+			WorkDateFrom:     h.WorkDateFrom,
+			WorkDateTo:       h.WorkDateTo,
+			EvalDateFrom:     h.EvalDateFrom,
+			EvalDateTo:       h.EvalDateTo,
+			LogoURL:          logoURL,
+			Technologies:     technologies,
+			TotalAward:       totalAward,
+			MinTeamSize:      h.MinTeamSize,
+			MaxTeamSize:      h.MaxTeamSize,
+			UserCount:        int(userCount),
+		}
+
+		hackathonInfoList = append(hackathonInfoList, info)
+	}
 
 	// Возвращаем данные с информацией о пагинации
-	c.JSON(http.StatusOK, gin.H{
-		"list":   hackathons,
-		"total":  totalCount,
-		"limit":  filterData.Limit,
-		"offset": filterData.Offset,
-	})
+	response := hackathonDTO.ListResponse{
+		List:   hackathonInfoList,
+		Total:  totalCount,
+		Limit:  filterData.Limit,
+		Offset: filterData.Offset,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (hc *HackathonController) GetAllFull(c *gin.Context) {

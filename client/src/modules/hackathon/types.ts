@@ -1,5 +1,4 @@
 import {Stage} from "../../components/stepsListWithDates/types.ts";
-import {Organization} from "../organozaton/types.ts";
 
 export interface HackathonFormErrors {
     name?: string | undefined,
@@ -63,15 +62,29 @@ export type FilterUpdate = {
     value: any;
 };
 
+interface HackathonShortInfo {
+    id: number;
+    name: string;
+    organizationName: string;
+    regDateFrom: string;
+    regDateTo: string;
+    workDateFrom: string;
+    workDateTo: string;
+    evalDateFrom: string;
+    evalDateTo: string;
+    logoUrl?: string;
+    technologies: string[];
+    totalAward: number;
+    minTeamSize: number;
+    maxTeamSize: number;
+    usersCount: number;
+}
+
 export type HackathonSearchData = {
-    list: HackathonShort[],
+    list: HackathonShortInfo[],
     total: number
     limit: number
     offset: number
-}
-
-export type HackathonShort = {
-    name: string
 }
 
 export type HackathonFilterData = {

@@ -26,7 +26,9 @@ const HackathonList = () => {
 
     const initialHackathonData: HackathonSearchData = {
         total: 0,
-        list: []
+        list: [],
+        limit: 0,
+        offset: 0
     }
 
     const [hackathons, setHackathons] = useState<HackathonSearchData>(initialHackathonData);
