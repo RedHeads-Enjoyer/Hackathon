@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect, useId } from 'react';
 import classes from './style.module.css';
+import Modal from '../modal/Modal'; // Импортируем компонент Modal
 
 type FileUploadProps = {
     onChange: (files: File[]) => void;
     value: File[];
     label?: string;
     acceptedFileTypes?: string;
-    maxFileSize?: number; // in bytes
+    maxFileSize?: number;
     maxFiles?: number;
     required?: boolean;
     error?: string;
@@ -28,6 +29,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
     const [localErrors, setLocalErrors] = useState<string[]>([]);
     const inputRef = useRef<HTMLInputElement>(null);
     const labelId = useId();
+
+    // Добавляем состояние для модального окна подтверждения удаления
+    const [deleteConfirm, setDeleteConfirm] = useState<{
+        show: boolean;
+        fileIndex: number | null;
+        fileName: string | null;
+    }>({ show: false, fileIndex: null, fileName: null });
 
     useEffect(() => {
         // Clear local errors when external error changes
@@ -76,10 +84,29 @@ const FileUpload: React.FC<FileUploadProps> = ({
         setLocalErrors([]);
     };
 
-    const removeFile = (index: number) => {
+    // Заменим прямое удаление на запрос подтверждения
+    const requestRemoveFile = (index: number) => {
+        setDeleteConfirm({
+            show: true,
+            fileIndex: index,
+            fileName: value[index]?.name || null
+        });
+    };
+
+    // Функция для выполнения удаления после подтверждения
+    const confirmRemoveFile = () => {
+        if (deleteConfirm.fileIndex === null) return;
+
         const newFiles = [...value];
-        newFiles.splice(index, 1);
+        newFiles.splice(deleteConfirm.fileIndex, 1);
         onChange(newFiles);
+
+        setDeleteConfirm({ show: false, fileIndex: null, fileName: null });
+    };
+
+    // Функция для отмены удаления
+    const cancelRemoveFile = () => {
+        setDeleteConfirm({ show: false, fileIndex: null, fileName: null });
     };
 
     const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
@@ -201,12 +228,28 @@ const FileUpload: React.FC<FileUploadProps> = ({
             )}
 
             {value.length > 0 && (
+                <div className={classes.filesHeader}>
+                    <h4 className={classes.filesListTitle}>Список файлов</h4>
+                    <div className={classes.filesHelp}>
+                        Для удаления файла кликните на него
+                    </div>
+                </div>
+            )}
+
+            {value.length > 0 && (
                 <div className={classes.fileList}>
                     {value.map((file, index) => {
                         const preview = getPreviewUrl(file);
 
                         return (
-                            <div key={`${file.name}-${index}`} className={classes.fileItem}>
+                            <div
+                                key={`${file.name}-${index}`}
+                                className={classes.fileItem}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    requestRemoveFile(index);
+                                }}
+                            >
                                 <div className={classes.filePreview}>
                                     {preview ? (
                                         <img src={preview} alt={file.name} className={classes.previewImage} />
@@ -219,23 +262,25 @@ const FileUpload: React.FC<FileUploadProps> = ({
                                     <div className={classes.fileName}>{file.name}</div>
                                     <div className={classes.fileSize}>{formatFileSize(file.size)}</div>
                                 </div>
-
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        removeFile(index);
-                                    }}
-                                    className={classes.removeButton}
-                                    aria-label="Удалить файл"
-                                >
-                                    ✕
-                                </button>
                             </div>
                         );
                     })}
                 </div>
             )}
+
+            {/* Модальное окно подтверждения удаления */}
+            <Modal
+                isOpen={deleteConfirm.show}
+                title={'Удалить файл?'}
+                onConfirm={confirmRemoveFile}
+                confirmText={'Удалить'}
+                onReject={cancelRemoveFile}
+                rejectText={'Отмена'}
+            >
+                <p>
+                    Вы уверены, что хотите удалить файл "{deleteConfirm.fileName}"? Это действие нельзя отменить.
+                </p>
+            </Modal>
         </div>
     );
 };

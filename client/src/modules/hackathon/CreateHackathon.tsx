@@ -73,6 +73,7 @@ interface HackathonFormErrors {
     criteriaInvalid?: boolean,
     technologiesInvalid?: boolean,
     awardsInvalid?: boolean,
+    documents?: string | undefined,
 }
 
 const CreateHackathon: React.FC = () => {
@@ -98,7 +99,6 @@ const CreateHackathon: React.FC = () => {
     });
 
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
-    const [documentError, setDocumentError] = useState<string | null>(null);
 
     const stagesRef = useRef<StepsListWithDatesRef>(null);
     const criteriaRef = useRef<CriteriaEditorRef>(null);
@@ -193,6 +193,10 @@ const CreateHackathon: React.FC = () => {
             errors.awardsInvalid = true;
         }
 
+        if (formData.documents.length === 0) {
+            errors.documents = "Загрузите хотя бы один документ";
+        }
+
         return errors;
     };
 
@@ -280,17 +284,17 @@ const CreateHackathon: React.FC = () => {
         }));
     }
 
-    // Handler for file uploads
     const handleFilesChange = (files: File[]) => {
         setFormData(prev => ({
             ...prev,
             documents: files
         }));
 
-        // Clear any error when files are uploaded
-        if (files.length > 0) {
-            setDocumentError(null);
-        }
+        // Очищаем ошибку при загрузке файлов
+        setFormErrors(prev => ({
+            ...prev,
+            documents: undefined
+        }));
     };
 
     return (
@@ -464,6 +468,16 @@ const CreateHackathon: React.FC = () => {
             {/* Блок документов */}
             <div className={classes.info_block}>
                 <h4 className={classes.block_title}>Документация хакатона</h4>
+
+                {formData.documents.length > 0 && (
+                    <div className={classes.documentsHeader}>
+                        <h4 className={classes.documentsListTitle}>Загруженные документы</h4>
+                        <div className={classes.documentsHelp}>
+                            Для удаления документа нажмите на крестик справа от него
+                        </div>
+                    </div>
+                )}
+
                 <FileUpload
                     label="Документы проекта"
                     required
@@ -473,6 +487,7 @@ const CreateHackathon: React.FC = () => {
                     maxFileSize={5 * 1024 * 1024} // 5MB
                     maxFiles={5}
                     placeholder="Перетащите файлы сюда или нажмите для выбора"
+                    error={formErrors.documents}
                 />
                 <div className={classes.file_help}>
                     <p>Загрузите важные документы: положение о проведении, правила участия, требования к проектам и т.д.</p>
