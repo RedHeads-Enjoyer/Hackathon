@@ -172,3 +172,15 @@
         width: 100%;
     }
 }
+
+.required {
+    color: var(--accent-color); /* или другой цвет акцента */
+    margin-left: 4px;
+}
+
+.errorMessage {
+    color: var(--error-text-color); /* или другой цвет для ошибок */
+    font-size: 14px;
+    margin-top: 4px;
+    margin-bottom: 16px;
+}

@@ -7,7 +7,7 @@ import ImageUploader from "../../components/imageUploader/ImageUploader.tsx";
 import StepsListWithDates, {StepsListWithDatesRef} from "../../components/stepsListWithDates/StepsListWithDates.tsx";
 import {Stage} from "../../components/stepsListWithDates/types.ts";
 import TechnologyStackInput from "../../components/technologyStackInput/TechnologyStackInput.tsx";
-import CriteriaEditor from "../../components/criteriaEditor/CriteriaEditor.tsx";
+import CriteriaEditor, {CriteriaEditorRef} from "../../components/criteriaEditor/CriteriaEditor.tsx";
 import AwardsEditor from "../../components/awardsEditor/AwardsEditor.tsx";
 import DatePicker from "../../components/datePicker/DatePicker.tsx";
 import Button from "../../components/button/Button.tsx";
@@ -66,8 +66,9 @@ interface HackathonFormErrors {
     evalDateTo?: string | undefined;
     minTeamSize?: string | undefined;
     maxTeamSize?: string | undefined;
-    stages?: string | undefined,  // Общая ошибка для списка этапов (например, "Добавьте хотя бы один этап хакатона")
-    stagesInvalid?: boolean,      // Флаг, показывающий что валидация этапов не прошла
+    stages?: string | undefined,
+    stagesInvalid?: boolean,
+    criteriaInvalid?: boolean,
 }
 
 const CreateHackathon: React.FC = () => {
@@ -96,6 +97,7 @@ const CreateHackathon: React.FC = () => {
     const [documentError, setDocumentError] = useState<string | null>(null);
 
     const stagesRef = useRef<StepsListWithDatesRef>(null);
+    const criteriaRef = useRef<CriteriaEditorRef>(null);
 
     const handlePublishClick = () => {
         setIsPublishModalOpen(true);
@@ -168,6 +170,11 @@ const CreateHackathon: React.FC = () => {
         const stagesValid = stagesRef.current?.validate() ?? false;
         if (!stagesValid) {
             errors.stagesInvalid = true;
+        }
+
+        const criteriaValid = criteriaRef.current?.validate() ?? false;
+        if (!criteriaValid) {
+            errors.criteriaInvalid = true;
         }
 
         return errors;
@@ -418,8 +425,10 @@ const CreateHackathon: React.FC = () => {
             />
 
             <CriteriaEditor
+                ref={criteriaRef}
                 initialCriteria={formData.criteria}
                 onChange={handleCriteriaChange}
+                required
             />
 
             <TechnologyStackInput
