@@ -1,10 +1,10 @@
-import React, {useState} from 'react';
+import React, {useRef, useState} from 'react';
 import classes from './hackathon.module.css';
 import PageLabel from "../../components/pageLabel/PageLabel.tsx";
 import Input from "../../components/input/Input.tsx";
 import TextArea from "../../components/textArea/TextArea.tsx";
 import ImageUploader from "../../components/imageUploader/ImageUploader.tsx";
-import StepsListWithDates from "../../components/stepsListWithDates/StepsListWithDates.tsx";
+import StepsListWithDates, {StepsListWithDatesRef} from "../../components/stepsListWithDates/StepsListWithDates.tsx";
 import {Stage} from "../../components/stepsListWithDates/types.ts";
 import TechnologyStackInput from "../../components/technologyStackInput/TechnologyStackInput.tsx";
 import CriteriaEditor from "../../components/criteriaEditor/CriteriaEditor.tsx";
@@ -66,6 +66,8 @@ interface HackathonFormErrors {
     evalDateTo?: string | undefined;
     minTeamSize?: string | undefined;
     maxTeamSize?: string | undefined;
+    stages?: string | undefined,  // Общая ошибка для списка этапов (например, "Добавьте хотя бы один этап хакатона")
+    stagesInvalid?: boolean,      // Флаг, показывающий что валидация этапов не прошла
 }
 
 const CreateHackathon: React.FC = () => {
@@ -92,6 +94,8 @@ const CreateHackathon: React.FC = () => {
 
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
     const [documentError, setDocumentError] = useState<string | null>(null);
+
+    const stagesRef = useRef<StepsListWithDatesRef>(null);
 
     const handlePublishClick = () => {
         setIsPublishModalOpen(true);
@@ -155,6 +159,15 @@ const CreateHackathon: React.FC = () => {
 
         if (formData.maxTeamSize && formData.maxTeamSize == 0) {
             errors.maxTeamSize = "Размер команды не может быть 0";
+        }
+
+        if (formData.stages.length === 0) {
+            errors.stages = "Добавьте хотя бы один этап хакатона";
+        }
+
+        const stagesValid = stagesRef.current?.validate() ?? false;
+        if (!stagesValid) {
+            errors.stagesInvalid = true;
         }
 
         return errors;
@@ -398,8 +411,10 @@ const CreateHackathon: React.FC = () => {
 
             {/* Остальные секции */}
             <StepsListWithDates
+                ref={stagesRef}
                 initialStages={formData.stages}
                 onChange={handleStagesChange}
+                required
             />
 
             <CriteriaEditor
