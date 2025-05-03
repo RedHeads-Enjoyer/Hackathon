@@ -5,10 +5,10 @@ import { getCroppedImg } from './imageUtils';
 import Modal from '../../components/modal/Modal.tsx';
 
 interface ImageUploaderProps {
-    onImageChange: (croppedImage: string) => void;
-    initialImage?: string | null;
-    required?: boolean; // добавлен параметр обязательности
-    error?: string; // добавлен параметр текста ошибки
+    onImageChange: (croppedImage: File) => void;
+    initialImage?: string | File | null; // Изменено здесь
+    required?: boolean;
+    error?: string;
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({
@@ -17,13 +17,22 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                                                          required = false,
                                                          error = ''
                                                      }) => {
+
+    const getInitialImageUrl = () => {
+        if (!initialImage) return null;
+        if (typeof initialImage === 'string') return initialImage;
+        return URL.createObjectURL(initialImage);
+    };
+
     const [originalImage, setOriginalImage] = useState<string | null>(null);
-    const [croppedImage, setCroppedImage] = useState<string | null>(initialImage);
+    const [croppedImage, setCroppedImage] = useState<string | null>(getInitialImageUrl());
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+
 
     // Остальной код компонента не изменяется
     const handleUploadClick = () => {
@@ -56,9 +65,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         try {
             if (!originalImage || !croppedAreaPixels) return;
 
-            const newCroppedImage = await getCroppedImg(originalImage, croppedAreaPixels);
-            setCroppedImage(newCroppedImage);
-            onImageChange(newCroppedImage);
+            // Получаем результат и проверяем тип
+            const result = await getCroppedImg(originalImage, croppedAreaPixels, true);
+
+            // Проверяем, что это Blob
+            if (result instanceof Blob) {
+                const croppedFile = new File([result], 'cover-image.jpg', { type: 'image/jpeg' });
+                const previewUrl = URL.createObjectURL(result);
+                setCroppedImage(previewUrl);
+                onImageChange(croppedFile);
+            } else {
+                console.error('Expected Blob but got string');
+            }
+
             setIsModalOpen(false);
         } catch (e) {
             console.error('Ошибка обрезки изображения', e);

@@ -35,7 +35,7 @@ interface Award {
 interface HackathonFormData {
     name: string;
     description: string;
-    coverImage: string | null;
+    coverImage: File | null;
     regDateFrom: string;
     regDateTo: string;
     workDateFrom: string;
@@ -57,6 +57,7 @@ interface HackathonFormErrors {
     name?: string | undefined,
     description?: string | undefined,
     organizationId?: string | undefined,
+    coverImage?: string | undefined,
 }
 
 const CreateHackathon: React.FC = () => {
@@ -103,6 +104,13 @@ const CreateHackathon: React.FC = () => {
         if (formData.organizationId == 0) {
             errors.organizationId = "Организация не может быть пустой";
         }
+
+        if (!formData.coverImage) {
+            errors.coverImage = "Изображение не может быть пустым";
+        }
+
+
+
         return errors;
     };
 
@@ -147,11 +155,15 @@ const CreateHackathon: React.FC = () => {
         }));
     };
 
-    const handleImageCrop = (croppedImage: string) => {
+    const handleImageCrop = (croppedImage: File) => {
         setFormData(prev => ({
             ...prev,
-            croppedImage,
             coverImage: croppedImage
+        }));
+
+        setFormErrors(prev => ({
+            ...prev,
+            coverImage: undefined
         }));
     };
 
@@ -239,7 +251,7 @@ const CreateHackathon: React.FC = () => {
                             onImageChange={handleImageCrop}
                             initialImage={formData.coverImage}
                             required
-                            error={'asd'}
+                            error={formErrors.coverImage}
                         />
                     </div>
                 </div>

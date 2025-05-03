@@ -1,19 +1,18 @@
-export async function getCroppedImg(
+export const getCroppedImg = async (
     imageSrc: string,
-    pixelCrop: { x: number; y: number; width: number; height: number }
-): Promise<string> {
+    pixelCrop: any,
+    returnBlob: boolean = false
+): Promise<string | Blob> => {
     const image = await createImage(imageSrc);
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
-    if (!ctx) {
-        throw new Error('Не удалось создать canvas context');
-    }
-
+    // Установка размеров
     canvas.width = pixelCrop.width;
     canvas.height = pixelCrop.height;
 
-    ctx.drawImage(
+    // Отрисовка
+    ctx?.drawImage(
         image,
         pixelCrop.x,
         pixelCrop.y,
@@ -25,17 +24,18 @@ export async function getCroppedImg(
         pixelCrop.height
     );
 
-    return new Promise((resolve, reject) => {
-        canvas.toBlob((blob) => {
-            if (!blob) {
-                reject(new Error('Canvas is empty'));
-                return;
-            }
-            const url = URL.createObjectURL(blob);
-            resolve(url);
-        }, 'image/jpeg', 0.9);
-    });
-}
+    // Если нужен Blob
+    if (returnBlob) {
+        return new Promise<Blob>((resolve) => {
+            canvas.toBlob(blob => {
+                resolve(blob!);
+            }, 'image/jpeg', 0.85);
+        });
+    }
+
+    // Если нужна строка base64
+    return canvas.toDataURL('image/jpeg', 0.85);
+};
 
 function createImage(url: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
