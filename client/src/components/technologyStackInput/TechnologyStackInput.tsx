@@ -47,11 +47,6 @@ const TechnologyStackInput = forwardRef<TechnologyStackInputRef, TechnologyStack
             const updatedTechs = [...technologies, option];
             setTechnologies(updatedTechs);
             onChange(updatedTechs);
-
-            // Если была ошибка и теперь есть технологии, скрываем ошибку
-            if (showError && updatedTechs.length > 0) {
-                setShowError(false);
-            }
         }
     };
 
@@ -70,11 +65,6 @@ const TechnologyStackInput = forwardRef<TechnologyStackInputRef, TechnologyStack
         );
         setTechnologies(updatedTechs);
         onChange(updatedTechs);
-
-        // Если после удаления не осталось технологий и они обязательны, показываем ошибку
-        if (required && updatedTechs.length === 0) {
-            setShowError(true);
-        }
 
         setDeleteConfirm({ show: false, techToDelete: null });
     };
@@ -104,6 +94,15 @@ const TechnologyStackInput = forwardRef<TechnologyStackInputRef, TechnologyStack
                     />
                 </div>
             </div>
+
+            {technologies.length > 0 && (
+                <div className={classes.techHeader}>
+                    <h4 className={classes.techListTitle}>Список технологий</h4>
+                    <div className={classes.techHelp}>
+                        Для удаления технологии кликните на неё
+                    </div>
+                </div>
+            )}
 
             {technologies.length > 0 && (
                 <div className={classes.techList}>

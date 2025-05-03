@@ -10,7 +10,7 @@ import TechnologyStackInput, {
     TechnologyStackInputRef
 } from "../../components/technologyStackInput/TechnologyStackInput.tsx";
 import CriteriaEditor, {CriteriaEditorRef} from "../../components/criteriaEditor/CriteriaEditor.tsx";
-import AwardsEditor from "../../components/awardsEditor/AwardsEditor.tsx";
+import AwardsEditor, {AwardsEditorRef} from "../../components/awardsEditor/AwardsEditor.tsx";
 import DatePicker from "../../components/datePicker/DatePicker.tsx";
 import Button from "../../components/button/Button.tsx";
 import Modal from "../../components/modal/Modal.tsx";
@@ -72,6 +72,7 @@ interface HackathonFormErrors {
     stagesInvalid?: boolean,
     criteriaInvalid?: boolean,
     technologiesInvalid?: boolean,
+    awardsInvalid?: boolean,
 }
 
 const CreateHackathon: React.FC = () => {
@@ -102,6 +103,7 @@ const CreateHackathon: React.FC = () => {
     const stagesRef = useRef<StepsListWithDatesRef>(null);
     const criteriaRef = useRef<CriteriaEditorRef>(null);
     const techRef = useRef<TechnologyStackInputRef>(null);
+    const awardsRef = useRef<AwardsEditorRef>(null);
 
     const handlePublishClick = () => {
         setIsPublishModalOpen(true);
@@ -184,6 +186,11 @@ const CreateHackathon: React.FC = () => {
         const techValid = techRef.current?.validate() ?? false;
         if (!techValid) {
             errors.technologiesInvalid = true;
+        }
+
+        const awardsValid = awardsRef.current?.validate() ?? false;
+        if (!awardsValid) {
+            errors.awardsInvalid = true;
         }
 
         return errors;
@@ -448,8 +455,10 @@ const CreateHackathon: React.FC = () => {
             />
 
             <AwardsEditor
+                ref={awardsRef}
                 initialAwards={formData.awards}
                 onChange={handleAwardsChange}
+                required
             />
 
             {/* Блок документов */}

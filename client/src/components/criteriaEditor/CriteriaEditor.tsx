@@ -67,11 +67,6 @@ const CriteriaEditor = forwardRef<CriteriaEditorRef, CriteriaEditorProps>(
             setCriteria(updatedCriteria);
             onChange(updatedCriteria);
 
-            // Если была ошибка и теперь есть критерии, скрываем ошибку
-            if (showError && updatedCriteria.length > 0) {
-                setShowError(false);
-            }
-
             resetForm();
         };
 
@@ -97,11 +92,6 @@ const CriteriaEditor = forwardRef<CriteriaEditorRef, CriteriaEditorProps>(
             );
             setCriteria(updatedCriteria);
             onChange(updatedCriteria);
-
-            // Если после удаления не осталось критериев и они обязательны, показываем ошибку
-            if (required && updatedCriteria.length === 0) {
-                setShowError(true);
-            }
 
             setDeleteConfirm({ show: false, criterionId: null });
             resetForm();
@@ -198,6 +188,15 @@ const CriteriaEditor = forwardRef<CriteriaEditorRef, CriteriaEditorProps>(
                         )}
                     </div>
                 </div>
+
+                {criteria.length > 0 && (
+                    <div className={classes.criteriaHeader}>
+                        <h4 className={classes.criteriaListTitle}>Список критериев оценки</h4>
+                        <div className={classes.criteriaHelp}>
+                            Для редактирования критерия кликните на него
+                        </div>
+                    </div>
+                )}
 
                 <div className={classes.criteriaList}>
                     {criteria.map((criterion) => (

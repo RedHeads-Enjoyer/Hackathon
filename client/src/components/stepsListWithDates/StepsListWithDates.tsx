@@ -177,13 +177,13 @@ const StepsListWithDates = forwardRef<StepsListWithDatesRef, HackathonStagesProp
             setStageErrors(newErrors);
         }
 
+        // Если удаляем последний этап, сбрасываем флаг показа ошибок
+        if (filteredStages.length === 0) {
+            setShowValidation(false);
+        }
+
         setStages(filteredStages);
         onChange(filteredStages);
-
-        // Если после удаления не осталось этапов и они обязательны, показываем ошибку
-        if (required && filteredStages.length === 0) {
-            setShowValidation(true);
-        }
 
         if (expandedStageId === stageToDelete) {
             setExpandedStageId(null);

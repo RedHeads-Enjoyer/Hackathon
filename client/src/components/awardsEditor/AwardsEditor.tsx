@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import classes from './style.module.css';
 import Button from '../button/Button';
 import Input from '../input/Input';
@@ -12,10 +12,22 @@ interface Award {
     additionally: string;
 }
 
-const AwardsEditor: React.FC<{
+// Интерфейс для ref
+export interface AwardsEditorRef {
+    validate: () => boolean;
+}
+
+interface AwardsEditorProps {
     initialAwards?: Award[];
     onChange: (awards: Award[]) => void;
-}> = ({ initialAwards = [], onChange }) => {
+    required?: boolean;
+}
+
+const AwardsEditor = forwardRef<AwardsEditorRef, AwardsEditorProps>(({
+                                                                         initialAwards = [],
+                                                                         onChange,
+                                                                         required = false
+                                                                     }, ref) => {
     const [awards, setAwards] = useState<Award[]>(initialAwards);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState<Omit<Award, 'id'>>({
@@ -28,6 +40,25 @@ const AwardsEditor: React.FC<{
         show: boolean;
         awardId: string | null;
     }>({ show: false, awardId: null });
+
+    // Состояния для ошибок
+    const [showError, setShowError] = useState(false);
+    const [formErrors, setFormErrors] = useState<{
+        placeTo?: string;
+        moneyAmount?: string;
+    }>({});
+
+    // Метод валидации для использования через ref
+    const validate = (): boolean => {
+        const isValid = !required || awards.length > 0;
+        setShowError(required && awards.length === 0);
+        return isValid;
+    };
+
+    // Экспортируем метод через ref
+    useImperativeHandle(ref, () => ({
+        validate
+    }));
 
     // При инициализации и изменении awards обновляем следующий доступный диапазон
     useEffect(() => {
@@ -43,6 +74,11 @@ const AwardsEditor: React.FC<{
 
     const handleChange = (field: keyof Omit<Award, 'id'>, value: string | number) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+
+        // Очищаем ошибку поля при изменении
+        if (formErrors[field as keyof typeof formErrors]) {
+            setFormErrors(prev => ({ ...prev, [field]: undefined }));
+        }
     };
 
     const getNextAvailablePlace = (): number => {
@@ -58,16 +94,19 @@ const AwardsEditor: React.FC<{
         return award.id === sortedAwards[sortedAwards.length - 1].id;
     };
 
-    // Упрощенная валидация - ИСПРАВЛЕНО
+    // Валидация формы с использованием объекта ошибок
     const validateForm = (): boolean => {
+        const errors: { placeTo?: string; moneyAmount?: string } = {};
+        let isValid = true;
+
         if (formData.placeTo < formData.placeFrom) {
-            alert('"Место до" не может быть меньше "Место от"');
-            return false;
+            errors.placeTo = '"Место до" не может быть меньше "Место от"';
+            isValid = false;
         }
 
         if (formData.moneyAmount < 0) {
-            alert('Денежная сумма не может быть отрицательной');
-            return false;
+            errors.moneyAmount = 'Денежная сумма не может быть отрицательной';
+            isValid = false;
         }
 
         // При редактировании проверяем, чтобы не редактировались места для не-последних наград
@@ -83,13 +122,14 @@ const AwardsEditor: React.FC<{
 
                 // Проверяем только изменение мест, а не всех полей
                 if (formData.placeFrom !== originalPlaceFrom || formData.placeTo !== originalPlaceTo) {
-                    alert('Для не-последней награды нельзя менять диапазон мест');
-                    return false;
+                    errors.placeTo = 'Для не-последней награды нельзя менять диапазон мест';
+                    isValid = false;
                 }
             }
         }
 
-        return true;
+        setFormErrors(errors);
+        return isValid;
     };
 
     const saveAward = () => {
@@ -106,6 +146,12 @@ const AwardsEditor: React.FC<{
 
         setAwards(updatedAwards);
         onChange(updatedAwards);
+
+        // Если была ошибка (пустые награды) и теперь есть награды, скрываем ошибку
+        if (showError && updatedAwards.length > 0) {
+            setShowError(false);
+        }
+
         resetForm();
     };
 
@@ -117,6 +163,8 @@ const AwardsEditor: React.FC<{
             moneyAmount: award.moneyAmount,
             additionally: award.additionally || '',
         });
+        // Очищаем ошибки формы при выборе награды для редактирования
+        setFormErrors({});
     };
 
     const deleteAward = () => {
@@ -133,7 +181,9 @@ const AwardsEditor: React.FC<{
 
         // Можно удалять только последнюю награду
         if (deletedIndex !== sortedAwards.length - 1) {
-            alert("Можно удалять только последнюю награду. Чтобы удалить эту награду, сначала удалите все награды после неё.");
+            setFormErrors({
+                placeTo: "Можно удалять только последнюю награду. Сначала удалите все награды после неё."
+            });
             setDeleteConfirm({ show: false, awardId: null });
             return;
         }
@@ -143,6 +193,7 @@ const AwardsEditor: React.FC<{
 
         setAwards(updatedAwards);
         onChange(updatedAwards);
+
         setDeleteConfirm({ show: false, awardId: null });
         resetForm();
     };
@@ -155,6 +206,7 @@ const AwardsEditor: React.FC<{
             moneyAmount: 0,
             additionally: ''
         }));
+        setFormErrors({});
     };
 
     const formatPlace = (placeFrom: number, placeTo: number): string => {
@@ -173,19 +225,27 @@ const AwardsEditor: React.FC<{
 
     return (
         <div className={classes.container}>
-            <h3 className={classes.title}>Награды</h3>
+            <h3 className={classes.title}>
+                Награды
+                {required && <span className={classes.required}>*</span>}
+            </h3>
 
-            <div className={classes.form}>
+            {showError && (
+                <div className={classes.errorMessage}>
+                    Добавьте хотя бы одну награду
+                </div>
+            )}
+
+            <div className={awards.length !== 0 ? classes.form : ""}>
                 <div className={classes.placesRow}>
                     <div className={classes.placeInput}>
                         <Input
                             label="Место от"
                             type="number"
                             value={formData.placeFrom}
-                            onChange={() => {}} // Пустая функция, поле всегда read-only
+                            onChange={() => {}}
                             min={1}
                             disabled={true}
-                            readOnly={true}
                         />
                         <div className={classes.inputHelperText}>
                             Устанавливается автоматически
@@ -198,8 +258,9 @@ const AwardsEditor: React.FC<{
                             value={formData.placeTo}
                             onChange={(e) => handleChange('placeTo', Number(e.target.value))}
                             min={formData.placeFrom}
-                            // Блокируем изменение для всех наград, кроме последней при редактировании
-                            disabled={editingId && !isLastAward({ ...formData, id: editingId } as Award)}
+                            disabled={!!editingId && !isLastAward({ ...formData, id: editingId } as Award)}
+                            error={formErrors.placeTo}
+                            required={!(!!editingId && !isLastAward({ ...formData, id: editingId } as Award))}
                         />
                     </div>
                 </div>
@@ -212,6 +273,7 @@ const AwardsEditor: React.FC<{
                         onChange={(e) => handleChange('moneyAmount', Number(e.target.value))}
                         min={0}
                         required
+                        error={formErrors.moneyAmount}
                     />
                 </div>
 
@@ -308,6 +370,6 @@ const AwardsEditor: React.FC<{
             </Modal>
         </div>
     );
-};
+});
 
 export default AwardsEditor;
