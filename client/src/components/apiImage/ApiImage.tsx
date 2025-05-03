@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { hackathonAPI } from '../../modules/hackathon/hackathonAPI'; // Импортируйте ваш API
+import { hackathonAPI } from '../../modules/hackathon/hackathonAPI';
 import styles from './styles.module.css';
 
 interface ApiImageProps {

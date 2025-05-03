@@ -12,7 +12,7 @@
     width: 24px;
     height: 24px;
     border: 3px solid rgba(128, 128, 128, 0.2);
-    border-top-color: #3498db; /* или var(--accent-color) в вашей теме */
+    border-top-color: var(--default-backgroud-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
