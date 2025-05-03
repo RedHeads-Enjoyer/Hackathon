@@ -10,10 +10,9 @@ import (
 func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	hackathonController := controllers.NewHackathonController(db, controllers.NewFileController(db))
 	inviteTeamController := controllers.NewTeamInviteController(db)
-	public := router.Group("/hackathon")
+	public := router.Group("/hackathons")
 	{
-		public.GET("", hackathonController.GetAll)
-		public.GET("/full", hackathonController.GetAllFull)
+		public.POST("", hackathonController.GetAll)
 		public.GET("/:hackathon_id", hackathonController.GetByIDFull)
 	}
 

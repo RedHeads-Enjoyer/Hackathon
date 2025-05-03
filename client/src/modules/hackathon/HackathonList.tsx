@@ -4,20 +4,21 @@ import HackathonFilter from "./components/HackathonsFilter.tsx";
 import {FilterUpdate, HackathonFilterData, HackathonSearchData} from "./types.ts";
 import React, {useEffect, useState} from "react";
 import {hackathonAPI} from "./hackathonAPI.ts";
+import Loader from "../../components/loader/Loader.tsx";
+import OrganizationItem from "../organozaton/Components/OrganizationItem.tsx";
+import Error from "../../components/error/Error.tsx";
 
 
 const HackathonList = () => {
     const initialFilterData: HackathonFilterData = {
         name: "",
         organizationId: 0,
-
         startDate: "",
         endDate: "",
         maxTeamSize: 5,
         minTeamSize: 1,
         technologyId: 0,
         totalAward: 0,
-
         limit: 20,
         total: 0,
         offset: 0,
@@ -103,7 +104,19 @@ const HackathonList = () => {
                 onResetFilters={handleResetFilters}
                 onSearch={handleSearch}
             />
+            {searchLoading ? <Loader/> :
+                hackathons.list?.length > 0 ? (
+                    hackathons.list.map((hack) => (
+                        <div key={`hack_${hack.name}`}>
+                            {hack.name}
+                        </div>
+                    ))
+                ) : (
+                    <div className={classes.noResults}><p>Организации не найдены</p></div>
+                )
+            }
 
+            {searchError && <Error>{searchError}</Error>}
 
         </div>
     )

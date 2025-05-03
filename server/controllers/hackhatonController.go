@@ -246,14 +246,106 @@ func (hc *HackathonController) CreateHackathon(c *gin.Context) {
 
 // GetAll - Получение списка всех хакатонов
 func (hc *HackathonController) GetAll(c *gin.Context) {
-	var hackathons []models.Hackathon
+	// Парсинг параметров фильтрации из тела запроса
+	var filterData hackathonDTO.FilterData
+	if err := c.ShouldBindJSON(&filterData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат фильтров"})
+		return
+	}
 
-	if err := hc.DB.Find(&hackathons).Error; err != nil {
+	// Базовый запрос для подсчета общего количества
+	countQuery := hc.DB.Model(&models.Hackathon{})
+
+	// Базовый запрос для получения данных
+	dataQuery := hc.DB.Model(&models.Hackathon{})
+
+	// Применение фильтров к обоим запросам
+	applyFilters := func(query *gorm.DB) *gorm.DB {
+		if filterData.Name != "" {
+			query = query.Where("name LIKE ?", "%"+filterData.Name+"%")
+		}
+
+		if filterData.OrganizationId != 0 {
+			query = query.Where("organization_id = ?", filterData.OrganizationId)
+		}
+
+		// Фильтры по датам - используем ParseTime для корректной обработки дат
+		if filterData.StartDate != "" {
+			query = query.Where("reg_date_to >= ? OR work_date_to >= ? OR eval_date_to >= ?",
+				filterData.StartDate, filterData.StartDate, filterData.StartDate)
+		}
+
+		if filterData.EndDate != "" {
+			query = query.Where("reg_date_from <= ? OR work_date_from <= ? OR eval_date_from <= ?",
+				filterData.EndDate, filterData.EndDate, filterData.EndDate)
+		}
+
+		if filterData.MinTeamSize > 0 {
+			query = query.Where("min_team_size >= ?", filterData.MinTeamSize)
+		}
+
+		if filterData.MaxTeamSize > 0 {
+			query = query.Where("max_team_size <= ?", filterData.MaxTeamSize)
+		}
+
+		if filterData.TotalAward > 0 {
+			// Здесь нужна подтаблица или связь, зависит от структуры БД
+			query = query.Where("(SELECT SUM(amount) FROM awards WHERE hackathon_id = hackathons.id) >= ?", filterData.TotalAward)
+		}
+
+		if filterData.TechnologyId > 0 {
+			// Для технологий нужна связь многие-ко-многим
+			query = query.Joins("JOIN hackathon_technologies ht ON ht.hackathon_id = hackathons.id").
+				Where("ht.technology_id = ?", filterData.TechnologyId)
+		}
+
+		return query
+	}
+
+	countQuery = applyFilters(countQuery)
+	dataQuery = applyFilters(dataQuery)
+
+	// Подсчет общего количества записей
+	var totalCount int64
+	if err := countQuery.Count(&totalCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при подсчете хакатонов", "details": err.Error()})
+		return
+	}
+
+	// Применение пагинации только к запросу данных
+	if filterData.Limit > 0 {
+		dataQuery = dataQuery.Limit(filterData.Limit)
+	} else {
+		// Значение по умолчанию, если лимит не указан
+		dataQuery = dataQuery.Limit(20)
+	}
+
+	if filterData.Offset > 0 {
+		dataQuery = dataQuery.Offset(filterData.Offset)
+	}
+
+	// Добавление сортировки (например, по дате создания)
+	dataQuery = dataQuery.Order("created_at DESC")
+
+	var hackathons []models.Hackathon
+	if err := dataQuery.Find(&hackathons).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении хакатонов", "details": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, hackathons)
+	// Преобразование в DTO, если нужно
+	// var hackathonsDTO []hackathonDTO.HackathonResponseDTO
+	// for _, h := range hackathons {
+	//    hackathonsDTO = append(hackathonsDTO, convertToDTO(h))
+	// }
+
+	// Возвращаем данные с информацией о пагинации
+	c.JSON(http.StatusOK, gin.H{
+		"list":   hackathons,
+		"total":  totalCount,
+		"limit":  filterData.Limit,
+		"offset": filterData.Offset,
+	})
 }
 
 func (hc *HackathonController) GetAllFull(c *gin.Context) {

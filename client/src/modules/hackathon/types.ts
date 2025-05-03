@@ -64,8 +64,14 @@ export type FilterUpdate = {
 };
 
 export type HackathonSearchData = {
-    list: Organization[],
+    list: HackathonShort[],
     total: number
+    limit: number
+    offset: number
+}
+
+export type HackathonShort = {
+    name: string
 }
 
 export type HackathonFilterData = {
