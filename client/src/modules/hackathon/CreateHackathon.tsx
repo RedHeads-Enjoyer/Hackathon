@@ -36,7 +36,6 @@ const CreateHackathon: React.FC = () => {
         minTeamSize: 1,
         maxTeamSize: 5,
         organizationId: 0,
-        goals: [''],
         stages: [],
         criteria: [],
         technologies: [],

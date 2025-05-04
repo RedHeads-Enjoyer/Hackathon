@@ -1,28 +1,34 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import classes from './hackathon.module.css';
 import PageLabel from "../../components/pageLabel/PageLabel.tsx";
 import Input from "../../components/input/Input.tsx";
 import TextArea from "../../components/textArea/TextArea.tsx";
 import ImageUploader from "../../components/imageUploader/ImageUploader.tsx";
-import StepsListWithDates, {StepsListWithDatesRef} from "../../components/stepsListWithDates/StepsListWithDates.tsx";
-import {Stage} from "../../components/stepsListWithDates/types.ts";
+import StepsListWithDates, { StepsListWithDatesRef } from "../../components/stepsListWithDates/StepsListWithDates.tsx";
+import { Stage } from "../../components/stepsListWithDates/types.ts";
 import TechnologyStackInput, {
     TechnologyStackInputRef
 } from "../../components/technologyStackInput/TechnologyStackInput.tsx";
-import CriteriaEditor, {CriteriaEditorRef} from "../../components/criteriaEditor/CriteriaEditor.tsx";
-import AwardsEditor, {AwardsEditorRef} from "../../components/awardsEditor/AwardsEditor.tsx";
+import CriteriaEditor, { CriteriaEditorRef } from "../../components/criteriaEditor/CriteriaEditor.tsx";
+import AwardsEditor, { AwardsEditorRef } from "../../components/awardsEditor/AwardsEditor.tsx";
 import DatePicker from "../../components/datePicker/DatePicker.tsx";
 import Button from "../../components/button/Button.tsx";
 import Modal from "../../components/modal/Modal.tsx";
 import SelectSearch from "../../components/searchSelect/SearchSelect.tsx";
-import {Link, useNavigate} from "react-router-dom";
-import {Option} from "../organozaton/types.ts";
+import { Option } from "../organozaton/types.ts";
 import FileUpload from "../../components/fileUpload/FileUpload.tsx";
-import {Award, Criteria, HackathonFormData, HackathonFormErrors} from "./types.ts";
+import { Award, Criteria, HackathonFormData, HackathonFormErrors } from "./types.ts";
 import Error from "../../components/error/Error.tsx";
-import {hackathonAPI} from "./hackathonAPI.ts";
+import { hackathonAPI } from "./hackathonAPI.ts";
+import Loader from "../../components/loader/Loader.tsx";
 
 const HackathonDashboard: React.FC = () => {
+    // Получаем ID хакатона из URL параметров
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+
+    // Состояние для хранения данных формы
     const [formData, setFormData] = useState<HackathonFormData>({
         name: '',
         description: '',
@@ -36,7 +42,6 @@ const HackathonDashboard: React.FC = () => {
         minTeamSize: 1,
         maxTeamSize: 5,
         organizationId: 0,
-        goals: [''],
         stages: [],
         criteria: [],
         technologies: [],
@@ -44,28 +49,142 @@ const HackathonDashboard: React.FC = () => {
         documents: [],
     });
 
-    useEffect(() => {
-        hackathonAPI.getFullById()
-    }, [])
-
+    // Дополнительные состояния для управления формой
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
-    const navigate = useNavigate()
-    const [createHackathonLoading, setCreateHackathonLoading] = useState<boolean>(false)
-    const [createHackathonError, setCreateHackathonError] = useState<string | null>(null)
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [updateHackathonLoading, setUpdateHackathonLoading] = useState<boolean>(false);
+    const [updateHackathonError, setUpdateHackathonError] = useState<string | null>(null);
+    const [formErrors, setFormErrors] = useState<HackathonFormErrors>({});
 
+    const [initialOrganization, setInitialOrganization] = useState<Option | undefined>(undefined)
+
+    // Состояния для управления существующими файлами и изображениями
+    const [logoId, setLogoId] = useState<number | null>(null);
+    const [existingDocuments, setExistingDocuments] = useState<Array<any>>([]);
+
+    // Рефы для доступа к компонентам дочерних форм
     const stagesRef = useRef<StepsListWithDatesRef>(null);
     const criteriaRef = useRef<CriteriaEditorRef>(null);
     const techRef = useRef<TechnologyStackInputRef>(null);
     const awardsRef = useRef<AwardsEditorRef>(null);
 
-    const handlePublishClick = () => {
-        setIsPublishModalOpen(true);
-    };
+    // Загрузка данных хакатона при монтировании компонента
+    useEffect(() => {
+        if (!id) {
+            setIsLoading(false);
+            setUpdateHackathonError("ID хакатона не указан");
+            return;
+        }
 
-    const [formErrors, setFormErrors] = useState<HackathonFormErrors>({});
+        const fetchHackathonData = async () => {
+            try {
+                const hackathonId = parseInt(id, 10);
+                const data = await hackathonAPI.getFullForEditById(hackathonId);
 
+                // Форматируем даты для полей ввода
+                const formatDate = (dateStr: string | null) => {
+                    if (!dateStr) return '';
+                    const date = new Date(dateStr);
+                    return date.toISOString().split('T')[0]; // Формат YYYY-MM-DD
+                };
+
+                // Сохраняем ID логотипа, если есть
+                if (data.logoId) {
+                    setLogoId(data.logoId);
+                }
+
+                // Сохраняем данные об организации для предварительного выбора
+                // Сохраняем информацию о документах
+                if (data.files && data.files.length > 0) {
+                    setExistingDocuments(data.files.map(file => ({
+                        ...file,
+                        isExisting: true
+                    })));
+                }
+
+                // Преобразуем данные API в формат formData
+                setFormData({
+                    name: data.name || '',
+                    description: data.description || '',
+                    coverImage: null,
+
+                    regDateFrom: formatDate(data.regDateFrom),
+                    regDateTo: formatDate(data.regDateTo),
+                    workDateFrom: formatDate(data.workDateFrom),
+                    workDateTo: formatDate(data.workDateTo),
+                    evalDateFrom: formatDate(data.evalDateFrom),
+                    evalDateTo: formatDate(data.evalDateTo),
+
+                    minTeamSize: data.minTeamSize || 1,
+                    maxTeamSize: data.maxTeamSize || 5,
+                    organizationId: data.organizationId || 0,
+
+                    // Преобразуем этапы
+                    stages: data.steps?.map(step => ({
+                        id: step.id,
+                        name: step.name,
+                        description: step.description || '',
+                        startDate: formatDate(step.startDate),
+                        endDate: formatDate(step.endDate)
+                    })) || [],
+
+                    // Преобразуем критерии
+                    criteria: data.criteria?.map(criterion => ({
+                        id: criterion.id,
+                        name: criterion.name,
+                        minScore: criterion.minScore,
+                        maxScore: criterion.maxScore
+                    })) || [],
+
+                    // Технологии
+                    technologies: data.technologies?.map(tech => ({
+                        value: tech.id,
+                        label: tech.name,
+                    })) || [],
+
+                    // Награды
+                    awards: data.awards?.map(award => ({
+                        id: award.id,
+                        placeFrom: award.placeFrom,
+                        placeTo: award.placeTo,
+                        moneyAmount: award.moneyAmount,
+                        additionally: award.additionally || ''
+                    })) || [],
+
+                    // Для документов сначала устанавливаем пустой массив,
+                    // потом добавим существующие файлы отдельно
+                    documents: [],
+                });
+
+                setInitialOrganization({
+                    label: data.organizationName,
+                    value: data.organizationId
+                })
+            } catch (err) {
+                const errorMessage = (err as Error).message || "Ошибка при загрузке данных хакатона";
+                setUpdateHackathonError(errorMessage);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchHackathonData();
+    }, [id]);
+
+    // Объединяем новые и существующие документы для отображения в UI
+    useEffect(() => {
+        if (existingDocuments.length > 0) {
+            setFormData(prev => ({
+                ...prev,
+                documents: [...existingDocuments, ...prev.documents.filter(doc => !(doc as any).isExisting)]
+            }));
+        }
+    }, [existingDocuments]);
+
+    // Валидация формы
     const validateForm = () => {
         const errors: HackathonFormErrors = {};
+
         if (!formData.name) {
             errors.name = "Название хакатона не может быть пустым";
         }
@@ -74,14 +193,16 @@ const HackathonDashboard: React.FC = () => {
             errors.description = "Описание хакатона не может быть пустым";
         }
 
-        if (formData.organizationId == 0) {
+        if (formData.organizationId === 0) {
             errors.organizationId = "Организация не может быть пустой";
         }
 
-        if (!formData.coverImage) {
+        // Проверяем изображение только если нет существующего логотипа
+        if (!formData.coverImage && !logoId) {
             errors.coverImage = "Изображение не может быть пустым";
         }
 
+        // Проверка дат
         if (!formData.regDateFrom) {
             errors.regDateFrom = "Дата не может быть пустой";
         }
@@ -106,11 +227,12 @@ const HackathonDashboard: React.FC = () => {
             errors.workDateTo = "Дата не может быть пустой";
         }
 
+        // Проверка размера команды
         if (!formData.minTeamSize) {
             errors.minTeamSize = "Размер команды не может быть пустым";
         }
 
-        if (formData.minTeamSize && formData.minTeamSize == 0) {
+        if (formData.minTeamSize && formData.minTeamSize === 0) {
             errors.minTeamSize = "Размер команды не может быть 0";
         }
 
@@ -118,14 +240,16 @@ const HackathonDashboard: React.FC = () => {
             errors.maxTeamSize = "Размер команды не может быть пустым";
         }
 
-        if (formData.maxTeamSize && formData.maxTeamSize == 0) {
+        if (formData.maxTeamSize && formData.maxTeamSize === 0) {
             errors.maxTeamSize = "Размер команды не может быть 0";
         }
 
+        // Проверка наличия этапов
         if (formData.stages.length === 0) {
             errors.stages = "Добавьте хотя бы один этап хакатона";
         }
 
+        // Проверка валидности через рефы
         const stagesValid = stagesRef.current?.validate() ?? false;
         if (!stagesValid) {
             errors.stagesInvalid = true;
@@ -146,6 +270,7 @@ const HackathonDashboard: React.FC = () => {
             errors.awardsInvalid = true;
         }
 
+        // Проверка наличия документов
         if (formData.documents.length === 0) {
             errors.documents = "Загрузите хотя бы один документ";
         }
@@ -153,30 +278,46 @@ const HackathonDashboard: React.FC = () => {
         return errors;
     };
 
-    const confirmPublish = async () => {
+    // Открытие модального окна подтверждения
+    const handleUpdateClick = () => {
+        setIsPublishModalOpen(true);
+    };
+
+    // Обработка подтверждения обновления
+    const confirmUpdate = async () => {
         setIsPublishModalOpen(false);
-        setCreateHackathonError(null);
+        setUpdateHackathonError(null);
 
         const validationErrors = validateForm();
         if (Object.keys(validationErrors).length > 0) {
             setFormErrors(validationErrors);
-            setCreateHackathonError("Пожалуйста, исправьте ошибки в форме перед публикацией хакатона");
+            setUpdateHackathonError("Пожалуйста, исправьте ошибки в форме перед сохранением изменений");
             return;
         }
 
-        setCreateHackathonLoading(true);
+        setUpdateHackathonLoading(true);
 
         try {
-            await hackathonAPI.create(formData);
-            navigate('/');
+            // const updateData = {
+            //     ...formData,
+            //     logoId: logoId, // Передаем ID существующего логотипа
+            //     existingDocumentIds: existingDocuments
+            //         .filter(doc => doc.isExisting)
+            //         .map(doc => doc.id)
+            // };
+            //
+            // // Вызываем API обновления
+            // await hackathonAPI.update(parseInt(id, 10), updateData);
+            // navigate(`/hackathon/${id}`);
         } catch (err) {
-            const errorMessage = (err as Error).message || "Ошибка при создании хакатона";
-            setCreateHackathonError(errorMessage);
+            const errorMessage = (err as Error).message || "Ошибка при обновлении хакатона";
+            setUpdateHackathonError(errorMessage);
         } finally {
-            setCreateHackathonLoading(false);
+            setUpdateHackathonLoading(false);
         }
     };
 
+    // Обработчики изменения значений полей формы
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const {name, value, type} = e.target;
         const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
@@ -224,6 +365,9 @@ const HackathonDashboard: React.FC = () => {
             coverImage: croppedImage
         }));
 
+        // Если загружаем новое изображение, сбрасываем ID старого
+        setLogoId(null);
+
         setFormErrors(prev => ({
             ...prev,
             coverImage: undefined
@@ -248,37 +392,52 @@ const HackathonDashboard: React.FC = () => {
         setFormData(prev => ({
             ...prev,
             technologies: tech
-        }))
-    }
+        }));
+    };
 
-    const handleOrganizationIdChange  = (option: Option) => {
+    const handleOrganizationIdChange = (option: Option) => {
         setFormData(prev => ({
             ...prev,
             organizationId: option.value
-        }))
+        }));
 
         setFormErrors(prev => ({
             ...prev,
             organizationId: undefined
         }));
-    }
+    };
 
     const handleFilesChange = (files: File[]) => {
+        // Фильтруем и оставляем только новые файлы (не существующие)
+        const newFiles = files.filter(file => !(file as any).isExisting);
+
+        // Выделяем существующие файлы из текущего списка документов
+        const currentExistingFiles = formData.documents.filter(file => (file as any).isExisting);
+
         setFormData(prev => ({
             ...prev,
-            documents: files
+            documents: [...currentExistingFiles, ...newFiles]
         }));
 
-        // Очищаем ошибку при загрузке файлов
         setFormErrors(prev => ({
             ...prev,
             documents: undefined
         }));
     };
 
+    // Если идет загрузка, показываем индикатор загрузки
+    if (isLoading) {
+        return (
+            <div className={classes.page_wrapper}>
+                <PageLabel size={'h3'}>Редактирование хакатона</PageLabel>
+                <Loader/>
+            </div>
+        );
+    }
+
     return (
         <div className={classes.page_wrapper}>
-            <PageLabel size={'h3'}>Создание хакатона</PageLabel>
+            <PageLabel size={'h3'}>Редактирование хакатона</PageLabel>
 
             {/* Блок 1: Основные данные */}
             <div className={classes.info_block}>
@@ -307,6 +466,7 @@ const HackathonDashboard: React.FC = () => {
                         />
 
                         <SelectSearch
+                            initialOption={initialOrganization}
                             label={"Выберите организацию"}
                             url={"organizations/my/options"}
                             onChange={handleOrganizationIdChange}
@@ -320,7 +480,7 @@ const HackathonDashboard: React.FC = () => {
                         <ImageUploader
                             onImageChange={handleImageCrop}
                             initialImage={formData.coverImage}
-                            required
+                            required={!logoId}
                             error={formErrors.coverImage}
                         />
                     </div>
@@ -457,52 +617,50 @@ const HackathonDashboard: React.FC = () => {
                     </div>
                 )}
 
-                <FileUpload
-                    label="Документы проекта"
-                    required
-                    value={formData.documents}
-                    onChange={handleFilesChange}
-                    acceptedFileTypes=".jpg,.jpeg,.png,.pdf,.doc,.docx"
-                    maxFileSize={5 * 1024 * 1024} // 5MB
-                    maxFiles={5}
-                    placeholder="Перетащите файлы сюда или нажмите для выбора"
-                    error={formErrors.documents}
-                />
+                {/*<FileUpload*/}
+                {/*    label="Документы проекта"*/}
+                {/*    required*/}
+                {/*    value={formData.documents}*/}
+                {/*    onChange={handleFilesChange}*/}
+                {/*    acceptedFileTypes=".jpg,.jpeg,.png,.pdf,.doc,.docx"*/}
+                {/*    maxFileSize={5 * 1024 * 1024} // 5MB*/}
+                {/*    maxFiles={5}*/}
+                {/*    placeholder="Перетащите файлы сюда или нажмите для выбора"*/}
+                {/*    error={formErrors.documents}*/}
+                {/*/>*/}
                 <div className={classes.file_help}>
                     <p>Загрузите важные документы: положение о проведении, правила участия, требования к проектам и т.д.</p>
                 </div>
             </div>
 
             {/* Отображаем ошибку в верхней части формы */}
-            {createHackathonError && (
+            {updateHackathonError && (
                 <div className={classes.error_container}>
-                    <Error>{createHackathonError}</Error>
+                    <Error>{updateHackathonError}</Error>
                 </div>
             )}
 
-            {/* Кнопка публикации */}
+            {/* Кнопка сохранения */}
             <div className={classes.publish_section}>
                 <Button
-                    onClick={handlePublishClick}
-                    loading={createHackathonLoading}
+                    onClick={handleUpdateClick}
+                    loading={updateHackathonLoading}
                 >
-                    Опубликовать хакатон
+                    Сохранить изменения
                 </Button>
             </div>
-
-
 
             {/* Модальное окно подтверждения */}
             <Modal
                 isOpen={isPublishModalOpen}
-                onConfirm={confirmPublish}
+                onConfirm={confirmUpdate}
                 onReject={() => setIsPublishModalOpen(false)}
-                title="Подтверждение публикации"
-                confirmText="Подтвердить"
+                title="Подтверждение изменений"
+                confirmText="Сохранить"
                 rejectText="Отмена"
             >
                 <p className={classes.modalText}>
-                    Вы уверены, что хотите опубликовать хакатон? После публикации изменить некоторые данные будет невозможно.
+                    Вы уверены, что хотите сохранить изменения в хакатоне?
                 </p>
             </Modal>
         </div>

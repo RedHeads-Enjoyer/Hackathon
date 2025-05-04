@@ -34,7 +34,6 @@ export interface HackathonFormData {
     minTeamSize: number;
     maxTeamSize: number;
     organizationId: number;
-    goals: string[];
     stages: Stage[];
     criteria: Criteria[];
     technologies: Option[];
@@ -99,12 +98,13 @@ export type FileShort = {
 };
 
 export type HackathonStep = {
-    id: number;
+    id: string;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-};
+}
+
 
 export type Award = {
     id: string;
@@ -134,6 +134,41 @@ export type HackathonFullData = {
 
     // Даты хакатона
     regDateFrom: string;  // ISO 8601 формат даты
+    regDateTo: string;
+    workDateFrom: string;
+    workDateTo: string;
+    evalDateFrom: string;
+    evalDateTo: string;
+
+    // Статус хакатона
+    status: number;
+
+    // Дополнительная информация
+    logoId: number | null;
+    totalAward: number;
+    minTeamSize: number;
+    maxTeamSize: number;
+    usersCount: number;
+
+    // Связанные сущности
+    files: FileShort[];
+    steps: HackathonStep[];
+    awards: Award[];
+    technologies: TechnologyShort[];
+    criteria: Criteria[];
+
+    hackathonRole: number;
+};
+
+export type HackathonFullEditData = {
+    id: number;
+    name: string;
+    description: string;
+    organizationId: number;
+    organizationName: string;
+
+    // Даты хакатона
+    regDateFrom: string;
     regDateTo: string;
     workDateFrom: string;
     workDateTo: string;

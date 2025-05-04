@@ -1,5 +1,11 @@
 import {request, requestFile} from "../../config.ts";
-import {HackathonFilterData, HackathonFormData, HackathonFullData, HackathonSearchData} from "./types.ts";
+import {
+    HackathonFilterData,
+    HackathonFormData,
+    HackathonFullData,
+    HackathonFullEditData,
+    HackathonSearchData
+} from "./types.ts";
 
 export const hackathonAPI = {
     create: async (data: HackathonFormData) => {
@@ -74,5 +80,7 @@ export const hackathonAPI = {
         return requestFile(fileId);
     },
     getFullById: async (hackathonId: number) =>
-        request<HackathonFullData>({method: 'GET', url: `hackathon/${hackathonId}`})
+        request<HackathonFullData>({method: 'GET', url: `hackathon/${hackathonId}`}),
+    getFullForEditById: async (hackathonId: number) =>
+        request<HackathonFullEditData>({method: 'GET', url: `hackathon/${hackathonId}/edit`})
 };

@@ -1,7 +1,6 @@
 // types.ts
 export interface Stage {
     id: string;
-    order: number;
     name: string;
     description: string;
     startDate: string;

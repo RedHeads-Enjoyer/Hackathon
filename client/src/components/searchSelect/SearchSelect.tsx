@@ -14,6 +14,7 @@ type SearchSelectPropsType = {
     required?: boolean;
     notFound: React.ReactNode;
     clearable?: boolean;
+    initialOption?: Option; // Начальное значение в виде объекта {value: number, label: string}
 }
 
 const SearchSelect = (props: SearchSelectPropsType) => {
@@ -23,12 +24,23 @@ const SearchSelect = (props: SearchSelectPropsType) => {
     const [searchError, setSearchError] = useState<string | null>(null)
     const [loading, setLoading] = useState<boolean>(false)
     const [isOpen, setIsOpen] = useState<boolean>(false)
-    // Flag to prevent search when programmatically setting text
     const skipSearchRef = useRef<boolean>(false);
+    const initializedRef = useRef<boolean>(false);
+    const userModifiedRef = useRef<boolean>(false); // Новый реф для отслеживания изменений пользователем
 
     const debounceTime = 300;
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    // Установка начального значения
+    useEffect(() => {
+        if (props.initialOption && !initializedRef.current) {
+            setSearch(props.initialOption.label);
+            setConfirmedText(props.initialOption.label);
+            props.onChange(props.initialOption); // Вызываем onChange с начальным значением
+            initializedRef.current = true;
+        }
+    }, [props.initialOption]);
 
     useEffect(() => {
         // Skip search if the flag is set
@@ -41,7 +53,8 @@ const SearchSelect = (props: SearchSelectPropsType) => {
             clearTimeout(timeoutIdRef.current);
         }
 
-        if (search.trim()) {
+        // Выполняем поиск только если текст был модифицирован пользователем
+        if (search.trim() && userModifiedRef.current) {
             timeoutIdRef.current = setTimeout(() => {
                 setLoading(true);
                 setSearchError(null);
@@ -107,15 +120,27 @@ const SearchSelect = (props: SearchSelectPropsType) => {
         }
 
         setIsOpen(false);
+        userModifiedRef.current = false; // Сбрасываем флаг модификации после выбора
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        skipSearchRef.current = false; // Make sure search happens for user input
-        setSearch(e.target.value);
+        const newValue = e.target.value;
+        skipSearchRef.current = false;
+        userModifiedRef.current = true; // Пользователь изменил текст
+        setSearch(newValue);
+
+        // Автоматически открывать выпадающий список при вводе
+        if (newValue.trim()) {
+            setIsOpen(true);
+        } else {
+            setIsOpen(false);
+        }
     };
 
     const handleInputFocus = () => {
-        if (search.trim()) {
+        // Открываем выпадающий список при фокусе только если пользователь
+        // уже изменил текст или поле пустое (без initialOption)
+        if (userModifiedRef.current && search.trim()) {
             setIsOpen(true);
         }
     };
@@ -137,7 +162,7 @@ const SearchSelect = (props: SearchSelectPropsType) => {
                 onBlur={() => {
                     setTimeout(() => {
                         if (!isOpen) {
-                            skipSearchRef.current = true; // Set flag to skip search
+                            skipSearchRef.current = true;
                             setSearch(confirmedText);
                         }
                     }, 150);

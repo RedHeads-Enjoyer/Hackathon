@@ -967,3 +967,161 @@ func (hc *HackathonController) UpdateTeam(c *gin.Context) {
 
 	c.JSON(http.StatusOK, updatedTeam) // Возвращаем обновлённую команду
 }
+
+func (hc *HackathonController) GetByIDEditFull(c *gin.Context) {
+	// Получаем ID хакатона из параметров URL
+	id := c.Param("hackathon_id")
+
+	// Идентификатор текущего пользователя
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+
+	userID := claims.UserID
+
+	// Загружаем хакатон со всеми связанными данными
+	var hackathon models.Hackathon
+	if err := hc.DB.Preload("Logo").
+		Preload("Files").
+		Preload("Steps").
+		Preload("Technologies").
+		Preload("Awards").
+		Preload("Criteria").
+		Preload("Organization").
+		First(&hackathon, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
+		return
+	}
+
+	// Получаем роль пользователя в хакатоне
+	var userHackathon models.BndUserHackathon
+	hackathonRole := 0 // 0 = не участник
+
+	err := hc.DB.Where("user_id = ? AND hackathon_id = ?", userID, hackathon.ID).
+		First(&userHackathon).Error
+
+	if err == nil {
+		hackathonRole = userHackathon.HackathonRole
+	}
+
+	// Проверяем права доступа
+	// Если хакатон не опубликован (статус != 1) и пользователь не организатор/администратор
+	if hackathon.Status != 1 && hackathonRole != 2 && hackathonRole != 3 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Нет доступа к хакатону"})
+		return
+	}
+
+	// Подсчитываем количество пользователей в хакатоне
+	var userCount int64
+	hc.DB.Model(&models.BndUserHackathon{}).
+		Where("hackathon_id = ? AND hackathon_role = 1", hackathon.ID).
+		Count(&userCount)
+
+	// Рассчитываем общую сумму наград
+	var totalAward float64
+	for _, award := range hackathon.Awards {
+		totalAward += award.MoneyAmount * float64(award.PlaceTo-award.PlaceFrom+1)
+	}
+
+	// Преобразуем файлы в DTO
+	filesDTOs := make([]fileDTO.GetShort, 0, len(hackathon.Files))
+	for _, file := range hackathon.Files {
+		filesDTOs = append(filesDTOs, fileDTO.GetShort{
+			ID:   file.ID,
+			Name: file.Name,
+			Type: file.Type,
+			Size: file.Size,
+		})
+	}
+
+	// Преобразуем шаги в DTO
+	stepsDTOs := make([]hackathonStepDTO.Get, 0, len(hackathon.Steps))
+	for _, step := range hackathon.Steps {
+		stepsDTOs = append(stepsDTOs, hackathonStepDTO.Get{
+			ID:          step.ID,
+			Name:        step.Name,
+			Description: step.Description,
+			StartDate:   step.StartDate,
+			EndDate:     step.EndDate,
+		})
+	}
+
+	// Преобразуем награды в DTO
+	awardsDTOs := make([]awardDTO.Get, 0, len(hackathon.Awards))
+	for _, award := range hackathon.Awards {
+		awardsDTOs = append(awardsDTOs, awardDTO.Get{
+			ID:           award.ID,
+			MoneyAmount:  award.MoneyAmount,
+			Additionally: award.Additionally,
+			PlaceFrom:    award.PlaceFrom,
+			PlaceTo:      award.PlaceTo,
+		})
+	}
+
+	// Преобразуем технологии в DTO
+	techDTOs := make([]technologyDTO.GetShort, 0, len(hackathon.Technologies))
+	for _, tech := range hackathon.Technologies {
+		techDTOs = append(techDTOs, technologyDTO.GetShort{
+			ID:   tech.ID,
+			Name: tech.Name,
+		})
+	}
+
+	// Преобразуем критерии в DTO
+	criteriaDTOs := make([]criteriaDTO.Get, 0, len(hackathon.Criteria))
+	for _, criteria := range hackathon.Criteria {
+		criteriaDTOs = append(criteriaDTOs, criteriaDTO.Get{
+			ID:       criteria.ID,
+			Name:     criteria.Name,
+			MaxScore: criteria.MaxScore,
+			MinScore: criteria.MinScore,
+		})
+	}
+
+	// Создаем DTO с полной информацией о хакатоне
+	fullInfo := hackathonDTO.FullBaseEditInfo{
+		ID:               hackathon.ID,
+		Name:             hackathon.Name,
+		Description:      hackathon.Description,
+		OrganizationId:   hackathon.Organization.ID,
+		OrganizationName: hackathon.Organization.LegalName,
+
+		RegDateFrom:  hackathon.RegDateFrom,
+		RegDateTo:    hackathon.RegDateTo,
+		WorkDateFrom: hackathon.WorkDateFrom,
+		WorkDateTo:   hackathon.WorkDateTo,
+		EvalDateFrom: hackathon.EvalDateFrom,
+		EvalDateTo:   hackathon.EvalDateTo,
+
+		Status: hackathon.Status,
+
+		LogoId:      0, // По умолчанию 0, обновим если логотип есть
+		TotalAward:  totalAward,
+		MinTeamSize: hackathon.MinTeamSize,
+		MaxTeamSize: hackathon.MaxTeamSize,
+		UserCount:   int(userCount),
+
+		Files:        filesDTOs,
+		Steps:        stepsDTOs,
+		Awards:       awardsDTOs,
+		Technologies: techDTOs,
+		Criteria:     criteriaDTOs,
+
+		HackathonRole: hackathonRole,
+	}
+
+	// Установим LogoId, если логотип есть
+	if hackathon.Logo != nil {
+		fullInfo.LogoId = hackathon.Logo.ID
+	}
+
+	c.JSON(http.StatusOK, fullInfo)
+}
