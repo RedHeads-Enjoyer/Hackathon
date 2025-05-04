@@ -7,6 +7,7 @@ import {hackathonAPI} from "./hackathonAPI.ts";
 import Loader from "../../components/loader/Loader.tsx";
 import Error from "../../components/error/Error.tsx";
 import HackathonItem from "./components/HackathonItem.tsx";
+import {useNavigate} from "react-router-dom";
 
 
 const HackathonList = () => {
@@ -35,6 +36,8 @@ const HackathonList = () => {
     const [searchLoading, setSearhLoading] = useState<boolean>(true)
     const [searchError, setSearchError] = useState<null | string>()
     const [filterData, setFilterData] = useState<HackathonFilterData>(initialFilterData)
+
+    const navigate = useNavigate()
 
     useEffect(() => {
         searchHackathons()
@@ -98,6 +101,10 @@ const HackathonList = () => {
         });
     };
 
+    const handleHackathonClick = (id : number) => {
+        navigate(`/hackathon/${id}`)
+    }
+
     const handleResetFilters = () => {
         setFilterData(initialFilterData)
     }
@@ -119,7 +126,10 @@ const HackathonList = () => {
                     <div className={classes.hackathonsGrid}>
                         {hackathons.list.map((hack) => (
                             <div key={`hack_${hack.id}`} className={classes.hackathonCard}>
-                                <HackathonItem hackathon={hack} />
+                                <HackathonItem
+                                    hackathon={hack}
+                                    onClick={handleHackathonClick}
+                                />
                             </div>
                         ))}
                     </div>

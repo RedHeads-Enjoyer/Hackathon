@@ -42,21 +42,6 @@ export interface HackathonFormData {
     documents: File[];
 }
 
-export interface Criteria {
-    id: string;
-    name: string;
-    minScore: number;
-    maxScore: number;
-}
-
-export interface Award {
-    id: string;
-    placeFrom: number;
-    placeTo: number;
-    moneyAmount: number,
-    additionally: string;
-}
-
 export type FilterUpdate = {
     name: keyof HackathonFilterData;
     value: any;
@@ -105,3 +90,72 @@ export type Option = {
     value: number
     label: string
 }
+
+export type FileShort = {
+    id: number;
+    name: string;
+    type: string;
+    size: number;
+};
+
+export type HackathonStep = {
+    id: number;
+    name: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+};
+
+export type Award = {
+    id: number;
+    moneyAmount: number;
+    additionally: string;
+    placeFrom: number;
+    placeTo: number;
+};
+
+export type TechnologyShort = {
+    id: number;
+    name: string;
+};
+
+export type Criteria = {
+    id: number;
+    name: string;
+    maxScore: number;
+    minScore: number;
+};
+
+export type HackathonFullData = {
+    id: number;
+    name: string;
+    description: string;
+    organizationName: string;
+
+    // Даты хакатона
+    regDateFrom: string;  // ISO 8601 формат даты
+    regDateTo: string;
+    workDateFrom: string;
+    workDateTo: string;
+    evalDateFrom: string;
+    evalDateTo: string;
+
+    // Статус хакатона
+    status: number;
+
+    // Дополнительная информация
+    logoId: number | null;
+    totalAward: number;
+    minTeamSize: number;
+    maxTeamSize: number;
+    usersCount: number;
+
+    // Связанные сущности
+    files: FileShort[];
+    steps: HackathonStep[];
+    awards: Award[];
+    technologies: TechnologyShort[];
+    criteria: Criteria[];
+
+    hackathonRole: number;
+};
