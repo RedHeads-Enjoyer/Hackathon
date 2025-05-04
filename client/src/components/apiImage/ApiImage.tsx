@@ -32,7 +32,6 @@ const ApiImage: React.FC<ApiImageProps> = ({
 
         const loadImage = async () => {
             try {
-                console.log(`Загрузка файла с ID: ${fileId}`);
                 const blob = await hackathonAPI.getBlobFile(Number(fileId));
 
                 const objectUrl = URL.createObjectURL(blob);
@@ -43,7 +42,6 @@ const ApiImage: React.FC<ApiImageProps> = ({
                     setError(false);
                 }
             } catch (err) {
-                console.error('Ошибка при загрузке изображения:', err);
                 if (isMounted) {
                     setLoading(false);
                     setError(true);

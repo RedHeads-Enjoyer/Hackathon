@@ -612,6 +612,7 @@ func (hc *HackathonController) GetByIDFull(c *gin.Context) {
 	stepsDTOs := make([]hackathonStepDTO.Get, 0, len(hackathon.Steps))
 	for _, step := range hackathon.Steps {
 		stepsDTOs = append(stepsDTOs, hackathonStepDTO.Get{
+			ID:          step.ID,
 			Name:        step.Name,
 			Description: step.Description,
 			StartDate:   step.StartDate,
@@ -623,6 +624,7 @@ func (hc *HackathonController) GetByIDFull(c *gin.Context) {
 	awardsDTOs := make([]awardDTO.Get, 0, len(hackathon.Awards))
 	for _, award := range hackathon.Awards {
 		awardsDTOs = append(awardsDTOs, awardDTO.Get{
+			ID:           award.ID,
 			MoneyAmount:  award.MoneyAmount,
 			Additionally: award.Additionally,
 			PlaceFrom:    award.PlaceFrom,
@@ -634,6 +636,7 @@ func (hc *HackathonController) GetByIDFull(c *gin.Context) {
 	techDTOs := make([]technologyDTO.GetShort, 0, len(hackathon.Technologies))
 	for _, tech := range hackathon.Technologies {
 		techDTOs = append(techDTOs, technologyDTO.GetShort{
+			ID:   tech.ID,
 			Name: tech.Name,
 		})
 	}
@@ -642,6 +645,7 @@ func (hc *HackathonController) GetByIDFull(c *gin.Context) {
 	criteriaDTOs := make([]criteriaDTO.Get, 0, len(hackathon.Criteria))
 	for _, criteria := range hackathon.Criteria {
 		criteriaDTOs = append(criteriaDTOs, criteriaDTO.Get{
+			ID:       criteria.ID,
 			Name:     criteria.Name,
 			MaxScore: criteria.MaxScore,
 			MinScore: criteria.MinScore,

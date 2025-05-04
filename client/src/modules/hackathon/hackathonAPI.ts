@@ -74,5 +74,5 @@ export const hackathonAPI = {
         return requestFile(fileId);
     },
     getFullById: async (hackathonId: number) =>
-        request<HackathonFullData>({method: 'GET', url: `hackathons/${hackathonId}`})
+        request<HackathonFullData>({method: 'GET', url: `hackathon/${hackathonId}`})
 };

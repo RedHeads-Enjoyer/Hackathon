@@ -1,12 +1,13 @@
 import classes from "./hackathon.module.css";
 import { HackathonFullData } from "./types.ts";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { hackathonAPI } from "./hackathonAPI.ts";
 import Error from "../../components/error/Error.tsx";
 import ApiImage from "../../components/apiImage/ApiImage.tsx";
 import { useParams, useNavigate } from "react-router-dom";
-import {HackathonRole, HackathonStatus } from "./storage.ts";
+import { HackathonRole, HackathonStatus } from "./storage.ts";
 import { formatDate } from "date-fns";
+import { ru } from 'date-fns/locale';
 
 const StatusBadge = ({ status }: { status: number }) => {
     let statusText = '';
@@ -37,30 +38,21 @@ const StatusBadge = ({ status }: { status: number }) => {
     return <span className={`${classes.status} ${statusClass}`}>{statusText}</span>;
 };
 
-// Определение текущей фазы хакатона
-const getCurrentPhase = (hackathon: HackathonFullData) => {
-    const now = new Date();
-    const regFrom = new Date(hackathon.regDateFrom);
-    const regTo = new Date(hackathon.regDateTo);
-    const workFrom = new Date(hackathon.workDateFrom);
-    const workTo = new Date(hackathon.workDateTo);
-    const evalFrom = new Date(hackathon.evalDateFrom);
-    const evalTo = new Date(hackathon.evalDateTo);
+// Безопасное форматирование даты
+const safeFormatDate = (dateString: string | Date | null | undefined, formatStr: string = 'dd.MM.yyyy'): string => {
+    if (!dateString) return 'не указано';
 
-    if (now < regFrom) {
-        return { phase: 'upcoming', text: 'Скоро открытие' };
-    } else if (now >= regFrom && now <= regTo) {
-        return { phase: 'registration', text: 'Идет регистрация' };
-    } else if (now > regTo && now < workFrom) {
-        return { phase: 'preparation', text: 'Подготовка к старту' };
-    } else if (now >= workFrom && now <= workTo) {
-        return { phase: 'development', text: 'Разработка проектов' };
-    } else if (now > workTo && now < evalFrom) {
-        return { phase: 'submission', text: 'Прием работ' };
-    } else if (now >= evalFrom && now <= evalTo) {
-        return { phase: 'evaluation', text: 'Оценка проектов' };
-    } else {
-        return { phase: 'completed', text: 'Завершен' };
+    try {
+        const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+
+        if (isNaN(date.getTime())) {
+            return 'некорректная дата';
+        }
+
+        return formatDate(date, formatStr, { locale: ru });
+    } catch (error) {
+        console.error('Ошибка форматирования даты:', error);
+        return 'некорректная дата';
     }
 };
 
@@ -90,11 +82,75 @@ const OpenHackathon = () => {
             .finally(() => setLoadingHackathon(false));
     }, [id]);
 
+    // Определение статуса, фазы и прогресса хакатона
+    const { phase, text, status, progress } = useMemo(() => {
+        if (!hackathon) return { phase: '', text: '', status: '', progress: 0 };
+
+        const now = new Date();
+        const regStart = new Date(hackathon.regDateFrom);
+        const regEnd = new Date(hackathon.regDateTo);
+        const workStart = new Date(hackathon.workDateFrom);
+        const workEnd = new Date(hackathon.workDateTo);
+        const evalStart = new Date(hackathon.evalDateFrom);
+        const evalEnd = new Date(hackathon.evalDateTo);
+
+        let phase = '';
+        let text = '';
+        let status = '';
+        let progress = 0;
+
+        if (now < regStart) {
+            phase = 'upcoming';
+            text = 'Скоро открытие';
+            status = 'upcoming';
+            progress = 0;
+        } else if (now >= regStart && now <= regEnd) {
+            phase = 'registration';
+            text = 'Идет регистрация';
+            status = 'registration';
+            const totalRegTime = regEnd.getTime() - regStart.getTime();
+            const elapsedRegTime = now.getTime() - regStart.getTime();
+            progress = Math.min(25, Math.round((elapsedRegTime / totalRegTime) * 25));
+        } else if (now > regEnd && now < workStart) {
+            phase = 'preparation';
+            text = 'Подготовка к старту';
+            status = 'registration';
+            progress = 25;
+        } else if (now >= workStart && now <= workEnd) {
+            phase = 'development';
+            text = 'Разработка проектов';
+            status = 'development';
+            const totalWorkTime = workEnd.getTime() - workStart.getTime();
+            const elapsedWorkTime = now.getTime() - workStart.getTime();
+            progress = Math.min(75, 25 + Math.round((elapsedWorkTime / totalWorkTime) * 50));
+        } else if (now > workEnd && now < evalStart) {
+            phase = 'submission';
+            text = 'Прием работ';
+            status = 'development';
+            progress = 75;
+        } else if (now >= evalStart && now <= evalEnd) {
+            phase = 'evaluation';
+            text = 'Оценка проектов';
+            status = 'evaluation';
+            const totalEvalTime = evalEnd.getTime() - evalStart.getTime();
+            const elapsedEvalTime = now.getTime() - evalStart.getTime();
+            progress = Math.min(100, 75 + Math.round((elapsedEvalTime / totalEvalTime) * 25));
+        } else {
+            phase = 'completed';
+            text = 'Завершен';
+            status = 'completed';
+            progress = 100;
+        }
+
+        return { phase, text, status, progress };
+    }, [hackathon]);
+
     const handleRegister = async () => {
         if (!hackathon) return;
 
         try {
             setRegistering(true);
+            // Здесь должен быть вызов API для регистрации
             // Перезагружаем данные хакатона, чтобы обновить hackathonRole
             const updatedData = await hackathonAPI.getFullById(hackathon.id);
             setHackathon(updatedData);
@@ -116,7 +172,6 @@ const OpenHackathon = () => {
         if (hackathon.status !== HackathonStatus.PUBLISHED) return false;
 
         // Проверка текущей фазы (должна быть регистрация)
-        const { phase } = getCurrentPhase(hackathon);
         return phase === 'registration';
     };
 
@@ -139,121 +194,118 @@ const OpenHackathon = () => {
         return <Error>Хакатон не найден</Error>;
     }
 
-    const currentPhase = getCurrentPhase(hackathon);
-
-    // Расчет общего призового фонда
-    const totalPrize = hackathon.totalAward;
+    // Форматирование суммы призового фонда
+    const formattedAward = new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'RUB',
+        maximumFractionDigits: 0,
+    }).format(hackathon.totalAward);
 
     return (
         <div className={classes.pageWrapper}>
-            {/* Шапка хакатона */}
-            <div className={classes.heroSection}>
-                <div className={classes.heroContent}>
-                    <div className={classes.logoContainer}>
-                        <ApiImage
-                            fileId={hackathon.logoId}
-                            alt={hackathon.name}
-                            className={classes.logo}
-                            placeholderContent={
-                                <div className={classes.logoPlaceholder}>
-                                    {hackathon.name.substring(0, 2).toUpperCase()}
-                                </div>
-                            }
-                        />
-                    </div>
-
-                    <div className={classes.heroInfo}>
-                        <div className={classes.titleRow}>
-                            <h1 className={classes.title}>{hackathon.name}</h1>
-                            <StatusBadge status={hackathon.status} />
+            {/* Верхняя полоса: три отдельных блока */}
+            <div className={classes.topRow}>
+                {/* Блок 1: Основная информация */}
+                <div className={classes.block}>
+                    <div className={classes.heroSection}>
+                        <div className={classes.logoContainer}>
+                            <ApiImage
+                                fileId={hackathon.logoId}
+                                alt={hackathon.name}
+                                className={classes.logo}
+                                placeholderContent={
+                                    <div className={classes.logoPlaceholder}>
+                                        {hackathon.name.substring(0, 2).toUpperCase()}
+                                    </div>
+                                }
+                            />
                         </div>
 
-                        <div className={classes.organizationInfo}>
-                            <span className={classes.label}>Организатор:</span> {hackathon.organizationName}
-                        </div>
-
-                        <div className={classes.phaseIndicator}>
-              <span className={`${classes.phaseLabel} ${classes[`phase_${currentPhase.phase}`]}`}>
-                {currentPhase.text}
-              </span>
-                        </div>
-
-                        {hackathon.hackathonRole === HackathonRole.NOT_PARTICIPANT ? (
-                            <div className={classes.registrationBlock}>
-                                <button
-                                    className={classes.registerButton}
-                                    disabled={!canRegister() || registering}
-                                    onClick={handleRegister}
-                                >
-                                    {registering ? 'Регистрация...' : 'Зарегистрироваться'}
-                                </button>
-                                {!canRegister() && currentPhase.phase !== 'registration' && (
-                                    <p className={classes.registrationNote}>
-                                        Регистрация {currentPhase.phase === 'upcoming' ? 'ещё не началась' : 'уже завершена'}
-                                    </p>
-                                )}
+                        <div className={classes.heroInfo}>
+                            <div className={classes.titleRow}>
+                                <h1 className={classes.title}>{hackathon.name}</h1>
+                                <StatusBadge status={hackathon.status} />
                             </div>
-                        ) : (
-                            <div className={classes.participantBlock}>
-                                <div className={classes.participantStatus}>
-                                    {hackathon.hackathonRole === HackathonRole.PARTICIPANT && 'Вы — участник этого хакатона'}
-                                    {hackathon.hackathonRole === HackathonRole.MENTOR && 'Вы — ментор этого хакатона'}
-                                    {hackathon.hackathonRole === HackathonRole.OWNER && 'Вы — организатор этого хакатона'}
-                                </div>
 
-                                <button
-                                    className={classes.dashboardButton}
-                                    onClick={() => navigate(`/hackathon/${hackathon.id}/dashboard`)}
-                                >
-                                    Перейти в личный кабинет
-                                </button>
+                            <div className={classes.organizationInfo}>
+                                <span className={classes.label}>Организатор:</span> {hackathon.organizationName}
                             </div>
-                        )}
+
+                            {/* Прогресс хакатона */}
+                            <div className={classes.progressContainer}>
+                                <div className={classes.progressLabel}>
+                                    <span>{text}</span>
+                                    <span className={classes.progressPercent}>{progress}%</span>
+                                </div>
+                                <div className={classes.progressBar}>
+                                    <div
+                                        className={`${classes.progressFill} ${classes[`progress_${status}`]}`}
+                                        style={{ width: `${progress}%` }}
+                                    />
+                                </div>
+                            </div>
+
+                            {hackathon.hackathonRole === HackathonRole.NOT_PARTICIPANT ? (
+                                <div className={classes.registrationBlock}>
+                                    <button
+                                        className={classes.registerButton}
+                                        disabled={!canRegister() || registering}
+                                        onClick={handleRegister}
+                                    >
+                                        {registering ? 'Регистрация...' : 'Зарегистрироваться'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className={classes.participantBlock}>
+                                    <div className={classes.participantStatus}>
+                                        {hackathon.hackathonRole === HackathonRole.PARTICIPANT && 'Вы — участник этого хакатона'}
+                                        {hackathon.hackathonRole === HackathonRole.MENTOR && 'Вы — ментор этого хакатона'}
+                                        {hackathon.hackathonRole === HackathonRole.OWNER && 'Вы — организатор этого хакатона'}
+                                    </div>
+
+                                    <button
+                                        className={classes.dashboardButton}
+                                        onClick={() => navigate(`/hackathon/${hackathon.id}/dashboard`)}
+                                    >
+                                        Перейти в личный кабинет
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Основная информация */}
-            <div className={classes.contentContainer}>
-                {/* Описание и сроки */}
-                <div className={classes.mainSection}>
-                    <div className={classes.descriptionSection}>
-                        <h2 className={classes.sectionTitle}>О хакатоне</h2>
-                        <div className={classes.description}>
-                            {hackathon.description || 'Описание не предоставлено'}
-                        </div>
-                    </div>
-
-                    <div className={classes.datesSection}>
-                        <h2 className={classes.sectionTitle}>Сроки проведения</h2>
-
+                {/* Блок 2: Сроки */}
+                <div className={classes.block}>
+                    <div className={classes.datesBlock}>
+                        <h2 className={classes.blockTitle}>Сроки проведения</h2>
                         <div className={classes.timeline}>
-                            <div className={`${classes.timelineItem} ${currentPhase.phase === 'registration' ? classes.activePhase : ''}`}>
+                            <div className={`${classes.timelineItem} ${phase === 'registration' ? classes.activePhase : ''}`}>
                                 <div className={classes.timelineIcon}>1</div>
                                 <div className={classes.timelineContent}>
                                     <h3 className={classes.timelineTitle}>Регистрация</h3>
                                     <div className={classes.timelineDates}>
-                                        {formatDate(hackathon.regDateFrom)} — {formatDate(hackathon.regDateTo)}
+                                        {safeFormatDate(hackathon.regDateFrom)} — {safeFormatDate(hackathon.regDateTo)}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className={`${classes.timelineItem} ${currentPhase.phase === 'development' ? classes.activePhase : ''}`}>
+                            <div className={`${classes.timelineItem} ${phase === 'development' ? classes.activePhase : ''}`}>
                                 <div className={classes.timelineIcon}>2</div>
                                 <div className={classes.timelineContent}>
                                     <h3 className={classes.timelineTitle}>Разработка</h3>
                                     <div className={classes.timelineDates}>
-                                        {formatDate(hackathon.workDateFrom)} — {formatDate(hackathon.workDateTo)}
+                                        {safeFormatDate(hackathon.workDateFrom)} — {safeFormatDate(hackathon.workDateTo)}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className={`${classes.timelineItem} ${currentPhase.phase === 'evaluation' ? classes.activePhase : ''}`}>
+                            <div className={`${classes.timelineItem} ${phase === 'evaluation' ? classes.activePhase : ''}`}>
                                 <div className={classes.timelineIcon}>3</div>
                                 <div className={classes.timelineContent}>
-                                    <h3 className={classes.timelineTitle}>Оценка проектов</h3>
+                                    <h3 className={classes.timelineTitle}>Оценка</h3>
                                     <div className={classes.timelineDates}>
-                                        {formatDate(hackathon.evalDateFrom)} — {formatDate(hackathon.evalDateTo)}
+                                        {safeFormatDate(hackathon.evalDateFrom)} — {safeFormatDate(hackathon.evalDateTo)}
                                     </div>
                                 </div>
                             </div>
@@ -261,39 +313,118 @@ const OpenHackathon = () => {
                     </div>
                 </div>
 
-                {/* Раздел с технологиями */}
-                <div className={classes.secondarySection}>
-                    <h2 className={classes.sectionTitle}>Технологии</h2>
-
-                    <div className={classes.technologiesContainer}>
-                        {hackathon.technologies.length > 0 ? (
-                            <div className={classes.tagsList}>
-                                {hackathon.technologies.map(tech => (
-                                    <span key={tech.id} className={classes.tag}>{tech.name}</span>
-                                ))}
+                {/* Блок 3: Статистика */}
+                <div className={classes.block}>
+                    <div className={classes.statsBlock}>
+                        <h2 className={classes.blockTitle}>Информация</h2>
+                        <div className={classes.statsContainer}>
+                            <div className={classes.statItem}>
+                                <div className={classes.statIcon}>👥</div>
+                                <div className={classes.statContent}>
+                                    <div className={classes.statValue}>{hackathon.usersCount}</div>
+                                    <div className={classes.statLabel}>Участников</div>
+                                </div>
                             </div>
-                        ) : (
-                            <p className={classes.emptyState}>Технологии не указаны</p>
-                        )}
+
+                            <div className={classes.statItem}>
+                                <div className={classes.statIcon}>👨‍💻</div>
+                                <div className={classes.statContent}>
+                                    <div className={classes.statValue}>
+                                        {hackathon.minTeamSize === hackathon.maxTeamSize
+                                            ? `${hackathon.minTeamSize}`
+                                            : `${hackathon.minTeamSize}-${hackathon.maxTeamSize}`}
+                                    </div>
+                                    <div className={classes.statLabel}>Размер команды</div>
+                                </div>
+                            </div>
+
+                            <div className={classes.statItem}>
+                                <div className={classes.statIcon}>🏆</div>
+                                <div className={classes.statContent}>
+                                    <div className={classes.statValue}>{formattedAward}</div>
+                                    <div className={classes.statLabel}>Призовой фонд</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Вторая линия: Технологии */}
+            <div className={classes.technologiesSection}>
+                <h2 className={classes.sectionTitle}>Технологии</h2>
+                <div className={classes.technologiesContainer}>
+                    {hackathon.technologies.length > 0 ? (
+                        <div className={classes.tagsList}>
+                            {hackathon.technologies.map(tech => (
+                                <span key={tech.id} className={classes.tag}>{tech.name}</span>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className={classes.emptyState}>Технологии не указаны</p>
+                    )}
+                </div>
+            </div>
+
+            {/* Третья линия: О хакатоне и этапы */}
+            <div className={classes.infoLine}>
+                {/* Описание хакатона */}
+                <div className={classes.section}>
+                    <h2 className={classes.sectionTitle}>О хакатоне</h2>
+                    <div className={classes.description}>
+                        {hackathon.description || 'Описание не предоставлено'}
                     </div>
                 </div>
 
-                {/* Раздел с наградами */}
-                <div className={classes.prizesSection}>
-                    <h2 className={classes.sectionTitle}>Призовой фонд</h2>
+                {/* Этапы хакатона */}
+                {hackathon.steps.length > 0 ? (
+                    <div className={classes.section}>
+                        <h2 className={classes.sectionTitle}>Этапы хакатона</h2>
+                        <div className={classes.stepsContainer}>
+                            {hackathon.steps.map((step, index) => (
+                                <div key={step.id} className={classes.stepCard}>
+                                    <div className={classes.stepHeader}>
+                                        <div className={classes.stepNumber}>{index + 1}</div>
+                                        <h3 className={classes.stepTitle}>{step.name}</h3>
+                                    </div>
 
-                    <div className={classes.prizesContainer}>
-                        <div className={classes.totalPrize}>
-              <span className={classes.totalPrizeAmount}>
-                {new Intl.NumberFormat('ru-RU', {
-                    style: 'currency',
-                    currency: 'RUB',
-                    maximumFractionDigits: 0
-                }).format(totalPrize)}
-              </span>
-                            <span className={classes.totalPrizeLabel}>Общий призовой фонд</span>
+                                    <div className={classes.stepDates}>
+                                        {safeFormatDate(step.startDate)} — {safeFormatDate(step.endDate)}
+                                    </div>
+
+                                    {step.description && (
+                                        <div className={classes.stepDescription}>{step.description}</div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
+                    </div>
+                ) : null}
+            </div>
 
+            {/* Четвертая линия: Остальные секции */}
+            <div className={classes.remainingSections}>
+                {/* Критерии оценки */}
+                {hackathon.criteria.length > 0 && (
+                    <div className={classes.section}>
+                        <h2 className={classes.sectionTitle}>Критерии оценки</h2>
+                        <div className={classes.criteriaContainer}>
+                            {hackathon.criteria.map(criterion => (
+                                <div key={criterion.id} className={classes.criterionCard}>
+                                    <h3 className={classes.criterionTitle}>{criterion.name}</h3>
+                                    <div className={classes.criterionScore}>
+                                        {criterion.minScore} - {criterion.maxScore} баллов
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Призы */}
+                {hackathon.awards.length > 0 && (
+                    <div className={classes.section}>
+                        <h2 className={classes.sectionTitle}>Призы</h2>
                         <div className={classes.awardsList}>
                             {hackathon.awards.map(award => (
                                 <div key={award.id} className={classes.awardCard}>
@@ -316,86 +447,12 @@ const OpenHackathon = () => {
                             ))}
                         </div>
                     </div>
-                </div>
-
-                {/* Условия участия */}
-                <div className={classes.conditionsSection}>
-                    <h2 className={classes.sectionTitle}>Условия участия</h2>
-
-                    <div className={classes.conditionsContainer}>
-                        <div className={classes.conditionCard}>
-                            <div className={classes.conditionIcon}>👥</div>
-                            <div className={classes.conditionContent}>
-                                <h3 className={classes.conditionTitle}>Размер команды</h3>
-                                <div className={classes.conditionValue}>
-                                    {hackathon.minTeamSize === hackathon.maxTeamSize
-                                        ? `${hackathon.minTeamSize} человек`
-                                        : `От ${hackathon.minTeamSize} до ${hackathon.maxTeamSize} человек`}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className={classes.conditionCard}>
-                            <div className={classes.conditionIcon}>👨‍💻</div>
-                            <div className={classes.conditionContent}>
-                                <h3 className={classes.conditionTitle}>Участников</h3>
-                                <div className={classes.conditionValue}>
-                                    {hackathon.usersCount} человек
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Раздел с этапами */}
-                {hackathon.steps.length > 0 && (
-                    <div className={classes.stepsSection}>
-                        <h2 className={classes.sectionTitle}>Этапы хакатона</h2>
-
-                        <div className={classes.stepsContainer}>
-                            {hackathon.steps.map((step, index) => (
-                                <div key={step.id} className={classes.stepCard}>
-                                    <div className={classes.stepHeader}>
-                                        <div className={classes.stepNumber}>{index + 1}</div>
-                                        <h3 className={classes.stepTitle}>{step.name}</h3>
-                                    </div>
-
-                                    <div className={classes.stepDates}>
-                                        {formatDate(step.startDate)} — {formatDate(step.endDate)}
-                                    </div>
-
-                                    {step.description && (
-                                        <div className={classes.stepDescription}>{step.description}</div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Критерии оценки */}
-                {hackathon.criteria.length > 0 && (
-                    <div className={classes.criteriaSection}>
-                        <h2 className={classes.sectionTitle}>Критерии оценки</h2>
-
-                        <div className={classes.criteriaContainer}>
-                            {hackathon.criteria.map(criterion => (
-                                <div key={criterion.id} className={classes.criterionCard}>
-                                    <h3 className={classes.criterionTitle}>{criterion.name}</h3>
-                                    <div className={classes.criterionScore}>
-                                        {criterion.minScore} - {criterion.maxScore} баллов
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                 )}
 
                 {/* Файлы */}
                 {hackathon.files.length > 0 && (
-                    <div className={classes.filesSection}>
+                    <div className={classes.section}>
                         <h2 className={classes.sectionTitle}>Материалы</h2>
-
                         <div className={classes.filesContainer}>
                             {hackathon.files.map(file => (
                                 <div key={file.id} className={classes.fileCard} onClick={() => hackathonAPI.getBlobFile(file.id)}>

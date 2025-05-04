@@ -474,7 +474,7 @@
 
 .statItem {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     flex: 1;
 }
@@ -592,5 +592,489 @@
     .hackathonsGrid {
         grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
         margin: 0 auto;
+    }
+}
+
+/* Основной контейнер страницы */
+/* Основной контейнер страницы */
+.pageWrapper {
+    padding: 20px;
+    background-color: var(--dark-bg-color);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* Верхняя полоса - сетка из трех блоков */
+.topRow {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 20px;
+}
+
+/* Общие стили для блоков */
+.block {
+    border-radius: 12px;
+    border: 1px solid var(--input-border-color);
+    background-color: var(--card-bg-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+}
+
+/* Шапка хакатона */
+.heroSection {
+    display: flex;
+    gap: 20px;
+}
+
+.logoContainer {
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--input-bg-color);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.logoPlaceholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--accent-dark-color), var(--accent-color));
+    color: var(--dark-text-color);
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.heroInfo {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.titleRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.title {
+    color: var(--light-text-color);
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.status {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.statusActive {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: var(--success-color);
+}
+
+.statusDraft, .statusArchived, .statusUnknown {
+    background-color: rgba(100, 100, 100, 0.1);
+    color: var(--muted-text-color);
+}
+
+.statusBanned {
+    background-color: rgba(244, 67, 54, 0.15);
+    color: #f44336;
+}
+
+.organizationInfo {
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.label {
+    color: var(--secondary-text-color);
+    margin-right: 5px;
+}
+
+/* Прогресс-бар */
+.progressContainer {
+    margin-bottom: 16px;
+}
+
+.progressLabel {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: var(--secondary-text-color);
+}
+
+.progressPercent {
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
+.progressBar {
+    height: 6px;
+    background-color: var(--input-bg-color);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress_upcoming, .progress_registration {
+    background-color: var(--accent-color);
+}
+
+.progress_development {
+    background-color: var(--button-warning-color);
+}
+
+.progress_evaluation {
+    background-color: #9b59b6;
+}
+
+.progress_completed {
+    background-color: var(--success-color);
+}
+
+/* Блок дат */
+.datesBlock {
+    display: flex;
+    flex-direction: column;
+}
+
+.blockTitle {
+    color: var(--accent-color);
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--input-border-color);
+}
+
+/* Таймлайн */
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.timelineItem {
+    display: flex;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 8px;
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--input-border-color);
+}
+
+.timelineIcon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--input-bg-color);
+    color: var(--light-text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 12px;
+    border: 1px solid var(--input-border-color);
+}
+
+.activePhase {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-left: 4px solid var(--accent-color);
+}
+
+.activePhase .timelineIcon {
+    background-color: var(--accent-color);
+    color: var(--dark-text-color);
+    border: none;
+}
+
+.timelineContent {
+    flex: 1;
+}
+
+.timelineTitle {
+    margin: 0 0 2px;
+    font-size: 13px;
+    color: var(--light-text-color);
+    font-weight: 500;
+}
+
+.timelineDates {
+    font-size: 12px;
+    color: var(--secondary-text-color);
+}
+
+/* Статистика */
+.statsBlock {
+    display: flex;
+    flex-direction: column;
+}
+
+.statsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.statItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.statIcon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--input-bg-color);
+    font-size: 16px;
+}
+
+.statContent {
+    flex: 1;
+}
+
+.statValue {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--light-text-color);
+}
+
+.statLabel {
+    font-size: 13px;
+    color: var(--secondary-text-color);
+}
+
+/* Кнопки регистрации */
+.registrationBlock, .participantBlock {
+    margin-top: auto;
+}
+
+.registerButton, .dashboardButton {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.registerButton {
+    background-color: var(--accent-color);
+    color: var(--dark-text-color);
+    border: none;
+}
+
+.registerButton:hover {
+    background-color: var(--accent-hover-color);
+}
+
+.registerButton:disabled {
+    background-color: var(--disabled-color);
+    cursor: not-allowed;
+    color: var(--muted-text-color);
+}
+
+.dashboardButton {
+    background-color: var(--input-bg-color);
+    color: var(--light-text-color);
+    border: 1px solid var(--input-border-color);
+}
+
+.dashboardButton:hover {
+    background-color: var(--card-bg-color);
+    border-color: var(--accent-light-color);
+}
+
+.participantStatus {
+    color: var(--success-color);
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+/* Технологии */
+.technologiesSection {
+    border-radius: 12px;
+    border: 1px solid var(--input-border-color);
+    background-color: var(--card-bg-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 16px;
+}
+
+.tagsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag {
+    background-color: var(--input-bg-color);
+    color: var(--accent-color);
+    padding: 4px 10px;
+    border-radius: var(--border-radius);
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.emptyState {
+    color: var(--secondary-text-color);
+    font-style: italic;
+    margin: 0;
+}
+
+/* Линия о хакатоне и этапах */
+.infoLine {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Общие стили для секций */
+.section {
+    border-radius: 12px;
+    border: 1px solid var(--input-border-color);
+    background-color: var(--card-bg-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 16px;
+}
+
+.sectionTitle {
+    color: var(--accent-color);
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--input-border-color);
+}
+
+.description {
+    font-size: var(--default-font-size);
+    line-height: 1.5;
+    color: var(--light-text-color);
+    white-space: pre-line;
+}
+
+/* Этапы */
+.stepsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stepCard {
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--input-border-color);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.stepHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.stepNumber {
+    width: 24px;
+    height: 24px;
+    background-color: var(--accent-color);
+    color: var(--dark-text-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.stepTitle {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.stepDates {
+    font-size: 12px;
+    color: var(--secondary-text-color);
+    margin-bottom: 8px;
+}
+
+.stepDescription {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* Остальные секции (критерии, призы, файлы) */
+.remainingSections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+    .topRow {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .infoLine, .remainingSections {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .topRow {
+        grid-template-columns: 1fr;
+    }
+
+    .heroSection {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .statsContainer .statItem {
+        justify-content: center;
+    }
+
+    .registrationBlock, .participantBlock {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 }
