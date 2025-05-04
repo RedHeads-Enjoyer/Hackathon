@@ -3,7 +3,7 @@ package criteriaDTO
 import "server/models"
 
 type Create struct {
-	Name     string `json:"name" validate:"required,min=3,max=100"`
+	Name     string `json:"name" validate:"required,min=3,max=1000"`
 	MaxScore uint   `json:"max_score" validate:"min=0"`
 	MinScore uint   `json:"min_score" validate:"min=0"`
 }

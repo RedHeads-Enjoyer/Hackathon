@@ -9,8 +9,8 @@ import (
 )
 
 type CreateDTO struct {
-	Name        string `json:"name" validate:"required,min=3,max=100"`
-	Description string `json:"description" validate:"required,min=3,max=100"`
+	Name        string `json:"name" validate:"required,min=3,max=1000"`
+	Description string `json:"description" validate:"required,min=3,max=10000"`
 
 	RegDateFrom  time.Time `json:"reg_date_from,omitempty"`
 	RegDateTo    time.Time `json:"reg_date_to,omitempty"`

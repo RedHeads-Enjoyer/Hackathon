@@ -107,7 +107,7 @@ export type HackathonStep = {
 };
 
 export type Award = {
-    id: number;
+    id: string;
     moneyAmount: number;
     additionally: string;
     placeFrom: number;
@@ -120,7 +120,7 @@ export type TechnologyShort = {
 };
 
 export type Criteria = {
-    id: number;
+    id: string;
     name: string;
     maxScore: number;
     minScore: number;

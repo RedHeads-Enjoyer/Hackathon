@@ -22,6 +22,7 @@ import Technologies from "./modules/technologies/Technologies.tsx";
 import CreateTechnologyPage from "./modules/technologies/CreateTechnologyPage.tsx";
 import HackathonList from "./modules/hackathon/HackathonList.tsx";
 import OpenHackathon from "./modules/hackathon/OpenHackathon.tsx";
+import HackathonDashboard from "./modules/hackathon/HackathonDashboard.tsx";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -62,6 +63,7 @@ function App() {
                     <Route path="/user/list" element={<UserList /> } />
                     <Route path="/hackathon/create" element={<CreateHackathon />} />
                     <Route path="/hackathon/:id" element={<OpenHackathon />} />
+                    <Route path="/hackathon/:id/dashboard" element={<HackathonDashboard />} />
                     <Route path={"/organization/create"} element={<CreateOrganizationPage/>}/>
                     <Route path={"/organizations/my"} element={<MyOrganizationsPage/>}/>
                 </Route>

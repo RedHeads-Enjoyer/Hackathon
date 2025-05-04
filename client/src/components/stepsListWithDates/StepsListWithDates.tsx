@@ -1,6 +1,6 @@
-import { useState, useId, useImperativeHandle, forwardRef } from 'react';
+import {forwardRef, useId, useImperativeHandle, useState} from 'react';
 import classes from './style.module.css';
-import { HackathonStagesProps, Stage } from "./types";
+import {HackathonStagesProps, Stage} from "./types";
 import Button from "../button/Button";
 import Input from "../input/Input";
 import TextArea from "../textArea/TextArea";
@@ -70,17 +70,6 @@ const StepsListWithDates = forwardRef<StepsListWithDatesRef, HackathonStagesProp
                 isValid = false;
             }
 
-            // Проверка последовательности этапов
-            if (index > 0 && stage.startDate && stages[index-1].endDate) {
-                const prevEndDate = new Date(stages[index-1].endDate);
-                const currentStartDate = new Date(stage.startDate);
-
-                if (currentStartDate < prevEndDate) {
-                    stageError.startDate = 'Начало этапа должно быть после окончания предыдущего';
-                    isValid = false;
-                }
-            }
-
             // Если есть ошибки, добавляем их
             if (Object.keys(stageError).length > 0) {
                 errors[stage.id] = stageError;
@@ -104,7 +93,7 @@ const StepsListWithDates = forwardRef<StepsListWithDatesRef, HackathonStagesProp
             order: stages.length + 1,
             name: '',
             description: '',
-            startDate: stages.length > 0 ? stages[stages.length-1].endDate : '',
+            startDate: '',
             endDate: ''
         };
         const updatedStages = [...stages, newStage];
@@ -121,16 +110,7 @@ const StepsListWithDates = forwardRef<StepsListWithDatesRef, HackathonStagesProp
     const updateStage = (id: string, field: keyof Stage, value: string) => {
         const updatedStages = stages.map(stage => {
             if (stage.id === id) {
-                const updated = {...stage, [field]: value};
-
-                if (field === 'endDate' && value) {
-                    const nextStageIndex = stages.findIndex(s => s.id === id) + 1;
-                    if (nextStageIndex < stages.length) {
-                        updatedStages[nextStageIndex].startDate = value;
-                    }
-                }
-
-                return updated;
+                return {...stage, [field]: value};
             }
             return stage;
         });
@@ -300,6 +280,7 @@ const StepsListWithDates = forwardRef<StepsListWithDatesRef, HackathonStagesProp
                                             value={stage.startDate}
                                             onChange={(date) => updateStage(stage.id, 'startDate', date)}
                                             required
+                                            maxDate={stage.startDate}
                                             error={stageErrors[stage.id]?.startDate}
                                         />
 

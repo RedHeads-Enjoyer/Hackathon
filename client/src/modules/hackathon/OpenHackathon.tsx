@@ -8,6 +8,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { HackathonRole, HackathonStatus } from "./storage.ts";
 import { formatDate } from "date-fns";
 import { ru } from 'date-fns/locale';
+import Button from "../../components/button/Button.tsx";
 
 const StatusBadge = ({ status }: { status: number }) => {
     let statusText = '';
@@ -81,6 +82,44 @@ const OpenHackathon = () => {
             })
             .finally(() => setLoadingHackathon(false));
     }, [id]);
+
+    const handleFileDownload = async (fileId: number, fileName: string) => {
+        try {
+            // Показываем индикатор загрузки (опционально)
+            // setDownloadingFile(fileId);
+
+            // Получаем файл с сервера
+            const blobData = await hackathonAPI.getBlobFile(fileId);
+
+            // Создаем Blob URL для скачивания
+            const blobUrl = window.URL.createObjectURL(new Blob([blobData]));
+
+            // Создаем временный элемент <a>
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.setAttribute('download', fileName); // Сохраняем оригинальное имя файла
+
+            // Добавляем ссылку в DOM (нужно для работы в Safari)
+            document.body.appendChild(link);
+
+            // Эмулируем клик по ссылке
+            link.click();
+
+            // Удаляем ссылку из DOM
+            document.body.removeChild(link);
+
+            // Освобождаем ресурсы Blob URL
+            setTimeout(() => {
+                window.URL.revokeObjectURL(blobUrl);
+            }, 100);
+        } catch (error) {
+            console.error('Ошибка при загрузке файла:', error);
+            alert('Не удалось загрузить файл. Попробуйте позже.');
+        } finally {
+            // Скрываем индикатор загрузки (опционально)
+            // setDownloadingFile(null);
+        }
+    };
 
     // Определение статуса, фазы и прогресса хакатона
     const { phase, text, status, progress } = useMemo(() => {
@@ -223,18 +262,21 @@ const OpenHackathon = () => {
 
                         <div className={classes.heroInfo}>
                             <div className={classes.titleRow}>
-                                <h1 className={classes.title}>{hackathon.name}</h1>
+                                <h1 className={classes.title} title={hackathon.name}>
+                                    {hackathon.name}
+                                </h1>
                                 <StatusBadge status={hackathon.status} />
                             </div>
 
                             <div className={classes.organizationInfo}>
-                                <span className={classes.label}>Организатор:</span> {hackathon.organizationName}
+                                <span className={classes.label}>Организатор:</span>
+                                <span className={classes.organizationName}>{hackathon.organizationName}</span>
                             </div>
 
                             {/* Прогресс хакатона */}
                             <div className={classes.progressContainer}>
                                 <div className={classes.progressLabel}>
-                                    <span>{text}</span>
+                                    <span className={classes.progressPhase}>{text}</span>
                                     <span className={classes.progressPercent}>{progress}%</span>
                                 </div>
                                 <div className={classes.progressBar}>
@@ -263,12 +305,12 @@ const OpenHackathon = () => {
                                         {hackathon.hackathonRole === HackathonRole.OWNER && 'Вы — организатор этого хакатона'}
                                     </div>
 
-                                    <button
-                                        className={classes.dashboardButton}
+                                    <Button
+                                        variant={'secondary'}
                                         onClick={() => navigate(`/hackathon/${hackathon.id}/dashboard`)}
                                     >
-                                        Перейти в личный кабинет
-                                    </button>
+                                        Управление
+                                    </Button>
                                 </div>
                             )}
                         </div>
@@ -316,7 +358,7 @@ const OpenHackathon = () => {
                 {/* Блок 3: Статистика */}
                 <div className={classes.block}>
                     <div className={classes.statsBlock}>
-                        <h2 className={classes.blockTitle}>Информация</h2>
+                        <h2 className={classes.blockTitle}>Ключевая информация</h2>
                         <div className={classes.statsContainer}>
                             <div className={classes.statItem}>
                                 <div className={classes.statIcon}>👥</div>
@@ -366,7 +408,7 @@ const OpenHackathon = () => {
                 </div>
             </div>
 
-            {/* Третья линия: О хакатоне и этапы */}
+            {/* ПЕРВАЯ ЛИНИЯ: О хакатоне и Призы */}
             <div className={classes.infoLine}>
                 {/* Описание хакатона */}
                 <div className={classes.section}>
@@ -376,62 +418,17 @@ const OpenHackathon = () => {
                     </div>
                 </div>
 
-                {/* Этапы хакатона */}
-                {hackathon.steps.length > 0 ? (
-                    <div className={classes.section}>
-                        <h2 className={classes.sectionTitle}>Этапы хакатона</h2>
-                        <div className={classes.stepsContainer}>
-                            {hackathon.steps.map((step, index) => (
-                                <div key={step.id} className={classes.stepCard}>
-                                    <div className={classes.stepHeader}>
-                                        <div className={classes.stepNumber}>{index + 1}</div>
-                                        <h3 className={classes.stepTitle}>{step.name}</h3>
-                                    </div>
-
-                                    <div className={classes.stepDates}>
-                                        {safeFormatDate(step.startDate)} — {safeFormatDate(step.endDate)}
-                                    </div>
-
-                                    {step.description && (
-                                        <div className={classes.stepDescription}>{step.description}</div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ) : null}
-            </div>
-
-            {/* Четвертая линия: Остальные секции */}
-            <div className={classes.remainingSections}>
-                {/* Критерии оценки */}
-                {hackathon.criteria.length > 0 && (
-                    <div className={classes.section}>
-                        <h2 className={classes.sectionTitle}>Критерии оценки</h2>
-                        <div className={classes.criteriaContainer}>
-                            {hackathon.criteria.map(criterion => (
-                                <div key={criterion.id} className={classes.criterionCard}>
-                                    <h3 className={classes.criterionTitle}>{criterion.name}</h3>
-                                    <div className={classes.criterionScore}>
-                                        {criterion.minScore} - {criterion.maxScore} баллов
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
                 {/* Призы */}
-                {hackathon.awards.length > 0 && (
-                    <div className={classes.section}>
-                        <h2 className={classes.sectionTitle}>Призы</h2>
+                <div className={classes.section}>
+                    <h2 className={classes.sectionTitle}>Призы</h2>
+                    {hackathon.awards.length > 0 ? (
                         <div className={classes.awardsList}>
                             {hackathon.awards.map(award => (
                                 <div key={award.id} className={classes.awardCard}>
                                     <div className={classes.awardPlace}>
                                         {award.placeFrom === award.placeTo
                                             ? `${award.placeFrom} место`
-                                            : `${award.placeFrom}-${award.placeTo} места`}
+                                            : `${award.placeFrom}–${award.placeTo} места`}
                                     </div>
                                     <div className={classes.awardAmount}>
                                         {new Intl.NumberFormat('ru-RU', {
@@ -446,16 +443,65 @@ const OpenHackathon = () => {
                                 </div>
                             ))}
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <p className={classes.emptyState}>Информация о призах не предоставлена</p>
+                    )}
+                </div>
+            </div>
 
-                {/* Файлы */}
-                {hackathon.files.length > 0 && (
+            {/* ВТОРАЯ ЛИНИЯ: Этапы хакатона на всю ширину */}
+            {hackathon.steps.length > 0 && (
+                <div className={classes.stepsSection}>
                     <div className={classes.section}>
-                        <h2 className={classes.sectionTitle}>Материалы</h2>
+                        <h2 className={classes.sectionTitle}>Этапы хакатона</h2>
+                        <div className={classes.stepsContainer}>
+                            {hackathon.steps.map((step, index) => (
+                                <div key={step.id} className={classes.stepCard}>
+                                    <div className={classes.stepHeader}>
+                                        <div className={classes.stepNumber}>{index + 1}</div>
+                                        <h3 className={classes.stepTitle}>{step.name}</h3>
+                                        <div className={classes.stepDates}>
+                                            {safeFormatDate(step.startDate)} — {safeFormatDate(step.endDate)}
+                                        </div>
+                                    </div>
+                                    {step.description && (
+                                        <div className={classes.stepDescription}>{step.description}</div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ТРЕТЬЯ ЛИНИЯ: Критерии оценки и Материалы */}
+            <div className={classes.criteriaFilesLine}>
+                {/* Критерии оценки */}
+                <div className={classes.section}>
+                    <h2 className={classes.sectionTitle}>Критерии оценки</h2>
+                    {hackathon.criteria.length > 0 ? (
+                        <div className={classes.criteriaContainer}>
+                            {hackathon.criteria.map(criterion => (
+                                <div key={criterion.id} className={classes.criterionCard}>
+                                    <h3 className={classes.criterionTitle}>{criterion.name}</h3>
+                                    <div className={classes.criterionScore}>
+                                        {criterion.minScore} — {criterion.maxScore} баллов
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className={classes.emptyState}>Критерии не указаны</p>
+                    )}
+                </div>
+
+                {/* Файлы/Материалы */}
+                <div className={classes.section}>
+                    <h2 className={classes.sectionTitle}>Материалы</h2>
+                    {hackathon.files.length > 0 ? (
                         <div className={classes.filesContainer}>
                             {hackathon.files.map(file => (
-                                <div key={file.id} className={classes.fileCard} onClick={() => hackathonAPI.getBlobFile(file.id)}>
+                                <div key={file.id} className={classes.fileCard} onClick={() =>handleFileDownload(file.id, file.name)}>
                                     <div className={classes.fileIcon}>
                                         {file.type.includes('image') ? '🖼️' :
                                             file.type.includes('pdf') ? '📄' :
@@ -468,12 +514,13 @@ const OpenHackathon = () => {
                                             {(file.size / 1024 / 1024).toFixed(2)} МБ
                                         </div>
                                     </div>
-                                    <div className={classes.fileDownload}>⬇️</div>
                                 </div>
                             ))}
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <p className={classes.emptyState}>Материалы не загружены</p>
+                    )}
+                </div>
             </div>
         </div>
     );

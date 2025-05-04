@@ -597,42 +597,52 @@
 
 /* Основной контейнер страницы */
 /* Основной контейнер страницы */
+/* Основной контейнер страницы */
 .pageWrapper {
-    padding: 20px;
+    padding: 24px;
     background-color: var(--dark-bg-color);
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
     height: 100%;
+    width: 100%;
     overflow-y: auto;
+    margin: 0 auto;
 }
 
-/* Верхняя полоса - сетка из трех блоков */
+/* Верхняя полоса с основной информацией */
 .topRow {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.8fr);
     gap: 20px;
 }
 
-/* Общие стили для блоков */
+/* Стиль для всех блоков */
 .block {
     border-radius: 12px;
     border: 1px solid var(--input-border-color);
     background-color: var(--card-bg-color);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     padding: 20px;
+    height: 100%;
+    transition: box-shadow 0.3s, transform 0.2s;
+}
+
+.block:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 /* Шапка хакатона */
 .heroSection {
     display: flex;
     gap: 20px;
+    height: 100%;
 }
 
 .logoContainer {
-    width: 100px;
-    height: 100px;
-    border-radius: 8px;
+    width: 110px;
+    height: 110px;
+    border-radius: 12px;
     overflow: hidden;
     background-color: var(--input-bg-color);
     flex-shrink: 0;
@@ -640,6 +650,7 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--input-border-color);
 }
 
 .logo {
@@ -656,7 +667,7 @@
     justify-content: center;
     background: linear-gradient(135deg, var(--accent-dark-color), var(--accent-color));
     color: var(--dark-text-color);
-    font-size: 28px;
+    font-size: 32px;
     font-weight: bold;
 }
 
@@ -670,19 +681,26 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
 }
 
 .title {
     color: var(--light-text-color);
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 600;
     margin: 0;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+
+    white-space: nowrap;      /* Запрещает перенос на новую строку */
+    overflow: hidden;         /* Скрывает текст, выходящий за пределы */
+    max-width: 100%;          /* Ограничивает ширину */
 }
 
 .status {
     display: inline-block;
-    padding: 5px 12px;
+    padding: 4px 12px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
@@ -694,8 +712,13 @@
     color: var(--success-color);
 }
 
-.statusDraft, .statusArchived, .statusUnknown {
+.statusDraft {
     background-color: rgba(100, 100, 100, 0.1);
+    color: var(--muted-text-color);
+}
+
+.statusArchived {
+    background-color: rgba(200, 200, 200, 0.1);
     color: var(--muted-text-color);
 }
 
@@ -704,9 +727,15 @@
     color: #f44336;
 }
 
+.statusUnknown {
+    background-color: rgba(100, 100, 100, 0.1);
+    color: var(--muted-text-color);
+}
+
 .organizationInfo {
-    margin-bottom: 12px;
+    margin-bottom: 16px;
     font-size: 14px;
+    color: var(--light-text-color);
 }
 
 .label {
@@ -716,7 +745,7 @@
 
 /* Прогресс-бар */
 .progressContainer {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .progressLabel {
@@ -724,7 +753,11 @@
     justify-content: space-between;
     font-size: 12px;
     margin-bottom: 4px;
-    color: var(--secondary-text-color);
+}
+
+.progressPhase {
+    color: var(--light-text-color);
+    font-weight: 500;
 }
 
 .progressPercent {
@@ -737,16 +770,22 @@
     background-color: var(--input-bg-color);
     border-radius: 3px;
     overflow: hidden;
+    position: relative;
 }
 
 .progressFill {
     height: 100%;
     border-radius: 3px;
-    transition: width 0.3s ease;
+    transition: width 0.8s ease;
+    position: relative;
 }
 
-.progress_upcoming, .progress_registration {
+.progress_upcoming {
     background-color: var(--accent-color);
+}
+
+.progress_registration {
+    background-color: var(--success-color);
 }
 
 .progress_development {
@@ -754,7 +793,7 @@
 }
 
 .progress_evaluation {
-    background-color: #9b59b6;
+    background-color: #9b59b6; /* Фиолетовый */
 }
 
 .progress_completed {
@@ -765,14 +804,15 @@
 .datesBlock {
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 .blockTitle {
     color: var(--accent-color);
     font-size: 16px;
-    font-weight: 500;
-    margin: 0 0 12px;
-    padding-bottom: 8px;
+    font-weight: 600;
+    margin: 0 0 16px;
+    padding-bottom: 10px;
     border-bottom: 1px solid var(--input-border-color);
 }
 
@@ -780,21 +820,37 @@
 .timeline {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+    flex: 1;
 }
 
 .timelineItem {
     display: flex;
-    gap: 10px;
-    padding: 8px;
+    gap: 12px;
+    padding: 10px 12px;
     border-radius: 8px;
     background-color: var(--input-bg-color);
     border: 1px solid var(--input-border-color);
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.timelineItem:hover {
+    background-color: rgba(var(--accent-rgb-color), 0.05);
+    transform: translateY(-2px);
+}
+
+.activePhase {
+    background-color: rgba(var(--accent-rgb-color), 0.08);
+    border-left: 4px solid var(--accent-color);
+}
+
+.activePhase:hover {
+    background-color: rgba(var(--accent-rgb-color), 0.12);
 }
 
 .timelineIcon {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     background-color: var(--input-bg-color);
     color: var(--light-text-color);
@@ -802,19 +858,16 @@
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 12px;
+    font-size: 13px;
     border: 1px solid var(--input-border-color);
-}
-
-.activePhase {
-    background-color: rgba(255, 193, 7, 0.1);
-    border-left: 4px solid var(--accent-color);
+    flex-shrink: 0;
 }
 
 .activePhase .timelineIcon {
     background-color: var(--accent-color);
     color: var(--dark-text-color);
     border: none;
+    box-shadow: 0 2px 8px rgba(var(--accent-rgb-color), 0.3);
 }
 
 .timelineContent {
@@ -822,8 +875,8 @@
 }
 
 .timelineTitle {
-    margin: 0 0 2px;
-    font-size: 13px;
+    margin: 0 0 4px;
+    font-size: 14px;
     color: var(--light-text-color);
     font-weight: 500;
 }
@@ -837,30 +890,33 @@
 .statsBlock {
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 .statsContainer {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-top: 4px;
+    gap: 16px;
+    flex: 1;
 }
 
 .statItem {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 14px;
+    padding: 8px 0;
 }
 
 .statIcon {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    background-color: var(--input-bg-color);
-    font-size: 16px;
+    border-radius: 10px;
+    background-color: rgba(var(--accent-rgb-color), 0.1);
+    font-size: 18px;
+    flex-shrink: 0;
 }
 
 .statContent {
@@ -869,8 +925,9 @@
 
 .statValue {
     font-weight: 600;
-    font-size: 16px;
+    font-size: 18px;
     color: var(--light-text-color);
+    margin-bottom: 2px;
 }
 
 .statLabel {
@@ -884,28 +941,36 @@
 }
 
 .registerButton, .dashboardButton {
-    padding: 8px 16px;
-    border-radius: 6px;
+    padding: 10px 18px;
+    border-radius: 8px;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .registerButton {
     background-color: var(--accent-color);
     color: var(--dark-text-color);
     border: none;
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb-color), 0.3);
 }
 
 .registerButton:hover {
     background-color: var(--accent-hover-color);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(var(--accent-rgb-color), 0.4);
 }
 
 .registerButton:disabled {
     background-color: var(--disabled-color);
     cursor: not-allowed;
     color: var(--muted-text-color);
+    box-shadow: none;
+    transform: none;
 }
 
 .dashboardButton {
@@ -917,12 +982,13 @@
 .dashboardButton:hover {
     background-color: var(--card-bg-color);
     border-color: var(--accent-light-color);
+    transform: translateY(-2px);
 }
 
 .participantStatus {
     color: var(--success-color);
     font-weight: 500;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 /* Технологии */
@@ -930,37 +996,57 @@
     border-radius: 12px;
     border: 1px solid var(--input-border-color);
     background-color: var(--card-bg-color);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    transition: box-shadow 0.3s;
+}
+
+.technologiesSection:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.sectionTitle {
+    color: var(--accent-color);
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--input-border-color);
 }
 
 .tagsList {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
 }
 
 .tag {
-    background-color: var(--input-bg-color);
+    background-color: rgba(var(--accent-rgb-color), 0.08);
     color: var(--accent-color);
-    padding: 4px 10px;
-    border-radius: var(--border-radius);
-    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
     font-weight: 500;
-    border: 1px solid rgba(255, 193, 7, 0.2);
+    border: 1px solid rgba(var(--accent-rgb-color), 0.15);
+    transition: all 0.2s;
+}
+
+.tag:hover {
+    background-color: rgba(var(--accent-rgb-color), 0.15);
+    transform: translateY(-2px);
 }
 
 .emptyState {
     color: var(--secondary-text-color);
     font-style: italic;
-    margin: 0;
+    margin: 8px 0;
 }
 
 /* Линия о хакатоне и этапах */
 .infoLine {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 24px;
 }
 
 /* Общие стили для секций */
@@ -968,22 +1054,18 @@
     border-radius: 12px;
     border: 1px solid var(--input-border-color);
     background-color: var(--card-bg-color);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    transition: box-shadow 0.3s;
 }
 
-.sectionTitle {
-    color: var(--accent-color);
-    font-size: 16px;
-    font-weight: 500;
-    margin: 0 0 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--input-border-color);
+.section:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .description {
     font-size: var(--default-font-size);
-    line-height: 1.5;
+    line-height: 1.6;
     color: var(--light-text-color);
     white-space: pre-line;
 }
@@ -992,74 +1074,282 @@
 .stepsContainer {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
 }
 
 .stepCard {
     background-color: var(--input-bg-color);
     border: 1px solid var(--input-border-color);
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 10px;
+    padding: 16px;
+    transition: all 0.2s;
+}
+
+.stepCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    border-color: rgba(var(--accent-rgb-color), 0.3);
 }
 
 .stepHeader {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
+    gap: 14px;
+    margin-bottom: 12px;
 }
 
 .stepNumber {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
     background-color: var(--accent-color);
     color: var(--dark-text-color);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(var(--accent-rgb-color), 0.3);
 }
 
 .stepTitle {
     margin: 0;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--light-text-color);
+    flex-grow: 1;
 }
 
 .stepDates {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--secondary-text-color);
-    margin-bottom: 8px;
+    margin-left: auto;
+    flex-shrink: 0;
 }
 
 .stepDescription {
-    font-size: 13px;
-    line-height: 1.4;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--light-text-color);
+    margin-top: 8px;
+    padding-left: 46px; /* отступ слева, чтобы выровнять с названием */
 }
 
 /* Остальные секции (критерии, призы, файлы) */
 .remainingSections {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+}
+
+/* Призы */
+.awardsList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+}
+
+.awardCard {
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--input-border-color);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.awardCard:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    border-color: rgba(var(--accent-rgb-color), 0.3);
+}
+
+.awardPlace {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: rgba(var(--accent-rgb-color), 0.1);
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-color);
+    margin-bottom: 10px;
+}
+
+.awardAmount {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent-color);
+    margin-bottom: 6px;
+}
+
+.awardAdditional {
+    font-size: 13px;
+    color: var(--secondary-text-color);
+    line-height: 1.4;
+}
+
+/* Критерии */
+.criteriaContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.criterionCard {
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--input-border-color);
+    border-radius: 10px;
+    padding: 16px;
+    transition: all 0.2s;
+}
+
+.criterionCard:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    border-color: rgba(var(--accent-rgb-color), 0.3);
+}
+
+.criterionTitle {
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--light-text-color);
+}
+
+.criterionScore {
+    display: inline-block;
+    padding: 4px 10px;
+    background-color: rgba(var(--accent-rgb-color), 0.1);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+/* Файлы */
+.filesContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.fileCard {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--input-border-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.fileCard:hover {
+    background-color: rgba(var(--accent-rgb-color), 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: rgba(var(--accent-rgb-color), 0.3);
+}
+
+.fileIcon {
+    font-size: 24px;
+    margin-right: 16px;
+    opacity: 0.8;
+}
+
+.fileInfo {
+    flex: 1;
+}
+
+.fileName {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: var(--light-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fileSize {
+    font-size: 12px;
+    color: var(--secondary-text-color);
+}
+
+.fileDownload {
+    font-size: 18px;
+    color: var(--accent-color);
+    transition: transform 0.2s;
+}
+
+.fileCard:hover .fileDownload {
+    transform: translateY(-2px);
+}
+
+/* Загрузка */
+.loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+.spinnerContainer {
+    text-align: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(var(--accent-rgb-color), 0.1);
+    border-radius: 50%;
+    border-top-color: var(--accent-color);
+    animation: spin 1s ease-in-out infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Адаптивность */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
     .topRow {
         grid-template-columns: 1fr 1fr;
     }
 
+    .block:nth-child(3) {
+        grid-column: span 2;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .statsContainer {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 992px) {
     .infoLine, .remainingSections {
         grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 768px) {
+    .pageWrapper {
+        padding: 16px;
+    }
+
     .topRow {
         grid-template-columns: 1fr;
+    }
+
+    .block:nth-child(3) {
+        grid-column: span 1;
     }
 
     .heroSection {
@@ -1068,13 +1358,407 @@
         text-align: center;
     }
 
-    .statsContainer .statItem {
+    .titleRow {
         justify-content: center;
+    }
+
+    .progressContainer {
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .registrationBlock, .participantBlock {
         display: flex;
         flex-direction: column;
         align-items: center;
+    }
+
+    .statsContainer {
+        flex-direction: column;
+    }
+}
+
+.titleRow {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.title {
+    color: var(--light-text-color);
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+    /* Обрезание длинного текста */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Для случаев, когда вы хотите разрешить двустрочный заголовок */
+.titleMultiline {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Статус бейдж */
+.status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    align-self: flex-start;
+}
+
+/* Для блока со сроками */
+.timelineContent {
+    flex: 1;
+    min-width: 0; /* Важно для корректной работы text-overflow */
+}
+
+.timelineTitle {
+    margin: 0 0 4px;
+    font-size: 14px;
+    color: var(--light-text-color);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Для блока со статистикой */
+.statContent {
+    flex: 1;
+    min-width: 0; /* Важно для корректной работы text-overflow */
+}
+
+.statValue {
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--light-text-color);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Верхняя полоса с основной информацией */
+.topRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.8fr);
+    gap: 20px;
+}
+
+/* Стиль для всех блоков */
+.block {
+    border-radius: 12px;
+    border: 1px solid var(--input-border-color);
+    background-color: var(--card-bg-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    height: 100%;
+    transition: box-shadow 0.3s, transform 0.2s;
+    overflow: hidden; /* Предотвращает выход содержимого за границы */
+}
+
+/* Шапка хакатона */
+.heroSection {
+    display: flex;
+    gap: 20px;
+    height: 100%;
+    width: 100%;
+    overflow: hidden; /* Критично для предотвращения выхода за границы */
+}
+
+.heroInfo {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0; /* Критично для работы text-overflow */
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Заголовок */
+.titleRow {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.title {
+    color: var(--light-text-color);
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.heroSection {
+    display: flex;
+    gap: 20px;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.heroInfo {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0; /* Важно для работы text-overflow */
+    width: 100%;
+    overflow: hidden;
+}
+
+.titleRow {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.title {
+    color: var(--light-text-color);
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.organizationInfo {
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: var(--light-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+/* Исправленные медиа-запросы */
+@media (max-width: 1200px) {
+    .topRow {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .block:nth-child(3) {
+        grid-column: span 2;
+    }
+
+    .statsContainer {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .statItem {
+        width: calc(33.33% - 10px);
+    }
+}
+
+@media (max-width: 992px) {
+    .infoLine, .remainingSections {
+        grid-template-columns: 1fr;
+    }
+
+    .stepHeader {
+        flex-wrap: wrap;
+    }
+
+    .stepDates {
+        margin-left: 0;
+        width: 100%;
+        margin-top: 5px;
+        padding-left: 46px; /* Выравнивание с названием */
+    }
+}
+
+@media (max-width: 768px) {
+    .pageWrapper {
+        padding: 16px;
+    }
+
+    .topRow {
+        grid-template-columns: 1fr;
+    }
+
+    .block:nth-child(3) {
+        grid-column: span 1;
+    }
+
+    .heroSection {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .heroInfo {
+        align-items: center;
+        text-align: center;
+    }
+
+    /* Особый случай для мобильной версии - центрирование и многострочность */
+    .titleRow {
+        align-items: center;
+        text-align: center;
+    }
+
+    .title {
+        /* В мобильной версии позволяем перенос на несколько строк */
+        white-space: normal;
+        text-align: center;
+        display: -webkit-box;
+        -webkit-line-clamp: 2; /* Максимум 2 строки */
+        -webkit-box-orient: vertical;
+    }
+
+    .status {
+        /* В мобильной версии центрируем статус */
+        align-self: center;
+    }
+
+    .organizationInfo {
+        text-align: center;
+        white-space: normal;
+    }
+
+    .progressContainer {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .registrationBlock, .participantBlock {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .registerButton, .dashboardButton {
+        width: 100%;
+        max-width: 280px;
+    }
+
+    /* Мобильная статистика */
+    .statsContainer {
+        flex-direction: column;
+    }
+
+    .statItem {
+        width: 100%;
+    }
+
+    /* Мобильные призы */
+    .awardsList {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+
+    /* Мобильные критерии */
+    .criteriaContainer {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Дополнительные исправления для маленьких экранов */
+@media (max-width: 480px) {
+    .stepHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .stepTitle {
+        width: 100%;
+    }
+
+    .stepDates {
+        padding-left: 0;
+    }
+
+    .stepDescription {
+        padding-left: 0;
+        margin-top: 12px;
+    }
+
+    /* Более компактные карточки */
+    .awardCard, .criterionCard, .fileCard {
+        padding: 12px;
+    }
+
+    .tagsList {
+        gap: 6px;
+    }
+
+    .tag {
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+}
+
+/* Структура секций */
+.infoLine {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 24px;
+}
+
+/* Секция для этапов на всю ширину */
+.stepsSection {
+    width: 100%;
+}
+
+/* Структура для критериев и материалов */
+.criteriaFilesLine {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+}
+
+/* Общие стили для секций */
+.section {
+    border-radius: 12px;
+    border: 1px solid var(--input-border-color);
+    background-color: var(--card-bg-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    transition: box-shadow 0.3s;
+}
+
+.section:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Адаптивность */
+@media (max-width: 992px) {
+    .infoLine, .criteriaFilesLine {
+        grid-template-columns: 1fr;
+        gap: 16px;
     }
 }

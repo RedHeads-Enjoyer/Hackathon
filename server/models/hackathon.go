@@ -8,8 +8,8 @@ import (
 type Hackathon struct {
 	gorm.Model
 
-	Name        string `gorm:"size:50;unique;not null" json:"name"`
-	Description string `gorm:"size:255" json:"description"`
+	Name        string `gorm:"size:500;unique;not null" json:"name"`
+	Description string `json:"size:10000;description"`
 
 	RegDateFrom  time.Time `json:"reg_date_from,omitempty"`
 	RegDateTo    time.Time `json:"reg_date_to,omitempty"`
