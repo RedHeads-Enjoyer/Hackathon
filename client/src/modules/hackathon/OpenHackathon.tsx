@@ -269,14 +269,25 @@ const OpenHackathon = () => {
                                         {hackathon.hackathonRole === HackathonRole.OWNER && 'Вы — организатор'}
                                     </div>
 
-                                    {hackathon.hackathonRole === HackathonRole.OWNER &&
-                                        <Button
-                                            variant={'secondary'}
-                                            onClick={() => navigate(`/hackathon/${hackathon.id}/dashboard`)}
-                                        >
-                                            Управление
-                                        </Button>
-                                    }
+                                    <div className={classes.manageButtons}>
+                                        {hackathon.hackathonRole === HackathonRole.OWNER &&
+                                            <Button
+                                                variant={'secondary'}
+                                                onClick={() => navigate(`/hackathon/${hackathon.id}/edit`)}
+                                            >
+                                                Управление
+                                            </Button>
+                                        }
+
+                                        {hackathon.hackathonRole !== HackathonRole.NOT_PARTICIPANT  &&
+                                            <Button
+                                                variant={'primary'}
+                                                onClick={() => navigate(`/hackathon/${hackathon.id}/dashboard`)}
+                                            >
+                                                Перейти к хакатону
+                                            </Button>
+                                        }
+                                    </div>
                                 </div>
                             )}
                         </div>

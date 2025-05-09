@@ -1730,3 +1730,8 @@
         gap: 16px;
     }
 }
+
+.manageButtons {
+    display: flex;
+    gap: 8px;
+}

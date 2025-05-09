@@ -20,7 +20,7 @@ import Technologies from "./modules/technologies/Technologies.tsx";
 import CreateTechnologyPage from "./modules/technologies/CreateTechnologyPage.tsx";
 import HackathonList from "./modules/hackathon/HackathonList.tsx";
 import OpenHackathon from "./modules/hackathon/OpenHackathon.tsx";
-import HackathonDashboard from "./modules/hackathon/HackathonDashboard.tsx";
+import HackathonEdit from "./modules/hackathon/HackathonEdit.tsx";
 import MentorInvites from "./modules/invites/MentorInvites.tsx";
 
 function App() {
@@ -61,7 +61,7 @@ function App() {
                     <Route path="/invites/mentor" element={<MentorInvites />}/>
                     <Route path="/hackathon/create" element={<CreateHackathon />} />
                     <Route path="/hackathon/:id" element={<OpenHackathon />} />
-                    <Route path="/hackathon/:id/dashboard" element={<HackathonDashboard />} />
+                    <Route path="/hackathon/:id/edit" element={<HackathonEdit />} />
                     <Route path={"/organization/create"} element={<CreateOrganizationPage/>}/>
                     <Route path={"/organizations/my"} element={<MyOrganizationsPage/>}/>
                 </Route>

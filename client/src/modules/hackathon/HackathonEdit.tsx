@@ -24,7 +24,7 @@ import { hackathonAPI } from "./hackathonAPI.ts";
 import Loader from "../../components/loader/Loader.tsx";
 import MentorInviteStackInput from "../../components/mentorInviteStackInput/MentorInviteStackInput.tsx";
 
-const HackathonDashboard: React.FC = () => {
+const HackathonEdit: React.FC = () => {
     // Получаем ID хакатона из URL параметров
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -756,4 +756,4 @@ const HackathonDashboard: React.FC = () => {
     );
 };
 
-export default HackathonDashboard;
+export default HackathonEdit;
