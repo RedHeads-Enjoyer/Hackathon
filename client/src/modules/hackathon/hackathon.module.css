@@ -1877,3 +1877,7 @@
         border-radius: var(--border-radius);
     }
 }
+
+.publish_section {
+    margin-top: 12px;
+}

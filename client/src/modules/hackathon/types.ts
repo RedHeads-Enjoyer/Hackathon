@@ -247,3 +247,18 @@ export type ParticipantSearchData = {
     list: Participant[],
     total: number
 }
+
+export type TeamCreate = {
+    name: string
+}
+
+export type TeamData = {
+    name: string,
+    participants: TeamParticipant[]
+}
+
+export type TeamParticipant = {
+    id: number,
+    username: string,
+    teamRole: number
+}

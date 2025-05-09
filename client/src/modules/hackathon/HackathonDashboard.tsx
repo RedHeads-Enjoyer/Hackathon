@@ -1,36 +1,8 @@
 import { useState } from 'react';
 import ParticipantsSection from "./components/ParticipantsSection.tsx";
 import classes from './hackathon.module.css'
+import TeamSection from "./components/TeamsSection.tsx";
 
-
-
-const TeamsSection = () => (
-    <div className="dashboard-section">
-        <h2>Команды</h2>
-        <div className="teams-list">
-            <p>Здесь будет список команд хакатона</p>
-            {/* Заглушка для списка команд */}
-            <div className="team-card">
-                <h3>Команда Alpha</h3>
-                <p>5 участников</p>
-                <div className="team-stack">
-                    <span className="stack-tag">React</span>
-                    <span className="stack-tag">Node.js</span>
-                </div>
-            </div>
-            <div className="team-card">
-                <h3>Команда Beta</h3>
-                <p>4 участника</p>
-                <div className="team-stack">
-                    <span className="stack-tag">Vue</span>
-                    <span className="stack-tag">Python</span>
-                </div>
-            </div>
-            {/* Кнопка для создания новой команды */}
-            <button className="add-button">+ Создать команду</button>
-        </div>
-    </div>
-);
 
 const ChatsSection = () => (
     <div className="dashboard-section">
@@ -129,7 +101,7 @@ const HackathonDashboard = () => {
                     className={`${classes.tab_button} ${activeTab === 'teams' ? classes.active : ''}`}
                     onClick={() => setActiveTab('teams')}
                 >
-                    Команды
+                    Команда
                 </button>
                 <button
                     className={`${classes.tab_button} ${activeTab === 'chats' ? classes.active : ''}`}
@@ -147,7 +119,7 @@ const HackathonDashboard = () => {
 
             <div className={classes.dashboard_content}>
                 {activeTab === 'participants' && <ParticipantsSection />}
-                {activeTab === 'teams' && <TeamsSection />}
+                {activeTab === 'teams' && <TeamSection />}
                 {activeTab === 'chats' && <ChatsSection />}
                 {activeTab === 'projects' && <ProjectsSection />}
             </div>

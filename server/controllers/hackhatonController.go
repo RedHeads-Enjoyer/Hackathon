@@ -1269,7 +1269,8 @@ func (hc *HackathonController) CreateTeam(c *gin.Context) {
 	c.JSON(http.StatusCreated, teamModel)
 }
 
-func (hc *HackathonController) GetTeams(c *gin.Context) {
+func (hc *HackathonController) GetTeam(c *gin.Context) {
+	// Получение ID хакатона из параметров
 	hackathonIDStr := c.Param("hackathon_id")
 	if hackathonIDStr == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
@@ -1283,38 +1284,84 @@ func (hc *HackathonController) GetTeams(c *gin.Context) {
 		return
 	}
 
-	var teams []models.Team
-	// Поиск команд по ID хакатона с предзагрузкой участников
-	if err := hc.DB.Preload("Users").Where("hackathon_id = ?", hackathonID).Find(&teams).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении команд", "details": err.Error()})
+	// Получение информации о пользователе из контекста
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
 		return
 	}
 
-	// Формирование упрощённого ответа
-	var teamDTOs []teamDTO.GetDTO
-	for _, team := range teams {
-		var userDTOs []userDTO.GetUserInTeamMini
-		for _, userTeam := range team.Users {
-			userDTOs = append(userDTOs, userDTO.GetUserInTeamMini{
-				UserID:   userTeam.UserID,
-				TeamRole: userTeam.TeamRole,
-				Username: userTeam.User.Username, // Предполагается, что у вас есть поле Username в модели User
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+
+	// Поиск команды пользователя в этом хакатоне
+	var userTeam models.Team
+
+	// Сначала находим связь пользователя с командой через BndUserTeam
+	var userTeamLink models.BndUserTeam
+	teamQuery := hc.DB.
+		Joins("JOIN teams ON bnd_user_teams.team_id = teams.id").
+		Where("bnd_user_teams.user_id = ? AND teams.hackathon_id = ?", claims.UserID, hackathonID).
+		First(&userTeamLink)
+
+	if teamQuery.Error != nil {
+		if teamQuery.Error == gorm.ErrRecordNotFound {
+			// Пользователь не состоит в команде этого хакатона
+			c.JSON(http.StatusOK, gin.H{
+				"name":         nil, // Возвращаем null вместо пустой строки
+				"participants": []interface{}{},
 			})
+			return
 		}
-		teamDTOs = append(teamDTOs, teamDTO.GetDTO{
-			ID:          team.ID,
-			Name:        team.Name,
-			HackathonID: team.HackathonID,
-			Users:       userDTOs,
+		// Другая ошибка БД
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при поиске команды", "details": teamQuery.Error.Error()})
+		return
+	}
+
+	// Теперь загружаем полную информацию о команде
+	if err := hc.DB.First(&userTeam, userTeamLink.TeamID).Error; err != nil {
+		// Если команда не найдена (хотя это странно, т.к. мы нашли связь)
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusOK, gin.H{
+				"name":         nil,
+				"participants": []interface{}{},
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении информации о команде"})
+		return
+	}
+
+	// Загружаем всех участников команды
+	var teamMembers []models.BndUserTeam
+	if err := hc.DB.
+		Preload("User").
+		Where("team_id = ?", userTeam.ID).
+		Find(&teamMembers).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении участников команды"})
+		return
+	}
+
+	// Формируем ответ в нужном формате
+	var participants []userDTO.TeamParticipant
+	for _, member := range teamMembers {
+		participants = append(participants, userDTO.TeamParticipant{
+			ID:       member.User.ID,
+			Username: member.User.Username,
+			TeamRole: member.TeamRole,
 		})
 	}
 
-	if len(teamDTOs) == 0 {
-		c.JSON(http.StatusOK, []interface{}{})
-		return
+	// Используем указатель, чтобы значение могло быть null
+	teamData := userDTO.TeamData{
+		Name:         &userTeam.Name,
+		Participants: participants,
 	}
 
-	c.JSON(http.StatusOK, teamDTOs)
+	c.JSON(http.StatusOK, teamData)
 }
 
 func (hc *HackathonController) UpdateTeam(c *gin.Context) {
