@@ -1089,25 +1089,24 @@ func (pc *HackathonController) GetParticipants(c *gin.Context) {
 		return
 	}
 
-	// Проверяем, может ли текущий пользователь приглашать участников в команду
-	// Для этого проверяем, есть ли у него роль 2 в какой-либо команде этого хакатона
-	var canInvite bool
+	// Получаем ID команды текущего пользователя, если он капитан
+	var userTeamID *uint
+	var userIsCaptain bool
 
-	// Используем GORM для проверки роли пользователя в команде
-	var teamRole struct {
+	var userTeamInfo struct {
+		TeamID   uint
 		TeamRole int
 	}
 
 	teamRoleQuery := pc.DB.Model(&models.BndUserTeam{}).
-		Select("bnd_user_teams.team_role").
+		Select("bnd_user_teams.team_id, bnd_user_teams.team_role").
 		Joins("JOIN teams ON bnd_user_teams.team_id = teams.id").
 		Where("bnd_user_teams.user_id = ? AND teams.hackathon_id = ?", claims.UserID, hackathonID).
 		Limit(1)
 
-	if err := teamRoleQuery.First(&teamRole).Error; err == nil && teamRole.TeamRole == 2 {
-		canInvite = true
-	} else {
-		canInvite = false
+	if err := teamRoleQuery.First(&userTeamInfo).Error; err == nil && userTeamInfo.TeamRole == 2 {
+		userIsCaptain = true
+		userTeamID = &userTeamInfo.TeamID
 	}
 
 	// Структура для сбора информации о пользователях
@@ -1181,23 +1180,56 @@ func (pc *HackathonController) GetParticipants(c *gin.Context) {
 		return
 	}
 
-	// Формируем ответ
+	// Получаем список всех активных приглашений от команды текущего пользователя
+	type InviteInfo struct {
+		ReceiverID uint
+	}
+	var invites []InviteInfo
+
+	if userIsCaptain && userTeamID != nil {
+		inviteQuery := pc.DB.Model(&models.TeamInvite{}).
+			Select("team_invites.user_id").
+			Where("team_invites.team_id = ? AND team_invites.status = ?", *userTeamID, 0)
+
+		if err := inviteQuery.Find(&invites).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении приглашений: " + err.Error()})
+			return
+		}
+	}
+
+	// Создаем карту приглашенных пользователей для быстрого поиска
+	invitedUsers := make(map[uint]bool)
+	for _, invite := range invites {
+		invitedUsers[invite.ReceiverID] = true
+	}
+
+	// Формируем ответ с числовым статусом canInvite для каждого участника
 	participants := make([]userDTO.ParticipantResponse, len(usersWithTeamInfo))
 	for i, info := range usersWithTeamInfo {
+		var canInviteStatus int = 0 // По умолчанию - не может пригласить
+
+		if userIsCaptain && info.TeamName == nil && info.ID != claims.UserID {
+			if invitedUsers[info.ID] {
+				canInviteStatus = 2 // Уже приглашен
+			} else {
+				canInviteStatus = 1 // Может пригласить
+			}
+		}
+
 		participants[i] = userDTO.ParticipantResponse{
-			ID:       info.ID,
-			Username: info.Username,
-			TeamName: info.TeamName,
+			ID:        info.ID,
+			Username:  info.Username,
+			TeamName:  info.TeamName,
+			CanInvite: canInviteStatus, // Числовой статус вместо булевого
 		}
 	}
 
 	// Возвращаем результат с метаданными для пагинации
 	c.JSON(http.StatusOK, gin.H{
-		"list":      participants,
-		"total":     totalCount,
-		"limit":     filterData.Limit,
-		"offset":    filterData.Offset,
-		"canInvite": canInvite,
+		"list":   participants,
+		"total":  totalCount,
+		"limit":  filterData.Limit,
+		"offset": filterData.Offset,
 	})
 }
 

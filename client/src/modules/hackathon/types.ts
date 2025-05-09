@@ -241,6 +241,7 @@ export type Participant = {
     id: number,
     username: string,
     team: string | null,
+    canInvite: number
 }
 
 export type ParticipantSearchData = {

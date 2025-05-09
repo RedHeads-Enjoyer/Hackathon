@@ -95,6 +95,6 @@ export const HackathonAPI = {
     getTeam: async (hackathonId: number) =>
         request<TeamData>({method: 'GET', url: `hackathon/team/${hackathonId}`}),
     createTeam: async (hackathonId: number, data: TeamCreate)=> {
-        request<any>({method: 'POST', url: `hackathon/team/${hackathonId}`, data})
-    }
+        request<any>({method: 'POST', url: `hackathon/team/${hackathonId}`, data})},
+
 };
