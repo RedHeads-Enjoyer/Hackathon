@@ -1052,12 +1052,14 @@ func (hc *HackathonController) GetByIDEditFull(c *gin.Context) {
 	// Преобразуем файлы в DTO
 	filesDTOs := make([]fileDTO.GetShort, 0, len(hackathon.Files))
 	for _, file := range hackathon.Files {
-		filesDTOs = append(filesDTOs, fileDTO.GetShort{
-			ID:   file.ID,
-			Name: file.Name,
-			Type: file.Type,
-			Size: file.Size,
-		})
+		if file.ID != hackathon.Logo.ID {
+			filesDTOs = append(filesDTOs, fileDTO.GetShort{
+				ID:   file.ID,
+				Name: file.Name,
+				Type: file.Type,
+				Size: file.Size,
+			})
+		}
 	}
 
 	// Преобразуем шаги в DTO
