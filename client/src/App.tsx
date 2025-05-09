@@ -22,6 +22,7 @@ import HackathonList from "./modules/hackathon/HackathonList.tsx";
 import OpenHackathon from "./modules/hackathon/OpenHackathon.tsx";
 import HackathonEdit from "./modules/hackathon/HackathonEdit.tsx";
 import MentorInvites from "./modules/invites/MentorInvites.tsx";
+import HackathonDashboard from "./modules/hackathon/HackathonDashboard.tsx";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -60,6 +61,7 @@ function App() {
                     <Route path="/hackathons" element={<HackathonList />}/>
                     <Route path="/invites/mentor" element={<MentorInvites />}/>
                     <Route path="/hackathon/create" element={<CreateHackathon />} />
+                    <Route path="/hackathon/:id/dashboard" element={<HackathonDashboard />} />
                     <Route path="/hackathon/:id" element={<OpenHackathon />} />
                     <Route path="/hackathon/:id/edit" element={<HackathonEdit />} />
                     <Route path={"/organization/create"} element={<CreateOrganizationPage/>}/>

@@ -1,7 +1,7 @@
 import classes from "./hackathon.module.css";
 import { HackathonFullData } from "./types.ts";
 import { useEffect, useState, useMemo } from "react";
-import { hackathonAPI } from "./hackathonAPI.ts";
+import { HackathonAPI } from "./hackathonAPI.ts";
 import Error from "../../components/error/Error.tsx";
 import ApiImage from "../../components/apiImage/ApiImage.tsx";
 import { useParams, useNavigate } from "react-router-dom";
@@ -43,7 +43,7 @@ const OpenHackathon = () => {
 
         const hackathonId = id ? parseInt(id, 10) : 1;
 
-        hackathonAPI.getFullById(hackathonId)
+        HackathonAPI.getFullById(hackathonId)
             .then((data) => {
                 setHackathon(data);
             })
@@ -60,7 +60,7 @@ const OpenHackathon = () => {
             // setDownloadingFile(fileId);
 
             // Получаем файл с сервера
-            const blobData = await hackathonAPI.getBlobFile(fileId);
+            const blobData = await HackathonAPI.getBlobFile(fileId);
 
             // Создаем Blob URL для скачивания
             const blobUrl = window.URL.createObjectURL(new Blob([blobData]));
@@ -161,8 +161,8 @@ const OpenHackathon = () => {
         try {
             setRegistering(true);
 
-            await hackathonAPI.join(hackathon.id)
-            const updatedData = await hackathonAPI.getFullById(hackathon.id);
+            await HackathonAPI.join(hackathon.id)
+            const updatedData = await HackathonAPI.getFullById(hackathon.id);
             setHackathon(updatedData);
             setRegistering(false);
         } catch (err) {

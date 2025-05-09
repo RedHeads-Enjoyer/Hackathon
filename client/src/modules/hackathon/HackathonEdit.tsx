@@ -20,7 +20,7 @@ import { Option } from "../organozaton/types.ts";
 import FileUpload from "../../components/fileUpload/FileUpload.tsx";
 import { Award, Criteria, HackathonFormData, HackathonFormErrors } from "./types.ts";
 import Error from "../../components/error/Error.tsx";
-import { hackathonAPI } from "./hackathonAPI.ts";
+import { HackathonAPI } from "./hackathonAPI.ts";
 import Loader from "../../components/loader/Loader.tsx";
 import MentorInviteStackInput from "../../components/mentorInviteStackInput/MentorInviteStackInput.tsx";
 
@@ -85,7 +85,7 @@ const HackathonEdit: React.FC = () => {
         const fetchHackathonData = async () => {
             try {
                 const hackathonId = parseInt(id, 10);
-                const data = await hackathonAPI.getFullForEditById(hackathonId);
+                const data = await HackathonAPI.getFullForEditById(hackathonId);
 
                 // Форматируем даты для полей ввода
                 const formatDate = (dateStr: string | null) => {
@@ -379,7 +379,7 @@ const HackathonEdit: React.FC = () => {
 
             // Вызываем API обновления
             if (typeof id === "string") {
-                await hackathonAPI.update(parseInt(id, 10), formDataToSend);
+                await HackathonAPI.update(parseInt(id, 10), formDataToSend);
             }
             navigate(`/hackathon/${id}`);
         } catch (err) {

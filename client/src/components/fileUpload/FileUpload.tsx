@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useId } from 'react';
 import classes from './style.module.css';
 import Modal from '../modal/Modal';
-import { hackathonAPI } from '../../modules/hackathon/hackathonAPI';
+import { HackathonAPI } from '../../modules/hackathon/hackathonAPI';
 import Button from "../button/Button.tsx";
 
 // Расширяем интерфейс для существующих файлов
@@ -160,7 +160,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
             if (isExistingFile(file)) {
                 // Для файлов с сервера скачиваем через API
-                blob = await hackathonAPI.getBlobFile(file.id);
+                blob = await HackathonAPI.getBlobFile(file.id);
                 url = URL.createObjectURL(blob);
             } else {
                 // Для локальных файлов создаем URL

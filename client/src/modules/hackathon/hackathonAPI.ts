@@ -7,7 +7,7 @@ import {
     HackathonSearchData
 } from "./types.ts";
 
-export const hackathonAPI = {
+export const HackathonAPI = {
     create: async (data: HackathonFormData) => {
         const formData = new FormData();
 

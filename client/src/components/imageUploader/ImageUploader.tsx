@@ -3,7 +3,7 @@ import classes from './style.module.css';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from './imageUtils';
 import Modal from '../../components/modal/Modal.tsx';
-import { hackathonAPI } from '../../modules/hackathon/hackathonAPI';
+import { HackathonAPI } from '../../modules/hackathon/hackathonAPI';
 
 interface ImageUploaderProps {
     onImageChange: (croppedImage: File) => void;
@@ -34,7 +34,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         if (initialFileId) {
             const fetchImage = async () => {
                 try {
-                    const blob = await hackathonAPI.getBlobFile(initialFileId);
+                    const blob = await HackathonAPI.getBlobFile(initialFileId);
                     const imageUrl = URL.createObjectURL(blob);
                     setCroppedImage(imageUrl);
                 } catch (error) {

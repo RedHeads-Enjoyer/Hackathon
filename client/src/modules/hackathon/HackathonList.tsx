@@ -3,7 +3,7 @@ import PageLabel from "../../components/pageLabel/PageLabel.tsx";
 import HackathonFilter from "./components/HackathonsFilter.tsx";
 import {FilterUpdate, HackathonFilterData, HackathonSearchData} from "./types.ts";
 import React, {useEffect, useState} from "react";
-import {hackathonAPI} from "./hackathonAPI.ts";
+import {HackathonAPI} from "./hackathonAPI.ts";
 import Loader from "../../components/loader/Loader.tsx";
 import Error from "../../components/error/Error.tsx";
 import HackathonItem from "./components/HackathonItem.tsx";
@@ -47,7 +47,7 @@ const HackathonList = () => {
         setSearhLoading(true)
         setSearchError(null);
         setHackathons(initialHackathonData)
-        hackathonAPI.getAll(filterData)
+        HackathonAPI.getAll(filterData)
             .then((data) => {
                 setHackathons({
                     list: data.list,

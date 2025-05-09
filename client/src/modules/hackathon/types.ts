@@ -1,4 +1,5 @@
 import {Stage} from "../../components/stepsListWithDates/types.ts";
+import {Organization} from "../organozaton/types.ts";
 
 export interface HackathonFormErrors {
     name?: string | undefined,
@@ -221,4 +222,23 @@ export type MentorInvite = {
     id: number;
     username: string;
     status: number;
+}
+
+export type ParticipantFilterData = {
+    name: string,
+    isFree: boolean | null,
+    limit: number,
+    offset: number,
+    total: number
+}
+
+export type Participant = {
+    id: number,
+    username: string,
+    team: string,
+}
+
+export type ParticipantSearchData = {
+    list: Participant[],
+    total: number
 }

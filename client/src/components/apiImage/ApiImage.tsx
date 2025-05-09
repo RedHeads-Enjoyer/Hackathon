@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { hackathonAPI } from '../../modules/hackathon/hackathonAPI';
+import { HackathonAPI } from '../../modules/hackathon/hackathonAPI';
 import styles from './styles.module.css';
 
 interface ApiImageProps {
@@ -32,7 +32,7 @@ const ApiImage: React.FC<ApiImageProps> = ({
 
         const loadImage = async () => {
             try {
-                const blob = await hackathonAPI.getBlobFile(Number(fileId));
+                const blob = await HackathonAPI.getBlobFile(Number(fileId));
 
                 const objectUrl = URL.createObjectURL(blob);
 

@@ -20,7 +20,7 @@ import {Option} from "../organozaton/types.ts";
 import FileUpload from "../../components/fileUpload/FileUpload.tsx";
 import {Award, Criteria, HackathonFormData, HackathonFormErrors} from "./types.ts";
 import Error from "../../components/error/Error.tsx";
-import {hackathonAPI} from "./hackathonAPI.ts";
+import {HackathonAPI} from "./hackathonAPI.ts";
 import MentorStackInput from "../../components/mentorStackInput/MentorStackInput.tsx";
 
 const CreateHackathon: React.FC = () => {
@@ -165,7 +165,7 @@ const CreateHackathon: React.FC = () => {
         setCreateHackathonLoading(true);
 
         try {
-            await hackathonAPI.create(formData);
+            await HackathonAPI.create(formData);
             navigate('/');
         } catch (err) {
             const errorMessage = (err as Error).message || "Ошибка при создании хакатона";
