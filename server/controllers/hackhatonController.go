@@ -151,27 +151,26 @@ func (hc *HackathonController) CreateHackathon(c *gin.Context) {
 		c.Set("userID", claims.UserID)
 		logoFile, err := c.FormFile("logo")
 		if err == nil && logoFile != nil {
-			file, err := hc.FileController.UploadFile(c, logoFile, hackathon.ID, "hackathon")
+			file, err := hc.FileController.UploadFile(c, logoFile, hackathon.ID, "hackathon_logo")
 			if err != nil {
 				return err
 			}
 
-			// Обновляем хакатон с привязкой к логотипу
-			if err := tx.Model(&hackathon).Association("Logo").Replace(file); err != nil {
+			hackathon.Logo = file
+			if err := tx.Save(&hackathon).Error; err != nil {
 				return err
 			}
 		}
 
-		// Загружаем дополнительные файлы, если они есть
+		// Для обычных файлов
 		form, err := c.MultipartForm()
 		if err == nil && form != nil && form.File["files"] != nil {
 			for _, fileHeader := range form.File["files"] {
-				file, err := hc.FileController.UploadFile(c, fileHeader, hackathon.ID, "hackathon")
+				file, err := hc.FileController.UploadFile(c, fileHeader, hackathon.ID, "hackathon_file")
 				if err != nil {
 					return err
 				}
 
-				// Добавляем файл в Files хакатона
 				if err := tx.Model(&hackathon).Association("Files").Append(file); err != nil {
 					return err
 				}
@@ -449,11 +448,37 @@ func (hc *HackathonController) GetAllFull(c *gin.Context) {
 }
 
 func (hc *HackathonController) Update(c *gin.Context) {
-	var dto hackathonDTO.HackathonUpdateDTO
+	// Получаем claims пользователя из контекста, установленные middleware Auth()
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима авторизация"})
+		return
+	}
 
-	// Привязка JSON к DTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных", "details": err.Error()})
+	// Приводим claims к нужному типу
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+
+	// Парсим multipart форму
+	if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка при парсинге формы: " + err.Error()})
+		return
+	}
+
+	// Получаем JSON данные из поля 'data'
+	hackathonDataJSON := c.Request.FormValue("data")
+	if hackathonDataJSON == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствуют данные хакатона (поле 'data')"})
+		return
+	}
+
+	// Десериализуем JSON в нашу DTO структуру
+	var dto hackathonDTO.Update
+	if err := json.Unmarshal([]byte(hackathonDataJSON), &dto); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка при разборе JSON: " + err.Error()})
 		return
 	}
 
@@ -464,91 +489,306 @@ func (hc *HackathonController) Update(c *gin.Context) {
 		return
 	}
 
-	var hackathon models.Hackathon
+	// Начинаем транзакцию
 	tx := hc.DB.Begin()
 	if err := tx.Error; err != nil {
-		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при начале транзакции"})
 		return
 	}
 
-	// Поиск хакатона по ID
-	if err := tx.First(&hackathon, hackathonID).Error; err != nil {
+	// Функция для отката транзакции с возвратом ошибки
+	rollbackWithError := func(statusCode int, message string) {
 		tx.Rollback()
-		c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
+		c.JSON(statusCode, gin.H{"error": message})
+	}
+
+	// Установка userID для контекста (используется в FileController)
+	c.Set("userID", claims.UserID)
+
+	// Получаем хакатон с предварительной загрузкой всех связей
+	var hackathon models.Hackathon
+	if err := tx.Preload("Logo").
+		Preload("Files").
+		Preload("Technologies").
+		Preload("Steps").
+		Preload("Awards").
+		Preload("Criteria").
+		First(&hackathon, hackathonID).Error; err != nil {
+		rollbackWithError(http.StatusNotFound, "Хакатон не найден")
 		return
 	}
 
-	// Обновление полей хакатона
+	// Проверяем права на редактирование хакатона
+	var isOrganizer bool
+	if err := tx.Where("user_id = ? AND hackathon_id = ? AND hackathon_role = 3",
+		claims.UserID, hackathon.ID).First(&models.BndUserHackathon{}).Error; err == nil {
+		isOrganizer = true
+	}
+
+	// Проверяем права на администрирование
+	if !isOrganizer && claims.SystemRole != 3 {
+		rollbackWithError(http.StatusForbidden, "Недостаточно прав для редактирования хакатона")
+		return
+	}
+
+	// Обновление основных полей хакатона
 	hackathon = dto.ToModel(hackathon)
 
-	// Удаление старых этапов, если переданы новые
+	// -------------------------------------------
+	// Обработка логотипа
+	// -------------------------------------------
+
+	// Проверяем, есть ли новый логотип для загрузки
+	logoFile, logoErr := c.FormFile("logo")
+	hasNewLogo := logoErr == nil && logoFile != nil
+
+	// Если у нас есть флаг удаления логотипа или загрузки нового, удаляем старый
+	if (dto.DeleteLogo || hasNewLogo) && hackathon.Logo != nil {
+		// Получаем ID текущего логотипа
+		oldLogoID := hackathon.Logo.ID
+
+		// Обнуляем связь с логотипом
+		if err := tx.Model(&hackathon).Association("Logo").Clear(); err != nil {
+			rollbackWithError(http.StatusInternalServerError, "Ошибка при удалении старого логотипа")
+			return
+		}
+
+		// Удаляем файл логотипа из БД
+		if err := tx.Delete(&models.File{}, oldLogoID).Error; err != nil {
+			rollbackWithError(http.StatusInternalServerError, "Ошибка при удалении файла логотипа")
+			return
+		}
+
+		// Обнуляем ссылку на логотип
+		hackathon.Logo = nil
+	}
+
+	// Если есть новый логотип, загружаем его
+	if hasNewLogo {
+		// Загружаем новый логотип
+		logoFile, err := hc.FileController.UploadFile(c, logoFile, hackathon.ID, "hackathon")
+		if err != nil {
+			rollbackWithError(http.StatusInternalServerError, "Ошибка при загрузке логотипа: "+err.Error())
+			return
+		}
+
+		// Устанавливаем новый логотип
+		hackathon.Logo = logoFile
+
+		// Сохраняем обновленный хакатон
+		if err := tx.Save(&hackathon).Error; err != nil {
+			rollbackWithError(http.StatusInternalServerError, "Ошибка при сохранении хакатона")
+			return
+		}
+	}
+
+	// -------------------------------------------
+	// Обработка удаления файлов
+	// -------------------------------------------
+	if len(dto.FilesToDelete) > 0 {
+		for _, fileID := range dto.FilesToDelete {
+			// Находим файл
+			var file models.File
+			if err := tx.First(&file, fileID).Error; err != nil {
+				continue // Пропускаем, если файл не найден
+			}
+
+			// Проверяем, принадлежит ли файл хакатону
+			if file.OwnerID != hackathon.ID {
+				continue
+			}
+
+			// Проверяем, не является ли файл логотипом
+			if hackathon.Logo != nil && file.ID == hackathon.Logo.ID {
+				continue // Пропускаем логотип
+			}
+
+			// Отвязываем файл от хакатона перед удалением
+			if err := tx.Model(&hackathon).Association("Files").Delete(&file); err != nil {
+				rollbackWithError(http.StatusInternalServerError, "Ошибка при отвязывании файла")
+				return
+			}
+
+			// Удаляем файл
+			if err := tx.Delete(&file).Error; err != nil {
+				rollbackWithError(http.StatusInternalServerError, "Ошибка при удалении файла")
+				return
+			}
+		}
+	}
+
+	// -------------------------------------------
+	// Загрузка новых файлов
+	// -------------------------------------------
+	form, formErr := c.MultipartForm()
+	if formErr == nil && form != nil && form.File["files"] != nil {
+		for _, fileHeader := range form.File["files"] {
+			file, err := hc.FileController.UploadFile(c, fileHeader, hackathon.ID, "hackathon_file")
+			if err != nil {
+				rollbackWithError(http.StatusInternalServerError, "Ошибка при загрузке файла: "+err.Error())
+				return
+			}
+
+			// Добавляем файл в Files хакатона
+			if err := tx.Model(&hackathon).Association("Files").Append(file); err != nil {
+				rollbackWithError(http.StatusInternalServerError, "Ошибка при привязке файла")
+				return
+			}
+		}
+	}
+
+	// -------------------------------------------
+	// Обновление технологий
+	// -------------------------------------------
+	if len(dto.Technologies) > 0 {
+		// Сначала очищаем существующие связи
+		if err := tx.Model(&hackathon).Association("Technologies").Clear(); err != nil {
+			rollbackWithError(http.StatusInternalServerError, "Ошибка при обновлении технологий")
+			return
+		}
+
+		// Добавляем новые связи
+		var technologies []models.Technology
+		if err := tx.Where("id IN ?", dto.Technologies).Find(&technologies).Error; err != nil {
+			rollbackWithError(http.StatusInternalServerError, "Ошибка при поиске технологий")
+			return
+		}
+
+		if err := tx.Model(&hackathon).Association("Technologies").Append(&technologies); err != nil {
+			rollbackWithError(http.StatusInternalServerError, "Ошибка при добавлении технологий")
+			return
+		}
+	}
+
+	// -------------------------------------------
+	// Обработка менторов
+	// -------------------------------------------
+	if len(dto.Mentors) > 0 {
+		// Удаляем существующие приглашения, которые еще не приняты
+		if err := tx.Where("hackathon_id = ? AND status = 0", hackathon.ID).Delete(&models.MentorInvite{}).Error; err != nil {
+			rollbackWithError(http.StatusInternalServerError, "Ошибка при обновлении приглашений менторов")
+			return
+		}
+
+		// Добавляем новые приглашения для менторов, которые еще не являются менторами хакатона
+		var mentorInvites []models.MentorInvite
+		for _, mentorID := range dto.Mentors {
+			var existingMentor models.BndUserHackathon
+			if err := tx.Where("user_id = ? AND hackathon_id = ? AND hackathon_role = 2",
+				mentorID, hackathon.ID).First(&existingMentor).Error; err == nil {
+				// Пользователь уже ментор, пропускаем
+				continue
+			}
+
+			invite := models.MentorInvite{
+				UserID:      mentorID,
+				HackathonID: hackathon.ID,
+				Status:      0,
+			}
+			mentorInvites = append(mentorInvites, invite)
+		}
+
+		if len(mentorInvites) > 0 {
+			if err := tx.Create(&mentorInvites).Error; err != nil {
+				rollbackWithError(http.StatusInternalServerError, "Ошибка при создании приглашений менторов")
+				return
+			}
+		}
+	}
+
+	// -------------------------------------------
+	// Обновление этапов
+	// -------------------------------------------
 	if len(dto.Steps) > 0 {
+		// Удаляем существующие этапы
 		if err := tx.Where("hackathon_id = ?", hackathon.ID).Delete(&models.HackathonStep{}).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении старых этапов", "details": err.Error()})
+			rollbackWithError(http.StatusInternalServerError, "Ошибка при удалении старых этапов")
 			return
 		}
 
-		// Создание новых этапов
+		// Создаем новые этапы
 		for _, step := range dto.Steps {
-			stepModel := step.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
+			stepModel := models.HackathonStep{
+				HackathonID: hackathon.ID,
+				Name:        step.Name,
+				Description: step.Description,
+				StartDate:   step.StartDate,
+				EndDate:     step.EndDate,
+			}
+
 			if err := tx.Create(&stepModel).Error; err != nil {
-				tx.Rollback()
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании этапа", "details": err.Error()})
+				rollbackWithError(http.StatusInternalServerError, "Ошибка при создании этапа")
 				return
 			}
 		}
 	}
 
-	// Удаление старых наград, если переданы новые
+	// -------------------------------------------
+	// Обновление наград
+	// -------------------------------------------
 	if len(dto.Awards) > 0 {
+		// Удаляем существующие награды
 		if err := tx.Where("hackathon_id = ?", hackathon.ID).Delete(&models.Award{}).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении старых наград", "details": err.Error()})
+			rollbackWithError(http.StatusInternalServerError, "Ошибка при удалении старых наград")
 			return
 		}
 
-		// Создание новых наград
+		// Создаем новые награды
 		for _, award := range dto.Awards {
-			awardModel := award.ToModel(hackathon.ID) // Предполагается, что у вас есть метод ToModel
+			awardModel := models.Award{
+				HackathonID:  hackathon.ID,
+				PlaceFrom:    award.PlaceFrom,
+				PlaceTo:      award.PlaceTo,
+				MoneyAmount:  award.MoneyAmount,
+				Additionally: award.Additionally,
+			}
+
 			if err := tx.Create(&awardModel).Error; err != nil {
-				tx.Rollback()
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании награды", "details": err.Error()})
+				rollbackWithError(http.StatusInternalServerError, "Ошибка при создании награды")
 				return
 			}
 		}
 	}
 
+	// -------------------------------------------
+	// Обновление критериев оценки
+	// -------------------------------------------
 	if len(dto.Criteria) > 0 {
+		// Удаляем существующие критерии
 		if err := tx.Where("hackathon_id = ?", hackathon.ID).Delete(&models.Criteria{}).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении старых критериев", "details": err.Error()})
+			rollbackWithError(http.StatusInternalServerError, "Ошибка при удалении старых критериев")
 			return
 		}
 
-		for _, criteria := range dto.Criteria {
-			criteiaModel := criteria.ToModel(hackathon.ID)
-			if err := tx.Create(&criteiaModel).Error; err != nil {
-				tx.Rollback()
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании критериев", "details": err.Error()})
+		// Создаем новые критерии
+		for _, criterion := range dto.Criteria {
+			criterionModel := models.Criteria{
+				HackathonID: hackathon.ID,
+				Name:        criterion.Name,
+				MinScore:    criterion.MinScore,
+				MaxScore:    criterion.MaxScore,
+			}
+
+			if err := tx.Create(&criterionModel).Error; err != nil {
+				rollbackWithError(http.StatusInternalServerError, "Ошибка при создании критерия")
 				return
 			}
 		}
 	}
 
-	// Сохранение обновленного хакатона
+	// Сохраняем обновленный хакатон в конце транзакции
 	if err := tx.Save(&hackathon).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при обновлении хакатона", "details": err.Error()})
+		rollbackWithError(http.StatusInternalServerError, "Ошибка при обновлении хакатона")
 		return
 	}
 
+	// Завершаем транзакцию
 	if err := tx.Commit().Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при подтверждении транзакции"})
 		return
 	}
 
+	// Возвращаем обновленный хакатон
 	c.JSON(http.StatusOK, hackathon)
 }
 
@@ -1052,14 +1292,12 @@ func (hc *HackathonController) GetByIDEditFull(c *gin.Context) {
 	// Преобразуем файлы в DTO
 	filesDTOs := make([]fileDTO.GetShort, 0, len(hackathon.Files))
 	for _, file := range hackathon.Files {
-		if file.ID != hackathon.Logo.ID {
-			filesDTOs = append(filesDTOs, fileDTO.GetShort{
-				ID:   file.ID,
-				Name: file.Name,
-				Type: file.Type,
-				Size: file.Size,
-			})
-		}
+		filesDTOs = append(filesDTOs, fileDTO.GetShort{
+			ID:   file.ID,
+			Name: file.Name,
+			Type: file.Type,
+			Size: file.Size,
+		})
 	}
 
 	// Преобразуем шаги в DTO

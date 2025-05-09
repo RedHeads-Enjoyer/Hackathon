@@ -42,6 +42,28 @@ export interface HackathonFormData {
     documents: File[];
 }
 
+export interface HackathonUpdateFormData {
+    name: string;
+    description: string;
+    coverImage: File | null;
+    regDateFrom: string;
+    regDateTo: string;
+    workDateFrom: string;
+    workDateTo: string;
+    evalDateFrom: string;
+    evalDateTo: string;
+    minTeamSize: number;
+    maxTeamSize: number;
+    organizationId: number;
+    stages: Stage[];
+    criteria: Criteria[];
+    technologies: Option[];
+    mentors: Option[];
+    awards: Award[];
+    documents: File[];
+    filesToDelete: number[]
+}
+
 export type FilterUpdate = {
     name: keyof HackathonFilterData;
     value: any;

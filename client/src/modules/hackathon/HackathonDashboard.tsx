@@ -62,6 +62,8 @@ const HackathonDashboard: React.FC = () => {
     // Состояния для управления существующими файлами и изображениями
     const [logoId, setLogoId] = useState<number | null>(null);
     const [existingDocuments, setExistingDocuments] = useState<Array<any>>([]);
+    const [filesToDelete, setFilesToDelete] = useState<number[]>([]); // ID файлов для удаления
+    const [isLogoChanged, setIsLogoChanged] = useState<boolean>(false);
 
     // Рефы для доступа к компонентам дочерних форм
     const stagesRef = useRef<StepsListWithDatesRef>(null);
@@ -94,7 +96,6 @@ const HackathonDashboard: React.FC = () => {
                     setLogoId(data.logoId);
                 }
 
-                // Сохраняем данные об организации для предварительного выбора
                 // Сохраняем информацию о документах
                 if (data.files && data.files.length > 0) {
                     setExistingDocuments(data.files.map(file => ({
@@ -120,7 +121,6 @@ const HackathonDashboard: React.FC = () => {
                     maxTeamSize: data.maxTeamSize || 5,
                     organizationId: data.organizationId || 0,
 
-                    // Преобразуем этапы
                     stages: data.steps?.map(step => ({
                         id: step.id,
                         name: step.name,
@@ -129,7 +129,6 @@ const HackathonDashboard: React.FC = () => {
                         endDate: formatDate(step.endDate)
                     })) || [],
 
-                    // Преобразуем критерии
                     criteria: data.criteria?.map(criterion => ({
                         id: criterion.id,
                         name: criterion.name,
@@ -137,13 +136,11 @@ const HackathonDashboard: React.FC = () => {
                         maxScore: criterion.maxScore
                     })) || [],
 
-                    // Технологии
                     technologies: data.technologies?.map(tech => ({
                         value: tech.id,
                         label: tech.name,
                     })) || [],
 
-                    // Награды
                     awards: data.awards?.map(award => ({
                         id: award.id,
                         placeFrom: award.placeFrom,
@@ -152,8 +149,6 @@ const HackathonDashboard: React.FC = () => {
                         additionally: award.additionally || ''
                     })) || [],
 
-                    // Для документов сначала устанавливаем пустой массив,
-                    // потом добавим существующие файлы отдельно
                     documents: [],
                     mentors: []
                 });
@@ -300,17 +295,89 @@ const HackathonDashboard: React.FC = () => {
         setUpdateHackathonLoading(true);
 
         try {
-            // const updateData = {
-            //     ...formData,
-            //     logoId: logoId, // Передаем ID существующего логотипа
-            //     existingDocumentIds: existingDocuments
-            //         .filter(doc => doc.isExisting)
-            //         .map(doc => doc.id)
-            // };
-            //
-            // // Вызываем API обновления
-            // await hackathonAPI.update(parseInt(id, 10), updateData);
-            // navigate(`/hackathon/${id}`);
+            const formDataToSend = new FormData();
+
+            // Подготавливаем JSON-объект для всех остальных данных
+            const hackathonDTO = {
+                name: formData.name,
+                description: formData.description,
+
+                // Даты
+                reg_date_from: new Date(formData.regDateFrom).toISOString(),
+                reg_date_to: new Date(formData.regDateTo).toISOString(),
+                work_date_from: new Date(formData.workDateFrom).toISOString(),
+                work_date_to: new Date(formData.workDateTo).toISOString(),
+                eval_date_from: new Date(formData.evalDateFrom).toISOString(),
+                eval_date_to: new Date(formData.evalDateTo).toISOString(),
+
+                // Размеры команд
+                min_team_size: formData.minTeamSize,
+                max_team_size: formData.maxTeamSize,
+
+                // ID организации
+                organization_id: formData.organizationId,
+
+                // Технологии - отправляем массив ID
+                technologies: formData.technologies.map(tech => tech.value),
+
+                // Этапы
+                steps: formData.stages.map(stage => ({
+                    name: stage.name,
+                    description: stage.description,
+                    start_date: new Date(stage.startDate).toISOString(),
+                    end_date: new Date(stage.endDate).toISOString()
+                })),
+
+                // Критерии оценки
+                criteria: formData.criteria.map(criterion => ({
+                    name: criterion.name,
+                    min_score: criterion.minScore,
+                    max_score: criterion.maxScore
+                })),
+
+                // Награды
+                awards: formData.awards.map(award => ({
+                    place_from: award.placeFrom,
+                    place_to: award.placeTo,
+                    money_amount: award.moneyAmount,
+                    additionally: award.additionally
+                })),
+
+                mentors: formData.mentors.map(mentor => mentor.value),
+
+                // Добавляем список файлов для удаления, если есть
+                files_to_delete: filesToDelete.length > 0 ? filesToDelete : undefined,
+
+                delete_logo: isLogoChanged
+            };
+
+            // Добавляем JSON данные в FormData
+            formDataToSend.append('data', JSON.stringify(hackathonDTO));
+
+            // Добавляем файл обложки только если он был изменен
+            if (formData.coverImage && isLogoChanged) {
+                formDataToSend.append('logo', formData.coverImage);
+                console.log("Добавляем логотип в запрос", formData.coverImage);
+            }
+
+            // Добавляем только новые документы
+            const newDocuments = formData.documents.filter(doc => !(doc as any).isExisting);
+            newDocuments.forEach(doc => {
+                formDataToSend.append('files', doc);
+            });
+
+            // Отладочный вывод
+            console.log("Отправляем данные:", {
+                jsonData: JSON.parse(formDataToSend.get('data') as string),
+                hasLogo: formDataToSend.has('logo'),
+                filesCount: newDocuments.length
+            });
+
+            // Вызываем API обновления
+            if (typeof id === "string") {
+                await hackathonAPI.update(parseInt(id, 10), formDataToSend);
+            }
+            navigate(`/hackathon/${id}`);
         } catch (err) {
             const errorMessage = (err as Error).message || "Ошибка при обновлении хакатона";
             setUpdateHackathonError(errorMessage);
@@ -367,7 +434,7 @@ const HackathonDashboard: React.FC = () => {
             coverImage: croppedImage
         }));
 
-        // Если загружаем новое изображение, сбрасываем ID старого
+        setIsLogoChanged(true);
         setLogoId(null);
 
         setFormErrors(prev => ({
@@ -410,15 +477,27 @@ const HackathonDashboard: React.FC = () => {
     };
 
     const handleFilesChange = (files: File[]) => {
-        // Фильтруем и оставляем только новые файлы (не существующие)
-        const newFiles = files.filter(file => !(file as any).isExisting);
+        // Проверяем, какие файлы были удалены
+        const currentExistingFileIds = new Set(
+            files
+                .filter(file => (file as any).isExisting)
+                .map(file => (file as any).id)
+        );
 
-        // Выделяем существующие файлы из текущего списка документов
-        const currentExistingFiles = formData.documents.filter(file => (file as any).isExisting);
+        // Находим ID существующих файлов, которых нет в текущем списке
+        const deletedFileIds = existingDocuments
+            .filter(doc => !currentExistingFileIds.has(doc.id))
+            .map(doc => doc.id);
 
+        // Добавляем удаленные файлы в общий список для удаления
+        if (deletedFileIds.length > 0) {
+            setFilesToDelete(prev => [...prev, ...deletedFileIds]);
+        }
+
+        // Обновляем список документов
         setFormData(prev => ({
             ...prev,
-            documents: [...currentExistingFiles, ...newFiles]
+            documents: files
         }));
 
         setFormErrors(prev => ({

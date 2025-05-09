@@ -76,6 +76,9 @@ export const hackathonAPI = {
 
         return request<number>({ method: 'POST', url: '/hackathon', data: formData})
     },
+    update: async (id: number, data: FormData) => {
+        return request<number>({ method: 'PUT', url: `/hackathon/${id}`, data})
+    },
     getAll: async (filterData: HackathonFilterData) =>
         request<HackathonSearchData>({method: 'POST', url: 'hackathons', data: filterData}),
     getBlobFile: async (fileId: number): Promise<Blob> => {
