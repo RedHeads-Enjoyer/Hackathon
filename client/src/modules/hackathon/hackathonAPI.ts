@@ -4,7 +4,7 @@ import {
     HackathonFormData,
     HackathonFullData,
     HackathonFullEditData,
-    HackathonSearchData
+    HackathonSearchData, ParticipantFilterData, ParticipantSearchData
 } from "./types.ts";
 
 export const HackathonAPI = {
@@ -89,5 +89,7 @@ export const HackathonAPI = {
     getFullForEditById: async (hackathonId: number) =>
         request<HackathonFullEditData>({method: 'GET', url: `hackathon/${hackathonId}/edit`}),
     join: async (hackathonId: number) =>
-        request<any>({method: 'GET', url: `hackathon/join/${hackathonId}`})
+        request<any>({method: 'GET', url: `hackathon/join/${hackathonId}`}),
+    getParticipants: async (hackathonId: number, filterData: ParticipantFilterData) =>
+        request<ParticipantSearchData>({method: 'POST', url: `hackathon/participants/${hackathonId}`, data: filterData}),
 };

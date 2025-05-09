@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ParticipantsSection from "./components/ParticipantsSection.tsx";
+import classes from './hackathon.module.css'
 
 
 
@@ -115,39 +116,36 @@ const HackathonDashboard = () => {
     const [activeTab, setActiveTab] = useState('participants');
 
     return (
-        <div className="hackathon-dashboard">
-            <div className="dashboard-header">
-                <h1>Дашборд хакатона</h1>
-            </div>
+        <div className={classes.page_wrapper}>
 
-            <div className="dashboard-tabs">
+            <div className={classes.dashboard_tabs}>
                 <button
-                    className={`tab-button ${activeTab === 'participants' ? 'active' : ''}`}
+                    className={`${classes.tab_button} ${activeTab === 'participants' ? classes.active : ''}`}
                     onClick={() => setActiveTab('participants')}
                 >
                     Участники
                 </button>
                 <button
-                    className={`tab-button ${activeTab === 'teams' ? 'active' : ''}`}
+                    className={`${classes.tab_button} ${activeTab === 'teams' ? classes.active : ''}`}
                     onClick={() => setActiveTab('teams')}
                 >
                     Команды
                 </button>
                 <button
-                    className={`tab-button ${activeTab === 'chats' ? 'active' : ''}`}
+                    className={`${classes.tab_button} ${activeTab === 'chats' ? classes.active : ''}`}
                     onClick={() => setActiveTab('chats')}
                 >
                     Чаты
                 </button>
                 <button
-                    className={`tab-button ${activeTab === 'projects' ? 'active' : ''}`}
+                    className={`${classes.tab_button} ${activeTab === 'projects' ? classes.active : ''}`}
                     onClick={() => setActiveTab('projects')}
                 >
                     Загрузка проектов
                 </button>
             </div>
 
-            <div className="dashboard-content">
+            <div className={classes.dashboard_content}>
                 {activeTab === 'participants' && <ParticipantsSection />}
                 {activeTab === 'teams' && <TeamsSection />}
                 {activeTab === 'chats' && <ChatsSection />}

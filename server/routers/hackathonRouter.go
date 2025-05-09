@@ -40,7 +40,7 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	protected.Use(middlewares.Auth())
 	{
 		protected.GET("/join/:hackathon_id", hackathonController.AddUser)
-		protected.GET("/:hackathon_id/users", hackathonController.GetUsers)
+		protected.GET("/participants/:hackathon_id", hackathonController.GetUsers)
 		protected.GET("/team/:team_id", inviteTeamController.GetTeamMembers)
 	}
 

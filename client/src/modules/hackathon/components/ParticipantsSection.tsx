@@ -1,7 +1,18 @@
-import {ParticipantFilterData, ParticipantSearchData} from "../types.ts";
-import {useState} from "react";
+import {ParticipantFilterData, ParticipantFilterUpdate, ParticipantSearchData} from "../types.ts";
+import {useEffect, useState} from "react";
+import {HackathonAPI} from "../hackathonAPI.ts";
+import {useParams} from "react-router-dom";
+import PageLabel from "../../../components/pageLabel/PageLabel.tsx";
+import Loader from "../../../components/loader/Loader.tsx";
+import classes from  "../hackathon.module.css"
+import ParticipantsSectionFilters from "./ParticipantsSectionFilters.tsx";
+import Error from "../../../components/error/Error.tsx";
+import ParticipantItem from "./ParticipantItem.tsx";
 
 const ParticipantsSection = () => {
+    const { id } = useParams<{ id: string }>();
+    const hackathonId = id ? parseInt(id, 10) : 1;
+
     const initialFilterData: ParticipantFilterData = {
         name: "",
         isFree: null,
@@ -16,18 +27,18 @@ const ParticipantsSection = () => {
     }
 
     const [participants, setParticipants] = useState<ParticipantSearchData>(initialParticipantsData);
-    const [searchLoading, setSearhLoading] = useState<boolean>(true)
+    const [searchLoading, setSearchLoading] = useState<boolean>(true)
     const [searchError, setSearchError] = useState<null | string>()
     const [filterData, setFilterData] = useState<ParticipantFilterData>(initialFilterData)
 
     const searchParticipants = (filterData: ParticipantFilterData) => {
-        setSearhLoading(true)
+        setSearchLoading(true)
         setSearchError(null);
         setParticipants(initialParticipantsData)
-        Hacat.getAll(filterData)
+        HackathonAPI.getParticipants(hackathonId, filterData)
             .then((data) => {
                 console.log(data)
-                setOrganization(prevState => ({
+                setParticipants(prevState => ({
                     ...prevState,
                     list: data.list
                 }));
@@ -35,81 +46,22 @@ const ParticipantsSection = () => {
                     ...prevState,
                     total: data.total
                 }));
-                setSearhLoading(false)
+                setSearchLoading(false)
             })
             .catch ((err) => {
-                const errorMessage = (err as Error).message || "Ошибка при создании организации";
+                const errorMessage = (err as Error).message || "Ошибка при поиске участников";
                 setSearchError(errorMessage);
             }).finally(() => {
-            setSearhLoading(false);
-        })
-    }
-}
-
-
-
-const Organizations = () => {
-    const initialFilterData: OrganizationFilterData = {
-        INN: "",
-        OGRN: "",
-        contactEmail: "",
-        legalName: "",
-        status: 0,
-        website: "",
-        limit: 20,
-        offset: 0,
-        total: 0
-    }
-
-    const initialOrganizationData: OrganizationSearchData = {
-        total: 0,
-        list: []
-    }
-
-    const [organizations, setOrganization] = useState<OrganizationSearchData>(initialOrganizationData);
-    const [searchLoading, setSearhLoading] = useState<boolean>(true)
-    const [searchError, setSearchError] = useState<null | string>()
-    const [filterData, setFilterData] = useState<OrganizationFilterData>(initialFilterData)
-
-    useEffect(() => {
-        searchOrganizations(filterData)
-    }, [filterData.offset])
-
-    useEffect(() => {
-        console.log(filterData)
-    }, [filterData]);
-
-    const searchOrganizations = (filterData: OrganizationFilterData) => {
-        setSearhLoading(true)
-        setSearchError(null);
-        setOrganization(initialOrganizationData)
-        OrganizationAPI.getAll(filterData)
-            .then((data) => {
-                console.log(data)
-                setOrganization(prevState => ({
-                    ...prevState,
-                    list: data.list
-                }));
-                setFilterData(prevState => ({
-                    ...prevState,
-                    total: data.total
-                }));
-                setSearhLoading(false)
-            })
-            .catch ((err) => {
-                const errorMessage = (err as Error).message || "Ошибка при создании организации";
-                setSearchError(errorMessage);
-            }).finally(() => {
-            setSearhLoading(false);
+            setSearchLoading(false);
         })
     }
 
-    const handleFilterChange = (update: FilterUpdate | React.ChangeEvent<HTMLInputElement>) => {
-        let name: keyof OrganizationFilterData;
+    const handleFilterChange = (update: ParticipantFilterUpdate | React.ChangeEvent<HTMLInputElement>) => {
+        let name: keyof ParticipantFilterData;
         let value: any;
 
         if ('target' in update) {
-            name = update.target.name as keyof OrganizationFilterData;
+            name = update.target.name as keyof ParticipantFilterData;
             value = update.target.value;
         } else {
             name = update.name;
@@ -119,7 +71,7 @@ const Organizations = () => {
         setFilterData(prev => {
             const newState = {
                 ...prev,
-                [name]: name === 'status' || name === 'limit' || name === 'offset' ? Number(value) : value
+                [name]: name === 'limit' || name === 'offset' ? Number(value) : value
             };
 
             if (name !== 'offset') {
@@ -130,41 +82,44 @@ const Organizations = () => {
         });
     };
 
+    useEffect(() => {
+        searchParticipants(filterData)
+    }, [filterData.offset])
+
     const handleResetFilters = () => {
         setFilterData(initialFilterData)
-        searchOrganizations(initialFilterData)
+        searchParticipants(initialFilterData)
     }
 
     const handleSearch = () => {
-        searchOrganizations(filterData)
+        searchParticipants(filterData)
     }
 
 
     return (
         <div className={classes.page_wrapper}>
-            <PageLabel size={'h3'}>Организации</PageLabel>
-            <OrganizationFilter
+            <PageLabel size={'h3'}>Участники</PageLabel>
+            <ParticipantsSectionFilters
                 filterData={filterData}
                 setFilterData={handleFilterChange}
                 onResetFilters={handleResetFilters}
                 onSearch={handleSearch}
             />
             {searchLoading ? <Loader/> :
-                organizations.list?.length > 0 ? (
-                    organizations.list.map((org) => (
-                        <div key={`organization_${org.INN}`}>
-                            <OrganizationItem organization={org} statusChange/>
+                participants.list?.length > 0 ? (
+                    participants.list.map((part) => (
+                        <div key={`participants_${part.id}`}>
+                            <ParticipantItem participant={part}/>
                         </div>
                     ))
                 ) : (
-                    <div className={classes.noResults}><p>Организации не найдены</p></div>
+                    <div className={classes.noResults}><p>Участники не найдены</p></div>
                 )
             }
             {searchError && <Error>{searchError}</Error>}
         </div>
     );
-};
+}
 
-export default Organizations;
 
 export default ParticipantsSection
