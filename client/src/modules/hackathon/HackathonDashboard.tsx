@@ -46,6 +46,7 @@ const HackathonDashboard: React.FC = () => {
         criteria: [],
         technologies: [],
         awards: [],
+        mentors: [],
         documents: [],
     });
 
@@ -154,6 +155,7 @@ const HackathonDashboard: React.FC = () => {
                     // Для документов сначала устанавливаем пустой массив,
                     // потом добавим существующие файлы отдельно
                     documents: [],
+                    mentors: []
                 });
 
                 setInitialOrganization({
@@ -479,7 +481,7 @@ const HackathonDashboard: React.FC = () => {
                     <div className={classes.image_info}>
                         <ImageUploader
                             onImageChange={handleImageCrop}
-                            initialImage={formData.coverImage}
+                            initialFileId={logoId}
                             required={!logoId}
                             error={formErrors.coverImage}
                         />
@@ -617,17 +619,17 @@ const HackathonDashboard: React.FC = () => {
                     </div>
                 )}
 
-                {/*<FileUpload*/}
-                {/*    label="Документы проекта"*/}
-                {/*    required*/}
-                {/*    value={formData.documents}*/}
-                {/*    onChange={handleFilesChange}*/}
-                {/*    acceptedFileTypes=".jpg,.jpeg,.png,.pdf,.doc,.docx"*/}
-                {/*    maxFileSize={5 * 1024 * 1024} // 5MB*/}
-                {/*    maxFiles={5}*/}
-                {/*    placeholder="Перетащите файлы сюда или нажмите для выбора"*/}
-                {/*    error={formErrors.documents}*/}
-                {/*/>*/}
+                <FileUpload
+                    label="Документы проекта"
+                    required
+                    value={formData.documents}
+                    onChange={handleFilesChange}
+                    acceptedFileTypes=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                    maxFileSize={5 * 1024 * 1024}
+                    maxFiles={10}
+                    placeholder="Перетащите файлы сюда или нажмите для выбора"
+                    error={formErrors.documents}
+                />
                 <div className={classes.file_help}>
                     <p>Загрузите важные документы: положение о проведении, правила участия, требования к проектам и т.д.</p>
                 </div>

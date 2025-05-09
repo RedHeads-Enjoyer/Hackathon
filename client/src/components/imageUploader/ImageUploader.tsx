@@ -1,12 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import classes from './style.module.css';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from './imageUtils';
 import Modal from '../../components/modal/Modal.tsx';
+import { hackathonAPI } from '../../modules/hackathon/hackathonAPI';
 
 interface ImageUploaderProps {
     onImageChange: (croppedImage: File) => void;
-    initialImage?: string | File | null; // Изменено здесь
+    initialImage?: string | File | null;
+    initialFileId?: number | null; // New prop for file ID
     required?: boolean;
     error?: string;
 }
@@ -14,27 +16,49 @@ interface ImageUploaderProps {
 const ImageUploader: React.FC<ImageUploaderProps> = ({
                                                          onImageChange,
                                                          initialImage = null,
+                                                         initialFileId = null,
                                                          required = false,
                                                          error = ''
                                                      }) => {
-
-    const getInitialImageUrl = () => {
-        if (!initialImage) return null;
-        if (typeof initialImage === 'string') return initialImage;
-        return URL.createObjectURL(initialImage);
-    };
-
     const [originalImage, setOriginalImage] = useState<string | null>(null);
-    const [croppedImage, setCroppedImage] = useState<string | null>(getInitialImageUrl());
+    const [croppedImage, setCroppedImage] = useState<string | null>(null);
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [loading, setLoading] = useState<boolean>(!!initialFileId);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Handle initial file ID
+    useEffect(() => {
+        if (initialFileId) {
+            const fetchImage = async () => {
+                try {
+                    const blob = await hackathonAPI.getBlobFile(initialFileId);
+                    const imageUrl = URL.createObjectURL(blob);
+                    setCroppedImage(imageUrl);
+                } catch (error) {
+                    console.error('Failed to load image:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
 
+            fetchImage();
+        }
+    }, [initialFileId]);
 
-    // Остальной код компонента не изменяется
+    // Handle direct initialImage
+    useEffect(() => {
+        if (!initialFileId && initialImage) {
+            const imageUrl = typeof initialImage === 'string'
+                ? initialImage
+                : URL.createObjectURL(initialImage as File);
+            setCroppedImage(imageUrl);
+        }
+    }, [initialImage, initialFileId]);
+
+    // Rest of your component code remains the same
     const handleUploadClick = () => {
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -65,10 +89,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         try {
             if (!originalImage || !croppedAreaPixels) return;
 
-            // Получаем результат и проверяем тип
             const result = await getCroppedImg(originalImage, croppedAreaPixels, true);
 
-            // Проверяем, что это Blob
             if (result instanceof Blob) {
                 const croppedFile = new File([result], 'cover-image.jpg', { type: 'image/jpeg' });
                 const previewUrl = URL.createObjectURL(result);
@@ -88,9 +110,21 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         handleUploadClick();
     };
 
-    // Определяем класс для контейнера с учетом ошибки
     const containerClass = error ? `${classes.container} ${classes.error}` : classes.container;
     const uploadAreaClass = error ? `${classes.uploadArea} ${classes.errorArea}` : classes.uploadArea;
+
+    if (loading) {
+        return (
+            <div className={containerClass}>
+                <div className={uploadAreaClass}>
+                    <div className={classes.placeholder}>
+                        <span>...</span>
+                        <p>Загрузка изображения</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={containerClass}>
@@ -121,7 +155,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                             Загрузить изображение
                             {required && <span className={classes.required}>*</span>}
                         </p>
-
                     </div>
                 </div>
             )}

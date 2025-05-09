@@ -35,13 +35,13 @@
     flex: 0 0 auto;
 }
 
-.mentorList {
+.techList {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 12px;
 }
 
-.mentorItem {
+.techItem {
     background-color: var(--input-bg-color);
     border: 1px solid var(--input-border-color);
     border-radius: var(--border-radius);
@@ -54,11 +54,11 @@
     color: var(--default-text-color);
 }
 
-.mentorItem:hover {
+.techItem:hover {
     border-color: var(--accent-light-color);
 }
 
-.mentorItem.active {
+.techItem.active {
     border-color: var(--accent-color);
     box-shadow: 0 0 0 3px var(--accent-shadow-color);
 }
@@ -91,7 +91,7 @@
 
 /* Адаптивность */
 @media (max-width: 768px) {
-    .mentorList {
+    .techList {
         grid-template-columns: 1fr;
     }
 
@@ -223,7 +223,7 @@
 
 
 /* Добавьте эти стили для заголовка списка технологий */
-.mentorHeader {
+.techHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -232,14 +232,14 @@
     gap: 8px;
 }
 
-.mentorListTitle {
+.techListTitle {
     margin: 0;
     color: var(--light-text-color);
     font-size: 16px;
     font-weight: 600;
 }
 
-.mentorHelp {
+.techHelp {
     color: var(--secondary-text-color);
     font-size: 14px;
     font-style: italic;
@@ -247,7 +247,7 @@
 
 /* Обновления для адаптивности */
 @media (max-width: 768px) {
-    .mentorHeader {
+    .techHeader {
         flex-direction: column;
         align-items: flex-start;
     }

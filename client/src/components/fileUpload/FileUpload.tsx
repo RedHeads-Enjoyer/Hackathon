@@ -1,10 +1,21 @@
 import React, { useState, useRef, useEffect, useId } from 'react';
 import classes from './style.module.css';
-import Modal from '../modal/Modal'; // Импортируем компонент Modal
+import Modal from '../modal/Modal';
+import { hackathonAPI } from '../../modules/hackathon/hackathonAPI';
+import Button from "../button/Button.tsx";
+
+// Расширяем интерфейс для существующих файлов
+export interface ExistingFile extends File {
+    id: number;
+    isExisting: true;
+}
+
+// Тип для файлов - обычные или существующие
+type FileItem = File | ExistingFile;
 
 type FileUploadProps = {
-    onChange: (files: File[]) => void;
-    value: File[];
+    onChange: (files: FileItem[]) => void;
+    value: FileItem[];
     label?: string;
     acceptedFileTypes?: string;
     maxFileSize?: number;
@@ -12,6 +23,11 @@ type FileUploadProps = {
     required?: boolean;
     error?: string;
     placeholder?: string;
+};
+
+// Проверка, является ли файл существующим
+const isExistingFile = (file: any): file is ExistingFile => {
+    return file && 'isExisting' in file && file.isExisting === true;
 };
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -27,18 +43,42 @@ const FileUpload: React.FC<FileUploadProps> = ({
                                                }) => {
     const [dragActive, setDragActive] = useState(false);
     const [localErrors, setLocalErrors] = useState<string[]>([]);
+    const [filePreviewUrls, setFilePreviewUrls] = useState<Map<string, string>>(new Map());
     const inputRef = useRef<HTMLInputElement>(null);
     const labelId = useId();
 
-    // Добавляем состояние для модального окна подтверждения удаления
+    // Модальное окно подтверждения удаления
     const [deleteConfirm, setDeleteConfirm] = useState<{
         show: boolean;
         fileIndex: number | null;
         fileName: string | null;
     }>({ show: false, fileIndex: null, fileName: null });
 
+    // Генерация и кэширование превью для файлов при изменении списка
     useEffect(() => {
-        // Clear local errors when external error changes
+        // Новые объекты File можно предварительно просмотреть
+        value.forEach((file, index) => {
+            if (!isExistingFile(file) && file.type.startsWith('image/')) {
+                try {
+                    const key = `file-${index}-${file.name}`;
+                    if (!filePreviewUrls.has(key)) {
+                        const url = URL.createObjectURL(file);
+                        setFilePreviewUrls(prev => new Map(prev).set(key, url));
+                    }
+                } catch (err) {
+                    console.error('Ошибка при создании превью:', err);
+                }
+            }
+        });
+
+        // Очистка URL при размонтировании
+        return () => {
+            filePreviewUrls.forEach(url => URL.revokeObjectURL(url));
+        };
+    }, [value]);
+
+    useEffect(() => {
+        // Очистка локальных ошибок при изменении внешней ошибки
         if (error) {
             setLocalErrors([]);
         }
@@ -50,15 +90,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
         const newErrors: string[] = [];
         const newFiles: File[] = [];
 
-        // Convert FileList to array and validate
+        // Проверка каждого файла
         Array.from(files).forEach(file => {
-            // Check file type if acceptedFileTypes is provided
+            // Проверка типа файла
             if (acceptedFileTypes !== "*" && !file.type.match(acceptedFileTypes.replace(/,/g, '|'))) {
                 newErrors.push(`Файл "${file.name}" имеет недопустимый формат`);
                 return;
             }
 
-            // Check file size if maxFileSize is provided
+            // Проверка размера файла
             if (maxFileSize && file.size > maxFileSize) {
                 const sizeMB = Math.round(maxFileSize / 1024 / 1024 * 10) / 10;
                 newErrors.push(`Файл "${file.name}" превышает максимальный размер (${sizeMB} МБ)`);
@@ -68,7 +108,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
             newFiles.push(file);
         });
 
-        // Check max files limit
+        // Проверка максимального количества файлов
         const totalFiles = [...value, ...newFiles];
         if (maxFiles && totalFiles.length > maxFiles) {
             newErrors.push(`Можно загрузить не более ${maxFiles} файлов`);
@@ -80,12 +120,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
             return;
         }
 
-        onChange(totalFiles);
+        onChange([...value, ...newFiles]);
         setLocalErrors([]);
     };
 
-    // Заменим прямое удаление на запрос подтверждения
-    const requestRemoveFile = (index: number) => {
+    // Запрос на подтверждение удаления
+    const requestRemoveFile = (index: number, e: React.MouseEvent) => {
+        e.stopPropagation(); // Предотвращаем распространение события
         setDeleteConfirm({
             show: true,
             fileIndex: index,
@@ -93,7 +134,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         });
     };
 
-    // Функция для выполнения удаления после подтверждения
+    // Удаление файла после подтверждения
     const confirmRemoveFile = () => {
         if (deleteConfirm.fileIndex === null) return;
 
@@ -104,9 +145,44 @@ const FileUpload: React.FC<FileUploadProps> = ({
         setDeleteConfirm({ show: false, fileIndex: null, fileName: null });
     };
 
-    // Функция для отмены удаления
+    // Отмена удаления
     const cancelRemoveFile = () => {
         setDeleteConfirm({ show: false, fileIndex: null, fileName: null });
+    };
+
+    // Скачивание файла
+    const downloadFile = async (file: FileItem, e: React.MouseEvent) => {
+        e.preventDefault();
+
+        try {
+            let url: string;
+            let blob: Blob;
+
+            if (isExistingFile(file)) {
+                // Для файлов с сервера скачиваем через API
+                blob = await hackathonAPI.getBlobFile(file.id);
+                url = URL.createObjectURL(blob);
+            } else {
+                // Для локальных файлов создаем URL
+                url = URL.createObjectURL(file);
+            }
+
+            // Создаем временную ссылку для скачивания
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = file.name;
+            document.body.appendChild(a);
+            a.click();
+
+            // Очищаем память
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        } catch (error) {
+            console.error("Ошибка при скачивании файла:", error);
+            alert("Не удалось скачать файл");
+        }
     };
 
     const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
@@ -130,7 +206,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         handleFiles(e.target.files);
-        // Reset input to allow selecting the same file again
+        // Сброс input для повторного выбора одного и того же файла
         if (inputRef.current) inputRef.current.value = '';
     };
 
@@ -140,7 +216,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         }
     };
 
-    // Format file size for display
+    // Форматирование размера файла для отображения
     const formatFileSize = (bytes: number): string => {
         if (bytes === 0) return '0 Байт';
 
@@ -151,8 +227,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
-    // Get file icon based on type
-    const getFileIcon = (file: File): string => {
+    // Получение иконки для типа файла
+    const getFileIcon = (file: FileItem): string => {
         if (file.type.startsWith('image/')) {
             return '🖼️';
         } else if (file.type.includes('pdf')) {
@@ -171,9 +247,17 @@ const FileUpload: React.FC<FileUploadProps> = ({
         return '📎';
     };
 
-    // Generate preview for image files
-    const getPreviewUrl = (file: File): string | null => {
-        return file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
+    // Получение URL превью для файла
+    const getPreviewUrl = (file: FileItem, index: number): string | null => {
+        const key = `file-${index}-${file.name}`;
+        if (file.type.startsWith('image/')) {
+            if (!isExistingFile(file)) {
+                return filePreviewUrls.get(key) || null;
+            }
+            // Для существующих файлов превью будет загружаться отдельно
+            return null;
+        }
+        return null;
     };
 
     const isError = error || localErrors.length > 0;
@@ -231,7 +315,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                 <div className={classes.filesHeader}>
                     <h4 className={classes.filesListTitle}>Список файлов</h4>
                     <div className={classes.filesHelp}>
-                        Для удаления файла кликните на него
+                        Нажмите на файл, чтобы скачать его
                     </div>
                 </div>
             )}
@@ -239,16 +323,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
             {value.length > 0 && (
                 <div className={classes.fileList}>
                     {value.map((file, index) => {
-                        const preview = getPreviewUrl(file);
+                        const preview = getPreviewUrl(file, index);
+                        const isExisting = isExistingFile(file);
 
                         return (
                             <div
-                                key={`${file.name}-${index}`}
+                                key={isExisting ? `existing-${(file as ExistingFile).id}-${index}` : `new-${file.name}-${index}`}
                                 className={classes.fileItem}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    requestRemoveFile(index);
-                                }}
+                                onClick={(e) => downloadFile(file, e)}
                             >
                                 <div className={classes.filePreview}>
                                     {preview ? (
@@ -259,9 +341,18 @@ const FileUpload: React.FC<FileUploadProps> = ({
                                 </div>
 
                                 <div className={classes.fileInfo}>
-                                    <div className={classes.fileName}>{file.name}</div>
+                                    <div className={classes.fileName}>
+                                        {file.name}
+                                        {isExisting && <span className={classes.existingBadge}> (Загружен)</span>}
+                                    </div>
                                     <div className={classes.fileSize}>{formatFileSize(file.size)}</div>
                                 </div>
+
+                                {/* Кнопка удаления файла */}
+                                <Button
+                                    variant={"clear"}
+                                    onClick={(e) => requestRemoveFile(index, e)}
+                                />
                             </div>
                         );
                     })}

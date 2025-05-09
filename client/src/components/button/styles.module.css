@@ -199,3 +199,52 @@
         opacity: 0;
     }
 }
+
+.clearButton:hover {
+    background-color: #495057;
+}
+
+.clearButton svg {
+    width: 10px;
+    height: 10px;
+}
+
+.clearButton svg path {
+    stroke: white;
+}
+
+/* Для случаев, когда position: absolute не требуется */
+button.clearButton:not([style*="position"]) {
+    position: static;
+    right: auto;
+}
+
+/* Стили для кнопки очистки */
+.clearButton {
+    position: absolute;
+    right: 30px;
+    background: #6c757d;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.clearButton:hover {
+    background-color: #495057;
+}
+
+.clearButton svg {
+    width: 10px;
+    height: 10px;
+}
+
+.clearButton svg path {
+    stroke: white;
+}

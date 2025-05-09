@@ -473,7 +473,7 @@ const CreateHackathon: React.FC = () => {
                     onChange={handleFilesChange}
                     acceptedFileTypes=".jpg,.jpeg,.png,.pdf,.doc,.docx"
                     maxFileSize={5 * 1024 * 1024} // 5MB
-                    maxFiles={5}
+                    maxFiles={10}
                     placeholder="Перетащите файлы сюда или нажмите для выбора"
                     error={formErrors.documents}
                 />
