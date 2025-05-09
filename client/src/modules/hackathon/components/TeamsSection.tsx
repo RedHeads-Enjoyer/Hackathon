@@ -8,6 +8,8 @@ import Error from "../../../components/error/Error.tsx";
 import Input from "../../../components/input/Input.tsx";
 import Modal from "../../../components/modal/Modal.tsx";
 import Button from "../../../components/button/Button.tsx";
+import Loader from "../../../components/loader/Loader.tsx";
+import TeamParticipantItem from "./TeamParticipantItem.tsx";
 
 const TeamSection = () => {
     const { id } = useParams<{ id: string }>();
@@ -97,8 +99,8 @@ const TeamSection = () => {
         }
 
         try {
-            // await OrganizationAPI.create(formData);
-            // navigate('/organizations/my');
+            await HackathonAPI.createTeam(hackathonId, formData);
+            searchTeam()
         } catch (err) {
             const errorMessage = (err as Error).message || "Ошибка при создании организации";
             setCreateError(errorMessage);
@@ -110,53 +112,54 @@ const TeamSection = () => {
 
     return (
         <div className={classes.page_wrapper}>
-            <PageLabel size={'h3'}>{isCreate ? "Создание команды" : `Команда${ team.name}`}</PageLabel>
-            {isCreate ?
-                <div className={classes.info_block}>
-                    <Input
-                        label="Название команды"
-                        type="text"
-                        value={formData.name}
-                        onChange={handleChange}
-                        name="name"
-                        placeholder="Введите название команды"
-                        required
-                        error={formErrors.name}
-                    />
-                    <div className={classes.publish_section}>
-                        <Button
-                            onClick={handleCreateClick}
-                            loading={createLoading}
-                        >
-                            Создать команду
-                        </Button>
-                    </div>
-                    <Modal
-                        isOpen={isPublishModalOpen}
-                        title={"Подтверждение создание команды"}
-                        confirmText={"Подтверждаю"}
-                        rejectText={"Отмена"}
-                        onConfirm={confirmCreate}
-                        onReject={() => setIsPublishModalOpen(false)}
-                    >
-                        <p>Подтвердите введенные данные.</p>
-                    </Modal>
-                </div>:
-                <div></div>}
+            {teamLoading ? < Loader/> :
+                <>
+                    <PageLabel size={'h3'}>{isCreate ? "Создание команды" : `Команда${ team.name}`}</PageLabel>
+                    {isCreate ?
+                        <div className={classes.info_block}>
+                            <Input
+                                label="Название команды"
+                                type="text"
+                                value={formData.name}
+                                onChange={handleChange}
+                                name="name"
+                                placeholder="Введите название команды"
+                                required
+                                error={formErrors.name}
+                            />
+                            <div className={classes.publish_section}>
+                                <Button
+                                    onClick={handleCreateClick}
+                                    loading={createLoading}
+                                >
+                                    Создать команду
+                                </Button>
+                            </div>
+                            <Modal
+                                isOpen={isPublishModalOpen}
+                                title={"Подтверждение создание команды"}
+                                confirmText={"Подтверждаю"}
+                                rejectText={"Отмена"}
+                                onConfirm={confirmCreate}
+                                onReject={() => setIsPublishModalOpen(false)}
+                            >
+                                <p>Подтвердите введенные данные.</p>
+                            </Modal>
+                        </div>
+                        :
+                        <div>
+                            {team.participants.length > 0 && (
+                                team.participants.map((part) => (
+                                    <div key={`participants_${part.id}`}>
+                                        <TeamParticipantItem participant={part} />
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    }
+                </>
+            }
 
-
-
-            {/*{searchLoading ? <Loader/> :*/}
-            {/*    participants.list?.length > 0 ? (*/}
-            {/*        participants.list.map((part) => (*/}
-            {/*            <div key={`participants_${part.id}`}>*/}
-            {/*                <ParticipantItem participant={part}/>*/}
-            {/*            </div>*/}
-            {/*        ))*/}
-            {/*    ) : (*/}
-            {/*        <div className={classes.noResults}><p>Участники не найдены</p></div>*/}
-            {/*    )*/}
-            {/*}*/}
             {loadingError && <Error>{loadingError}</Error>}
             {createError && <Error>{createError}</Error>}
         </div>

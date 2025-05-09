@@ -4,7 +4,7 @@ import {
     HackathonFormData,
     HackathonFullData,
     HackathonFullEditData,
-    HackathonSearchData, ParticipantFilterData, ParticipantSearchData, TeamData
+    HackathonSearchData, ParticipantFilterData, ParticipantSearchData, TeamCreate, TeamData
 } from "./types.ts";
 
 export const HackathonAPI = {
@@ -94,4 +94,7 @@ export const HackathonAPI = {
         request<ParticipantSearchData>({method: 'POST', url: `hackathon/participants/${hackathonId}`, data: filterData}),
     getTeam: async (hackathonId: number) =>
         request<TeamData>({method: 'GET', url: `hackathon/team/${hackathonId}`}),
+    createTeam: async (hackathonId: number, data: TeamCreate)=> {
+        request<any>({method: 'POST', url: `hackathon/team/${hackathonId}`, data})
+    }
 };
