@@ -28,6 +28,7 @@ type CreateDTO struct {
 	Criteria     []criteriaDTO.Create `json:"criteria" validate:"required,dive,required"`
 	Steps        []stepDTO.Create     `json:"steps" validate:"required,dive,required"`
 	Awards       []awardDTO.Create    `json:"awards" validate:"required,dive,required"`
+	Mentors      []uint               `json:"mentors"`
 }
 
 func (dto *CreateDTO) ToModel() *models.Hackathon {

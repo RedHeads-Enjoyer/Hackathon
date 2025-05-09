@@ -37,6 +37,7 @@ export interface HackathonFormData {
     stages: Stage[];
     criteria: Criteria[];
     technologies: Option[];
+    mentors: Option[];
     awards: Award[];
     documents: File[];
 }

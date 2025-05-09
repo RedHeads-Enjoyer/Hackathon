@@ -21,6 +21,7 @@ import FileUpload from "../../components/fileUpload/FileUpload.tsx";
 import {Award, Criteria, HackathonFormData, HackathonFormErrors} from "./types.ts";
 import Error from "../../components/error/Error.tsx";
 import {hackathonAPI} from "./hackathonAPI.ts";
+import MentorStackInput from "../../components/mentorStackInput/MentorStackInput.tsx";
 
 const CreateHackathon: React.FC = () => {
     const [formData, setFormData] = useState<HackathonFormData>({
@@ -40,6 +41,7 @@ const CreateHackathon: React.FC = () => {
         criteria: [],
         technologies: [],
         awards: [],
+        mentors: [],
         documents: [],
     });
 
@@ -247,6 +249,13 @@ const CreateHackathon: React.FC = () => {
         }))
     }
 
+    const handleMentorChange = (mentor: Array<Option>) => {
+        setFormData(prev => ({
+            ...prev,
+            mentors: mentor
+        }))
+    }
+
     const handleOrganizationIdChange  = (option: Option) => {
         setFormData(prev => ({
             ...prev,
@@ -438,6 +447,10 @@ const CreateHackathon: React.FC = () => {
                 initialAwards={formData.awards}
                 onChange={handleAwardsChange}
                 required
+            />
+
+            <MentorStackInput
+                onChange={handleMentorChange}
             />
 
             {/* Блок документов */}

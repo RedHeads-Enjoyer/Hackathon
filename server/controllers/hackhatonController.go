@@ -190,6 +190,24 @@ func (hc *HackathonController) CreateHackathon(c *gin.Context) {
 			}
 		}
 
+		// Добавляем приглашения
+		if len(dto.Mentors) > 0 {
+			var mentorInvites []models.MentorInvite
+
+			for _, mentorID := range dto.Mentors {
+				invite := models.MentorInvite{
+					UserID:      mentorID,
+					HackathonID: hackathon.ID,
+					Status:      0,
+				}
+				mentorInvites = append(mentorInvites, invite)
+			}
+
+			if err := tx.Create(&mentorInvites).Error; err != nil {
+				return err
+			}
+		}
+
 		// Создаем и связываем этапы хакатона
 		if len(dto.Steps) > 0 {
 			for _, stepDTO := range dto.Steps {
