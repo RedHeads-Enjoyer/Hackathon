@@ -688,16 +688,6 @@ const HackathonDashboard: React.FC = () => {
             {/* Блок документов */}
             <div className={classes.info_block}>
                 <h4 className={classes.block_title}>Документация хакатона</h4>
-
-                {formData.documents.length > 0 && (
-                    <div className={classes.documentsHeader}>
-                        <h4 className={classes.documentsListTitle}>Загруженные документы</h4>
-                        <div className={classes.documentsHelp}>
-                            Для удаления документа нажмите на крестик справа от него
-                        </div>
-                    </div>
-                )}
-
                 <FileUpload
                     label="Документы проекта"
                     required

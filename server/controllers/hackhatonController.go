@@ -15,6 +15,7 @@ import (
 	"server/models/DTO/fileDTO"
 	"server/models/DTO/hackathonDTO"
 	"server/models/DTO/hackathonStepDTO"
+	"server/models/DTO/mentorInviteDTO"
 	"server/models/DTO/teamDTO"
 	"server/models/DTO/technologyDTO"
 	"server/models/DTO/userDTO"
@@ -1344,6 +1345,25 @@ func (hc *HackathonController) GetByIDEditFull(c *gin.Context) {
 		})
 	}
 
+	// Получаем приглашения менторов с предварительной загрузкой пользователей
+	var mentorInvites []models.MentorInvite
+	if err := hc.DB.Preload("User").
+		Where("hackathon_id = ?", hackathon.ID).
+		Find(&mentorInvites).Error; err != nil {
+		// Логируем ошибку, но продолжаем выполнение
+		log.Printf("Ошибка при получении приглашений менторов: %v", err)
+	}
+
+	// Преобразуем приглашения менторов в DTO
+	mentorInvitesDTOs := make([]mentorInviteDTO.Get, 0, len(mentorInvites))
+	for _, invite := range mentorInvites {
+		mentorInvitesDTOs = append(mentorInvitesDTOs, mentorInviteDTO.Get{
+			Id:       int(invite.ID),
+			Username: invite.User.Username, // Используем предзагруженное поле User
+			Status:   invite.Status,
+		})
+	}
+
 	// Создаем DTO с полной информацией о хакатоне
 	fullInfo := hackathonDTO.FullBaseEditInfo{
 		ID:               hackathon.ID,
@@ -1367,11 +1387,12 @@ func (hc *HackathonController) GetByIDEditFull(c *gin.Context) {
 		MaxTeamSize: hackathon.MaxTeamSize,
 		UserCount:   int(userCount),
 
-		Files:        filesDTOs,
-		Steps:        stepsDTOs,
-		Awards:       awardsDTOs,
-		Technologies: techDTOs,
-		Criteria:     criteriaDTOs,
+		Files:         filesDTOs,
+		Steps:         stepsDTOs,
+		Awards:        awardsDTOs,
+		Technologies:  techDTOs,
+		Criteria:      criteriaDTOs,
+		MentorInvites: mentorInvitesDTOs,
 
 		HackathonRole: hackathonRole,
 	}
