@@ -22,6 +22,7 @@ import { Award, Criteria, HackathonFormData, HackathonFormErrors } from "./types
 import Error from "../../components/error/Error.tsx";
 import { hackathonAPI } from "./hackathonAPI.ts";
 import Loader from "../../components/loader/Loader.tsx";
+import MentorInviteStackInput from "../../components/mentorInviteStackInput/MentorInviteStackInput.tsx";
 
 const HackathonDashboard: React.FC = () => {
     // Получаем ID хакатона из URL параметров
@@ -46,7 +47,7 @@ const HackathonDashboard: React.FC = () => {
         criteria: [],
         technologies: [],
         awards: [],
-        mentors: [],
+        mentorInvites: [],
         documents: [],
     });
 
@@ -64,6 +65,8 @@ const HackathonDashboard: React.FC = () => {
     const [existingDocuments, setExistingDocuments] = useState<Array<any>>([]);
     const [filesToDelete, setFilesToDelete] = useState<number[]>([]); // ID файлов для удаления
     const [isLogoChanged, setIsLogoChanged] = useState<boolean>(false);
+    const [mentorInvitesToDelete, setMentorInvitesToDelete] = useState<number[]>([]);
+    const [newMentorInvites, setNewMentorInvites] = useState<Array<{userId: number, username: string}>>([]);
 
     // Рефы для доступа к компонентам дочерних форм
     const stagesRef = useRef<StepsListWithDatesRef>(null);
@@ -150,7 +153,7 @@ const HackathonDashboard: React.FC = () => {
                     })) || [],
 
                     documents: [],
-                    mentors: []
+                    mentorInvites: data.mentorInvites
                 });
 
                 setInitialOrganization({
@@ -343,7 +346,8 @@ const HackathonDashboard: React.FC = () => {
                     additionally: award.additionally
                 })),
 
-                mentors: formData.mentors.map(mentor => mentor.value),
+                mentors: newMentorInvites.map(invite => invite.userId),
+                mentor_invites_to_delete: mentorInvitesToDelete.length > 0 ? mentorInvitesToDelete : undefined,
 
                 // Добавляем список файлов для удаления, если есть
                 files_to_delete: filesToDelete.length > 0 ? filesToDelete : undefined,
@@ -414,6 +418,14 @@ const HackathonDashboard: React.FC = () => {
             ...prev,
             [name]: undefined
         }));
+    };
+
+    const handleMentorInviteChange = (
+        newInvites: Array<{userId: number, username: string}>,
+        invitesToDelete: Array<number>
+    ) => {
+        setNewMentorInvites(newInvites);
+        setMentorInvitesToDelete(invitesToDelete);
     };
 
     const handleCriteriaChange = (criteria: Criteria[]) => {
@@ -684,6 +696,12 @@ const HackathonDashboard: React.FC = () => {
                 onChange={handleAwardsChange}
                 required
             />
+
+            <MentorInviteStackInput
+                mentorInvites={formData.mentorInvites}
+                onChange={handleMentorInviteChange}
+            />
+
 
             {/* Блок документов */}
             <div className={classes.info_block}>

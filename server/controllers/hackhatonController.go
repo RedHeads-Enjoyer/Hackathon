@@ -664,16 +664,46 @@ func (hc *HackathonController) Update(c *gin.Context) {
 	// -------------------------------------------
 	// Обработка менторов
 	// -------------------------------------------
-	if len(dto.Mentors) > 0 {
-		// Удаляем существующие приглашения, которые еще не приняты
-		if err := tx.Where("hackathon_id = ? AND status = 0", hackathon.ID).Delete(&models.MentorInvite{}).Error; err != nil {
-			rollbackWithError(http.StatusInternalServerError, "Ошибка при обновлении приглашений менторов")
-			return
-		}
 
-		// Добавляем новые приглашения для менторов, которые еще не являются менторами хакатона
+	// Обработка удаления приглашений менторов
+	if len(dto.MentorInvitesToDelete) > 0 {
+		for _, inviteID := range dto.MentorInvitesToDelete {
+			// Находим приглашение
+			var invite models.MentorInvite
+			if err := tx.First(&invite, inviteID).Error; err != nil {
+				continue // Пропускаем, если приглашение не найдено
+			}
+
+			// Проверяем, принадлежит ли приглашение хакатону
+			if invite.HackathonID != hackathon.ID {
+				continue
+			}
+
+			// Проверяем, есть ли пользователь в хакатоне как ментор
+			var mentorRole models.BndUserHackathon
+			if err := tx.Where("user_id = ? AND hackathon_id = ? AND hackathon_role = 2",
+				invite.UserID, hackathon.ID).First(&mentorRole).Error; err == nil {
+				// Пользователь уже ментор, нужно удалить его из хакатона
+				if err := tx.Delete(&mentorRole).Error; err != nil {
+					rollbackWithError(http.StatusInternalServerError, "Ошибка при удалении ментора из хакатона")
+					return
+				}
+			}
+
+			// Удаляем приглашение
+			if err := tx.Delete(&invite).Error; err != nil {
+				rollbackWithError(http.StatusInternalServerError, "Ошибка при удалении приглашения ментора")
+				return
+			}
+		}
+	}
+
+	// Добавление новых приглашений
+	if len(dto.Mentors) > 0 {
+		// Обрабатываем новые приглашения для менторов
 		var mentorInvites []models.MentorInvite
 		for _, mentorID := range dto.Mentors {
+			// Проверяем, не является ли пользователь уже ментором
 			var existingMentor models.BndUserHackathon
 			if err := tx.Where("user_id = ? AND hackathon_id = ? AND hackathon_role = 2",
 				mentorID, hackathon.ID).First(&existingMentor).Error; err == nil {
@@ -681,10 +711,19 @@ func (hc *HackathonController) Update(c *gin.Context) {
 				continue
 			}
 
+			// Проверяем, нет ли уже приглашения для этого пользователя
+			var existingInvite models.MentorInvite
+			if err := tx.Where("user_id = ? AND hackathon_id = ?",
+				mentorID, hackathon.ID).First(&existingInvite).Error; err == nil {
+				// Приглашение уже существует, пропускаем
+				continue
+			}
+
+			// Создаем новое приглашение
 			invite := models.MentorInvite{
 				UserID:      mentorID,
 				HackathonID: hackathon.ID,
-				Status:      0,
+				Status:      0, // Статус "ожидает"
 			}
 			mentorInvites = append(mentorInvites, invite)
 		}

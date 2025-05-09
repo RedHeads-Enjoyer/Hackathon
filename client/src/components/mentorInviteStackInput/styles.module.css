@@ -1,0 +1,255 @@
+.container {
+    background-color: var(--card-bg-color);
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid var(--input-border-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--default-text-color);
+    font-size: 20px;
+}
+
+.form {
+    margin-bottom: 24px;
+}
+
+.inputContainer {
+    margin-bottom: 16px;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+}
+
+.mainButton {
+    min-width: 120px;
+}
+
+.secondaryButton {
+    flex: 0 0 auto;
+}
+
+.mentorList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.mentorItem {
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--input-border-color);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    word-wrap: anywhere;
+    font-size: 15px;
+    color: var(--default-text-color);
+}
+
+.mentorItem:hover {
+    border-color: var(--accent-light-color);
+}
+
+.mentorItem.active {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-shadow-color);
+}
+
+/* Модальное окно */
+.modalContent {
+    padding: 20px;
+    max-width: 400px;
+}
+
+.modalTitle {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 18px;
+    color: var(--light-text-color);
+}
+
+.modalText {
+    margin: 0;
+    color: var(--default-text-color);
+    line-height: 1.5;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .mentorList {
+        grid-template-columns: 1fr;
+    }
+
+    .actions {
+        flex-wrap: wrap;
+    }
+
+    .mainButton,
+    .secondaryButton {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 16px;
+    }
+}
+
+/* Добавьте эти стили к существующему CSS */
+.searchContainer {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.inputWrapper {
+    position: relative;
+}
+
+.searchInput {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--input-border-color);
+    border-radius: var(--border-radius);
+    color: var(--light-text-color);
+    font-size: var(--default-font-size);
+    transition: all 0.3s ease;
+}
+
+.searchInput:hover {
+    border-color: var(--accent-light-color);
+}
+
+.searchInput:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-shadow-color);
+    outline: none;
+}
+
+.dropdownResults {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--input-border-color);
+    border-radius: var(--border-radius);
+    margin-top: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dropdownItem {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.dropdownItem:hover {
+    background-color: var(--accent-shadow-color);
+}
+
+.editingActions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 10px 16px;
+    background-color: var(--accent-shadow-color);
+    border-radius: var(--border-radius);
+}
+
+.editingLabel {
+    color: var(--default-text-color);
+    font-size: 14px;
+}
+
+.editButtons {
+    display: flex;
+    gap: 8px;
+}
+
+.deleteButton {
+    background-color: var(--error-text-color);
+}
+
+.deleteButton:hover {
+    background-color: #d32f2f;
+}
+
+.noMoreOptions {
+    padding: 16px;
+    text-align: center;
+    color: var(--light-text-color);
+    font-style: italic;
+    background-color: var(--input-bg-color);
+    border-radius: var(--border-radius);
+    margin-top: 16px;
+}
+
+.selectionArea {
+    margin-bottom: 20px;
+}
+
+.required {
+    color: var(--accent-color);
+    margin-left: 4px;
+}
+
+.errorMessage {
+    color: var(--error-text-color);
+    font-size: 14px;
+    margin-top: 4px;
+    margin-bottom: 16px;
+}
+
+
+/* Добавьте эти стили для заголовка списка технологий */
+.mentorHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.mentorListTitle {
+    margin: 0;
+    color: var(--light-text-color);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.mentorHelp {
+    color: var(--secondary-text-color);
+    font-size: 14px;
+    font-style: italic;
+}
+
+/* Обновления для адаптивности */
+@media (max-width: 768px) {
+    .mentorHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+

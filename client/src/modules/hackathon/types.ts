@@ -37,9 +37,10 @@ export interface HackathonFormData {
     stages: Stage[];
     criteria: Criteria[];
     technologies: Option[];
-    mentors: Option[];
+    mentors?: Option[];
     awards: Award[];
     documents: File[];
+    mentorInvites?: MentorInvite[]
 }
 
 export interface HackathonUpdateFormData {
@@ -214,6 +215,13 @@ export type HackathonFullEditData = {
     awards: Award[];
     technologies: TechnologyShort[];
     criteria: Criteria[];
+    mentorInvites: MentorInvite[]
 
     hackathonRole: number;
 };
+
+export type MentorInvite = {
+    id: number;
+    username: string;
+    status: number;
+}

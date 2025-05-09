@@ -57,7 +57,7 @@ export const hackathonAPI = {
                 additionally: award.additionally
             })),
 
-            mentors: data.mentors.map(mentor => mentor.value),
+            mentors: data.mentors?.map(mentor => mentor.value),
         };
 
         // Добавляем JSON данные в FormData
