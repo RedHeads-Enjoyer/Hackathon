@@ -240,7 +240,7 @@ export type ParticipantFilterData = {
 export type Participant = {
     id: number,
     username: string,
-    team: string,
+    team: string | null,
 }
 
 export type ParticipantSearchData = {

@@ -6,7 +6,7 @@ type ShortInfo struct {
 	ID               uint   `json:"id"`
 	Name             string `json:"name"`
 	Description      string `json:"description"`
-	OrganizationName string `json:"organizationName"` // заменили organization_name на organizationName
+	OrganizationName string `json:"organizationName"`
 
 	// Даты в camelCase
 	RegDateFrom  time.Time `json:"regDateFrom"`

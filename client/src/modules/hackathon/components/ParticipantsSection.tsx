@@ -16,7 +16,7 @@ const ParticipantsSection = () => {
     const initialFilterData: ParticipantFilterData = {
         name: "",
         isFree: null,
-        limit: 0,
+        limit: 20,
         offset: 0,
         total: 0
     }

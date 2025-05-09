@@ -1053,51 +1053,152 @@ func (hc *HackathonController) AddUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Пользователь успешно добавлен к хакатону"})
 }
 
-func (hc *HackathonController) GetUsers(c *gin.Context) {
-	// Извлечение ID хакатона из URL
+func (pc *HackathonController) GetParticipants(c *gin.Context) {
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		c.Abort()
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		c.Abort()
+		return
+	}
+
+	// Получение ID хакатона из URL
 	hackathonID := c.Param("hackathon_id")
 	if hackathonID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Не указан ID хакатона"})
 		return
 	}
 
+	// Проверка существования хакатона
 	var hackathon models.Hackathon
-	// Поиск хакатона по ID и предзагрузка связанных пользователей
-	if err := hc.DB.Preload("Users").First(&hackathon, hackathonID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении хакатона", "details": err.Error()})
+	if err := pc.DB.First(&hackathon, hackathonID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
 		return
 	}
 
-	// Извлечение пользователей из связанной структуры
-	var usersWithRoles []userDTO.UserWithHackathonRoleDTO
-	for _, userHackathon := range hackathon.Users {
-		var user models.User
-		if err := hc.DB.First(&user, userHackathon.UserID).Error; err == nil {
-			avatarURL := ""
-			if user.Avatar != nil {
-				avatarURL = user.Avatar.URL // Проверяем, что Avatar не nil
-			}
-			usersWithRoles = append(usersWithRoles, userDTO.UserWithHackathonRoleDTO{
-				Id:            user.ID,
-				Username:      user.Username,
-				Email:         user.Email,
-				SystemRole:    user.SystemRole,
-				Avatar:        avatarURL,
-				HackathonRole: userHackathon.HackathonRole,
-			})
-		}
-	}
-
-	if len(usersWithRoles) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"message": "Пользователи не найдены для данного хакатона"})
+	// Парсинг параметров фильтрации из тела запроса
+	var filterData userDTO.ParticipantFilterData
+	if err := c.ShouldBindJSON(&filterData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат фильтров"})
 		return
 	}
 
-	c.JSON(http.StatusOK, usersWithRoles)
+	// Проверяем, может ли текущий пользователь приглашать участников в команду
+	// Для этого проверяем, есть ли у него роль 2 в какой-либо команде этого хакатона
+	var canInvite bool
+
+	// Используем GORM для проверки роли пользователя в команде
+	var teamRole struct {
+		TeamRole int
+	}
+
+	teamRoleQuery := pc.DB.Model(&models.BndUserTeam{}).
+		Select("bnd_user_teams.team_role").
+		Joins("JOIN teams ON bnd_user_teams.team_id = teams.id").
+		Where("bnd_user_teams.user_id = ? AND teams.hackathon_id = ?", claims.UserID, hackathonID).
+		Limit(1)
+
+	if err := teamRoleQuery.First(&teamRole).Error; err == nil && teamRole.TeamRole == 2 {
+		canInvite = true
+	} else {
+		canInvite = false
+	}
+
+	// Структура для сбора информации о пользователях
+	type UserWithTeamInfo struct {
+		ID       uint
+		Username string
+		Email    string
+		TeamName *string
+	}
+
+	// Подсчет общего количества участников
+	var totalCount int64
+
+	// Базовый запрос для подсчета
+	countQuery := pc.DB.Model(&models.User{}).
+		Joins("JOIN bnd_user_hackathons ON users.id = bnd_user_hackathons.user_id").
+		Where("bnd_user_hackathons.hackathon_id = ?", hackathonID)
+
+	// Добавляем фильтр по имени/email
+	if filterData.Name != "" {
+		searchTerm := "%" + filterData.Name + "%"
+		countQuery = countQuery.Where("users.username LIKE ? OR users.email LIKE ?", searchTerm, searchTerm)
+	}
+
+	// Добавляем фильтр для "свободных" участников
+	if filterData.IsFree {
+		countQuery = countQuery.Where("NOT EXISTS (SELECT 1 FROM bnd_user_teams "+
+			"JOIN teams ON bnd_user_teams.team_id = teams.id "+
+			"WHERE bnd_user_teams.user_id = users.id AND teams.hackathon_id = ?)", hackathonID)
+	}
+
+	// Выполняем подсчет
+	if err := countQuery.Count(&totalCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при подсчете участников: " + err.Error()})
+		return
+	}
+
+	// Запрос для получения пользователей с информацией о команде
+	var usersWithTeamInfo []UserWithTeamInfo
+
+	// Строим запрос с использованием моделей GORM и выбираем нужные поля
+	query := pc.DB.Model(&models.User{}).
+		Select("users.id, users.username, users.email, teams.name AS team_name").
+		Joins("JOIN bnd_user_hackathons buh ON users.id = buh.user_id").
+		Joins("LEFT JOIN bnd_user_teams but ON users.id = but.user_id").
+		Joins("LEFT JOIN teams ON but.team_id = teams.id AND teams.hackathon_id = ?", hackathonID).
+		Where("buh.hackathon_id = ?", hackathonID)
+
+	// Добавляем фильтр по имени/email
+	if filterData.Name != "" {
+		searchTerm := "%" + filterData.Name + "%"
+		query = query.Where("users.username LIKE ? OR users.email LIKE ?", searchTerm, searchTerm)
+	}
+
+	// Добавляем фильтр для "свободных" участников
+	if filterData.IsFree {
+		query = query.Where("teams.id IS NULL")
+	}
+
+	// Применяем пагинацию
+	if filterData.Limit > 0 {
+		query = query.Limit(filterData.Limit)
+	}
+	if filterData.Offset > 0 {
+		query = query.Offset(filterData.Offset)
+	}
+
+	// Выполняем запрос
+	if err := query.Find(&usersWithTeamInfo).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении участников: " + err.Error()})
+		return
+	}
+
+	// Формируем ответ
+	participants := make([]userDTO.ParticipantResponse, len(usersWithTeamInfo))
+	for i, info := range usersWithTeamInfo {
+		participants[i] = userDTO.ParticipantResponse{
+			ID:       info.ID,
+			Username: info.Username,
+			TeamName: info.TeamName,
+		}
+	}
+
+	// Возвращаем результат с метаданными для пагинации
+	c.JSON(http.StatusOK, gin.H{
+		"list":      participants,
+		"total":     totalCount,
+		"limit":     filterData.Limit,
+		"offset":    filterData.Offset,
+		"canInvite": canInvite,
+	})
 }
 
 func (hc *HackathonController) CreateTeam(c *gin.Context) {
