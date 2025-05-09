@@ -40,7 +40,7 @@ const StatusBadge = ({ status }: { status: number }) => {
 };
 
 // Безопасное форматирование даты
-const safeFormatDate = (dateString: string | Date | null | undefined, formatStr: string = 'dd.MM.yyyy'): string => {
+export const safeFormatDate = (dateString: string | Date | null | undefined, formatStr: string = 'dd.MM.yyyy'): string => {
     if (!dateString) return 'не указано';
 
     try {

@@ -877,11 +877,6 @@ func (hc *HackathonController) GetByIDFull(c *gin.Context) {
 	}
 
 	// Проверяем права доступа
-	// Если хакатон не опубликован (статус != 1) и пользователь не организатор/администратор
-	if hackathon.Status != 1 && hackathonRole != 2 && hackathonRole != 3 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Нет доступа к хакатону"})
-		return
-	}
 
 	// Подсчитываем количество пользователей в хакатоне
 	var userCount int64
@@ -963,8 +958,6 @@ func (hc *HackathonController) GetByIDFull(c *gin.Context) {
 		WorkDateTo:   hackathon.WorkDateTo,
 		EvalDateFrom: hackathon.EvalDateFrom,
 		EvalDateTo:   hackathon.EvalDateTo,
-
-		Status: hackathon.Status,
 
 		LogoId:      0, // По умолчанию 0, обновим если логотип есть
 		TotalAward:  totalAward,
@@ -1310,13 +1303,6 @@ func (hc *HackathonController) GetByIDEditFull(c *gin.Context) {
 		hackathonRole = userHackathon.HackathonRole
 	}
 
-	// Проверяем права доступа
-	// Если хакатон не опубликован (статус != 1) и пользователь не организатор/администратор
-	if hackathon.Status != 1 && hackathonRole != 2 && hackathonRole != 3 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Нет доступа к хакатону"})
-		return
-	}
-
 	// Подсчитываем количество пользователей в хакатоне
 	var userCount int64
 	hc.DB.Model(&models.BndUserHackathon{}).
@@ -1418,9 +1404,7 @@ func (hc *HackathonController) GetByIDEditFull(c *gin.Context) {
 		EvalDateFrom: hackathon.EvalDateFrom,
 		EvalDateTo:   hackathon.EvalDateTo,
 
-		Status: hackathon.Status,
-
-		LogoId:      0, // По умолчанию 0, обновим если логотип есть
+		LogoId:      0,
 		TotalAward:  totalAward,
 		MinTeamSize: hackathon.MinTeamSize,
 		MaxTeamSize: hackathon.MaxTeamSize,

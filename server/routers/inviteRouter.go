@@ -16,12 +16,11 @@ func InviteRouter(router *gin.Engine, db *gorm.DB) {
 		protected.GET("/:hackathon_id/invites", inviteController.GetMentorInvitations)
 	}
 
-	protected = router.Group("/hackathon")
+	protected = router.Group("/invites/mentor")
 	protected.Use(middlewares.Auth())
 	{
-		protected.POST("/accept/:invite_id", inviteController.AcceptMentorInvite)
-		protected.POST("/reject/:invite_id", inviteController.RejectMentorInvite)
-		protected.GET("/invites/in", inviteController.GetInvitesToMe)
+		protected.GET("", inviteController.GetMyMentorInvites)
+		protected.GET("/accept/:invite_id", inviteController.AcceptMentorInvite)
+		protected.GET("/reject/:invite_id", inviteController.RejectMentorInvite)
 	}
-
 }

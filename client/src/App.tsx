@@ -13,8 +13,6 @@ import NotFound from "./modules/auth/NotFound.tsx";
 import PermissionDenied from "./modules/auth/PermissionDenied.tsx";
 import CreateHackathon from "./modules/hackathon/CreateHackathon.tsx";
 import {logout} from "./modules/auth/store/authSlice.ts";
-import UserEditForm from "./modules/user/UserEditForm.tsx";
-import UserList from "./modules/user/UserList.tsx";
 import CreateOrganizationPage from "./modules/organozaton/CreateOrganizationPage.tsx";
 import MyOrganizationsPage from "./modules/organozaton/MyOrganizationsPage.tsx";
 import Organizations from "./modules/organozaton/Organizations.tsx";
@@ -23,6 +21,7 @@ import CreateTechnologyPage from "./modules/technologies/CreateTechnologyPage.ts
 import HackathonList from "./modules/hackathon/HackathonList.tsx";
 import OpenHackathon from "./modules/hackathon/OpenHackathon.tsx";
 import HackathonDashboard from "./modules/hackathon/HackathonDashboard.tsx";
+import MentorInvites from "./modules/invites/MentorInvites.tsx";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -59,8 +58,7 @@ function App() {
             <Routes>
                 <Route element={<ProtectedRoute roleLevel={1}><Outlet /></ProtectedRoute>}>
                     <Route path="/hackathons" element={<HackathonList />}/>
-                    <Route path="/user/edit" element={<UserEditForm userId={1}/> } />
-                    <Route path="/user/list" element={<UserList /> } />
+                    <Route path="/invites/mentor" element={<MentorInvites />}/>
                     <Route path="/hackathon/create" element={<CreateHackathon />} />
                     <Route path="/hackathon/:id" element={<OpenHackathon />} />
                     <Route path="/hackathon/:id/dashboard" element={<HackathonDashboard />} />

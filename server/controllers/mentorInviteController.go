@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"server/models"
+	"server/models/DTO/mentorInviteDTO"
 	"server/types"
 	"strconv"
 )
@@ -205,17 +206,50 @@ func (hc *MentorInviteController) RejectMentorInvite(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Приглашение отклонено"})
 }
 
-func (hc *MentorInviteController) GetInvitesToMe(c *gin.Context) {
-	// Извлечение ID пользователя из claims
-	claims := c.MustGet("user_claims").(*types.Claims)
-	userID := claims.UserID
-
-	// Получение приглашений для указанного пользователя
-	var invitations []models.MentorInvite
-	if err := hc.DB.Where("user_id = ?", userID).Find(&invitations).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении приглашений", "details": err.Error()})
+func (hc *MentorInviteController) GetMyMentorInvites(c *gin.Context) {
+	// Получаем claims пользователя из контекста
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима авторизация"})
 		return
 	}
 
-	c.JSON(http.StatusOK, invitations)
+	// Приводим claims к нужному типу
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+
+	userID := claims.UserID
+
+	// Получение приглашений с предзагрузкой хакатонов
+	var mentorInvites []models.MentorInvite
+	result := hc.DB.Preload("Hackathon").Where("user_id = ?", userID).Find(&mentorInvites)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении приглашений", "details": result.Error.Error()})
+		return
+	}
+
+	// Преобразуем данные в нужный формат
+	response := make([]mentorInviteDTO.GetFull, 0, len(mentorInvites))
+	for _, invite := range mentorInvites {
+
+		dto := mentorInviteDTO.GetFull{
+			ID:            invite.ID,
+			CreatedAt:     invite.CreatedAt,
+			HackathonID:   invite.HackathonID,
+			Status:        invite.Status,
+			HackathonName: invite.Hackathon.Name,
+		}
+		response = append(response, dto)
+	}
+
+	// Если нет приглаше ний, возвращаем пустой массив вместо null
+	if len(response) == 0 {
+		c.JSON(http.StatusOK, []mentorInviteDTO.GetFull{})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
 }

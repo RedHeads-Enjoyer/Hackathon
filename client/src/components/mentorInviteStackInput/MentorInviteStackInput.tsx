@@ -114,18 +114,8 @@ const MentorInviteStackInput = (({
         switch(status) {
             case 0: return "Ожидает";
             case 1: return "Принято";
-            case 2: return "Отклонено";
+            case -1: return "Отклонено";
             default: return "Неизвестно";
-        }
-    };
-
-    // Получаем цвет статуса
-    const getStatusColor = (status: number) => {
-        switch(status) {
-            case 0: return "#f39c12"; // Оранжевый для ожидания
-            case 1: return "#2ecc71"; // Зеленый для принятых
-            case 2: return "#e74c3c"; // Красный для отклоненных
-            default: return "#7f8c8d"; // Серый для неизвестного статуса
         }
     };
 
@@ -175,7 +165,6 @@ const MentorInviteStackInput = (({
                                     <div style={{
                                         fontSize: '12px',
                                         marginTop: '4px',
-                                        color: getStatusColor(invite.status)
                                     }}>
                                         Статус: {getStatusText(invite.status)}
                                     </div>

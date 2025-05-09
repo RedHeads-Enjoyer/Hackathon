@@ -1,0 +1,114 @@
+.page_wrapper {
+    padding: 24px;
+    background-color: var(--dark-bg-color);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.info_block {
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid var(--input-border-color);
+    background-color: var(--card-bg-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.expandedCard, .card {
+
+    border-radius: 12px;
+    border: 1px solid var(--input-border-color);
+    background-color: var(--card-bg-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    color: var(--light-text-color);
+    font-size: var(--default-font-size);
+}
+.card {
+    padding: 12px 16px;
+}
+
+.card:hover {
+    border-color: var(--accent-light-color);
+}
+
+.title {
+    color: var(--accent-color);
+    font-size: var(--default-font-size);
+    font-weight: 500;
+    margin-bottom: 0;
+}
+
+.expanded {
+    cursor: pointer;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.info {
+    font-size: var(--default-font-size);
+    color: var(--light-text-color);
+    margin: 4px 0; /* Отступы между строками информации */
+}
+
+.expandedFilters {
+    padding: 0 16px 16px;
+}
+
+.filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+.filterControls {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 768px) {
+    .filters {
+        grid-template-columns: 1fr;
+    }
+}
+
+.filterHeader {
+    height: 54px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.expandedCard:hover {
+    border-color: var(--accent-light-color);
+}
+
+.invitesList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+}
