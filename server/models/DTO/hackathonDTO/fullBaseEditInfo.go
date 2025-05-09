@@ -5,6 +5,7 @@ import (
 	"server/models/DTO/criteriaDTO"
 	"server/models/DTO/fileDTO"
 	"server/models/DTO/hackathonStepDTO"
+	"server/models/DTO/mentorInviteDTO"
 	"server/models/DTO/technologyDTO"
 	"time"
 )
@@ -31,11 +32,12 @@ type FullBaseEditInfo struct {
 	MaxTeamSize int     `json:"maxTeamSize"`
 	UserCount   int     `json:"usersCount"`
 
-	Files        []fileDTO.GetShort       `json:"files"`
-	Steps        []hackathonStepDTO.Get   `json:"steps"`
-	Awards       []awardDTO.Get           `json:"awards"`
-	Technologies []technologyDTO.GetShort `json:"technologies"`
-	Criteria     []criteriaDTO.Get        `json:"criteria"`
+	Files         []fileDTO.GetShort       `json:"files"`
+	Steps         []hackathonStepDTO.Get   `json:"steps"`
+	Awards        []awardDTO.Get           `json:"awards"`
+	Technologies  []technologyDTO.GetShort `json:"technologies"`
+	Criteria      []criteriaDTO.Get        `json:"criteria"`
+	MentorInvites []mentorInviteDTO.Get    `json:"mentorInvites"`
 
 	HackathonRole int `json:"hackathonRole"`
 }
