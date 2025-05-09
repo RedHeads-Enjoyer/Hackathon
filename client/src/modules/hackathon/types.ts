@@ -164,9 +164,6 @@ export type HackathonFullData = {
     evalDateFrom: string;
     evalDateTo: string;
 
-    // Статус хакатона
-    status: number;
-
     // Дополнительная информация
     logoId: number | null;
     totalAward: number;

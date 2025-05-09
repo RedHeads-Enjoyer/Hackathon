@@ -5,39 +5,10 @@ import { hackathonAPI } from "./hackathonAPI.ts";
 import Error from "../../components/error/Error.tsx";
 import ApiImage from "../../components/apiImage/ApiImage.tsx";
 import { useParams, useNavigate } from "react-router-dom";
-import { HackathonRole, HackathonStatus } from "./storage.ts";
+import { HackathonRole } from "./storage.ts";
 import { formatDate } from "date-fns";
 import { ru } from 'date-fns/locale';
 import Button from "../../components/button/Button.tsx";
-
-const StatusBadge = ({ status }: { status: number }) => {
-    let statusText = '';
-    let statusClass = '';
-
-    switch(status) {
-        case HackathonStatus.PUBLISHED:
-            statusText = 'Активный';
-            statusClass = classes.statusActive;
-            break;
-        case HackathonStatus.DRAFT:
-            statusText = 'Черновик';
-            statusClass = classes.statusDraft;
-            break;
-        case HackathonStatus.ARCHIVED:
-            statusText = 'Завершен';
-            statusClass = classes.statusArchived;
-            break;
-        case HackathonStatus.BANNED:
-            statusText = 'Заблокирован';
-            statusClass = classes.statusBanned;
-            break;
-        default:
-            statusText = 'Неизвестно';
-            statusClass = classes.statusUnknown;
-    }
-
-    return <span className={`${classes.status} ${statusClass}`}>{statusText}</span>;
-};
 
 // Безопасное форматирование даты
 export const safeFormatDate = (dateString: string | Date | null | undefined, formatStr: string = 'dd.MM.yyyy'): string => {
@@ -189,26 +160,20 @@ const OpenHackathon = () => {
 
         try {
             setRegistering(true);
-            // Здесь должен быть вызов API для регистрации
-            // Перезагружаем данные хакатона, чтобы обновить hackathonRole
+
+            await hackathonAPI.join(hackathon.id)
             const updatedData = await hackathonAPI.getFullById(hackathon.id);
             setHackathon(updatedData);
             setRegistering(false);
         } catch (err) {
-            console.error('Ошибка при регистрации:', err);
             setRegistering(false);
-            alert('Не удалось зарегистрироваться на хакатон. Попробуйте позже.');
         }
     };
 
     const canRegister = () => {
         if (!hackathon || registering) return false;
-
         // Проверка роли пользователя (0 = не участник)
         if (hackathon.hackathonRole !== HackathonRole.NOT_PARTICIPANT) return false;
-
-        // Проверка статуса хакатона (опубликован)
-        if (hackathon.status !== HackathonStatus.PUBLISHED) return false;
 
         // Проверка текущей фазы (должна быть регистрация)
         return phase === 'registration';
@@ -265,7 +230,6 @@ const OpenHackathon = () => {
                                 <h1 className={classes.title} title={hackathon.name}>
                                     {hackathon.name}
                                 </h1>
-                                <StatusBadge status={hackathon.status} />
                             </div>
 
                             <div className={classes.organizationInfo}>
@@ -289,28 +253,30 @@ const OpenHackathon = () => {
 
                             {hackathon.hackathonRole === HackathonRole.NOT_PARTICIPANT ? (
                                 <div className={classes.registrationBlock}>
-                                    <button
-                                        className={classes.registerButton}
+                                    <Button
                                         disabled={!canRegister() || registering}
                                         onClick={handleRegister}
+                                        loading={registering}
                                     >
-                                        {registering ? 'Регистрация...' : 'Зарегистрироваться'}
-                                    </button>
+                                        Зарегистрироваться
+                                    </Button>
                                 </div>
                             ) : (
                                 <div className={classes.participantBlock}>
                                     <div className={classes.participantStatus}>
-                                        {hackathon.hackathonRole === HackathonRole.PARTICIPANT && 'Вы — участник этого хакатона'}
-                                        {hackathon.hackathonRole === HackathonRole.MENTOR && 'Вы — ментор этого хакатона'}
-                                        {hackathon.hackathonRole === HackathonRole.OWNER && 'Вы — организатор этого хакатона'}
+                                        {hackathon.hackathonRole === HackathonRole.PARTICIPANT && 'Вы — участник'}
+                                        {hackathon.hackathonRole === HackathonRole.MENTOR && 'Вы — ментор'}
+                                        {hackathon.hackathonRole === HackathonRole.OWNER && 'Вы — организатор'}
                                     </div>
 
-                                    <Button
-                                        variant={'secondary'}
-                                        onClick={() => navigate(`/hackathon/${hackathon.id}/dashboard`)}
-                                    >
-                                        Управление
-                                    </Button>
+                                    {hackathon.hackathonRole === HackathonRole.OWNER &&
+                                        <Button
+                                            variant={'secondary'}
+                                            onClick={() => navigate(`/hackathon/${hackathon.id}/dashboard`)}
+                                        >
+                                            Управление
+                                        </Button>
+                                    }
                                 </div>
                             )}
                         </div>

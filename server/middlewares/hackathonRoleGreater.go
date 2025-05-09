@@ -8,7 +8,7 @@ import (
 	"server/types"
 )
 
-func HackathonRoleLover(db *gorm.DB, level int) gin.HandlerFunc {
+func HackathonRoleGreater(db *gorm.DB, level int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userClaims, exists := c.Get("user_claims")
 		if !exists {
@@ -39,7 +39,7 @@ func HackathonRoleLover(db *gorm.DB, level int) gin.HandlerFunc {
 			return
 		}
 
-		if userHackathon.HackathonRole >= level {
+		if userHackathon.HackathonRole < level {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ваша роль не соответствует"})
 			c.Abort()
 			return

@@ -87,5 +87,7 @@ export const hackathonAPI = {
     getFullById: async (hackathonId: number) =>
         request<HackathonFullData>({method: 'GET', url: `hackathon/${hackathonId}`}),
     getFullForEditById: async (hackathonId: number) =>
-        request<HackathonFullEditData>({method: 'GET', url: `hackathon/${hackathonId}/edit`})
+        request<HackathonFullEditData>({method: 'GET', url: `hackathon/${hackathonId}/edit`}),
+    join: async (hackathonId: number) =>
+        request<any>({method: 'GET', url: `hackathon/join/${hackathonId}`})
 };
