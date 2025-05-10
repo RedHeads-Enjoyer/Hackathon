@@ -1182,8 +1182,9 @@ func (pc *HackathonController) GetParticipants(c *gin.Context) {
 
 	// Получаем список всех активных приглашений от команды текущего пользователя
 	type InviteInfo struct {
-		ReceiverID uint
+		UserID uint `gorm:"column:user_id"` // Указываем имя колонки в запросе
 	}
+
 	var invites []InviteInfo
 
 	if userIsCaptain && userTeamID != nil {
@@ -1200,7 +1201,7 @@ func (pc *HackathonController) GetParticipants(c *gin.Context) {
 	// Создаем карту приглашенных пользователей для быстрого поиска
 	invitedUsers := make(map[uint]bool)
 	for _, invite := range invites {
-		invitedUsers[invite.ReceiverID] = true
+		invitedUsers[invite.UserID] = true
 	}
 
 	// Формируем ответ с числовым статусом canInvite для каждого участника

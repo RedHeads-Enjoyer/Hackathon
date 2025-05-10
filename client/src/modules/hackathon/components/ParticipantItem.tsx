@@ -2,9 +2,11 @@ import classes from '../hackathon.module.css';
 import {Participant} from '../types.ts';
 import Button from "../../../components/button/Button.tsx";
 import {useState} from "react";
+import {HackathonAPI} from "../hackathonAPI.ts";
 
 type ParticipantItemProps = {
     participant: Participant;
+    hackathonId: number
 };
 
 
@@ -15,12 +17,13 @@ const ParticipantItem = (props: ParticipantItemProps) => {
 
     const handleInvite = (id: number) => {
         setLoading(true)
-        setParticipant((prevState) => ({
-                ...prevState,
-                canInvite: 2
-        }
-
-        ))
+        HackathonAPI.inviteToTeam(props.hackathonId, id)
+            .then(() =>
+                setParticipant((prevState) => ({
+                    ...prevState,
+                    canInvite: 2
+                })
+        )).finally(() => {setLoading(false)})
     }
 
 

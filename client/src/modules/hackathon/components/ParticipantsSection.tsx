@@ -109,7 +109,7 @@ const ParticipantsSection = () => {
                 participants.list?.length > 0 ? (
                     participants.list.map((part) => (
                         <div key={`participants_${part.id}`}>
-                            <ParticipantItem participant={part}/>
+                            <ParticipantItem participant={part} hackathonId={hackathonId}/>
                         </div>
                     ))
                 ) : (

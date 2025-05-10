@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"log"
 	"net/http"
+	"reflect"
 	"server/models"
 	"server/types"
 )
@@ -17,72 +20,151 @@ func NewTeamInviteController(db *gorm.DB) *TeamInviteController {
 }
 
 func (hc *TeamInviteController) InviteUser(c *gin.Context) {
-	// Извлечение ID хакатона, команды и пользователя из URL
+	fmt.Println("zxcqwe")
+	// Установка восстановления после паники
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("PANIC в InviteUser: %v", r)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Внутренняя ошибка сервера"})
+		}
+	}()
+
+	log.Printf("Начинаем выполнение InviteUser")
+	log.Printf("Получены URL-параметры: hackathon_id=%s, user_id=%s", c.Param("hackathon_id"), c.Param("user_id"))
+
+	// Получаем текущего пользователя из JWT-токена
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		log.Printf("Ошибка: user_claims отсутствует в контексте")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		c.Abort()
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		log.Printf("Ошибка: не удалось привести user_claims к типу *types.Claims")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		c.Abort()
+		return
+	}
+	log.Printf("Получены данные о текущем пользователе: UserID=%d", claims.UserID)
+
+	// Извлечение ID хакатона и пользователя для приглашения из URL
 	hackathonID := c.Param("hackathon_id")
 	if hackathonID == "" {
+		log.Printf("Ошибка: отсутствует hackathon_id")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
 		return
 	}
 
-	teamID := c.Param("team_id")
-	if teamID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор команды"})
+	targetUserID := c.Param("user_id")
+	if targetUserID == "" {
+		log.Printf("Ошибка: отсутствует user_id")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор приглашаемого пользователя"})
 		return
 	}
-
-	userID := c.Param("user_id")
-	if userID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор пользователя"})
-		return
-	}
+	log.Printf("Извлечены параметры: hackathonID=%s, targetUserID=%s", hackathonID, targetUserID)
 
 	// Проверка, существует ли хакатон
 	var hackathon models.Hackathon
 	if err := hc.DB.First(&hackathon, hackathonID).Error; err != nil {
+		log.Printf("Ошибка: хакатон с ID=%s не найден: %v", hackathonID, err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
 		return
 	}
+	log.Printf("Хакатон найден: ID=%d, Name=%s", hackathon.ID, hackathon.Name)
 
-	// Проверка, существует ли команда
-	var team models.Team
-	if err := hc.DB.First(&team, teamID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Команда не найдена"})
+	// Проверка, участвует ли текущий пользователь в хакатоне
+	var currentUserHackathon models.BndUserHackathon
+	if err := hc.DB.Where("user_id = ? AND hackathon_id = ?", claims.UserID, hackathonID).First(&currentUserHackathon).Error; err != nil {
+		log.Printf("Ошибка: пользователь с ID=%d не участвует в хакатоне с ID=%s: %v", claims.UserID, hackathonID, err)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Вы не участвуете в данном хакатоне"})
 		return
 	}
+	fmt.Println("Текущий пользователь участвует в хакатоне: UserID=%d, HackathonID=%d", currentUserHackathon.UserID, currentUserHackathon.HackathonID)
 
-	// Проверка, участвует ли пользователь в хакатоне
-	var userHackathon models.BndUserHackathon
-	if err := hc.DB.Where("user_id = ? AND hackathon_id = ?", userID, hackathonID).First(&userHackathon).Error; err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Пользователь не участвует в хакатоне"})
+	// Проверка, участвует ли целевой пользователь в хакатоне
+	var targetUserHackathon models.BndUserHackathon
+	if err := hc.DB.Where("user_id = ? AND hackathon_id = ?", targetUserID, hackathonID).First(&targetUserHackathon).Error; err != nil {
+		log.Printf("Ошибка: целевой пользователь с ID=%s не участвует в хакатоне с ID=%s: %v", targetUserID, hackathonID, err)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Приглашаемый пользователь не участвует в хакатоне"})
 		return
 	}
+	fmt.Println("Целевой пользователь участвует в хакатоне: UserID=%d, HackathonID=%d", targetUserHackathon.UserID, targetUserHackathon.HackathonID)
 
-	// Проверка роли пользователя
-	if userHackathon.HackathonRole != 1 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Пользователь не имеет права отправлять приглашения"})
-		return
+	// Находим команду текущего пользователя в этом хакатоне
+	var userTeamInfo struct {
+		TeamID   uint
+		TeamRole int
 	}
 
-	// Проверка, есть ли у пользователя уже команда для этого хакатона
-	var userTeam models.BndUserTeam
-	if err := hc.DB.Where("user_id = ? AND team_id IN (SELECT id FROM teams WHERE hackathon_id = ?)", userID, hackathonID).First(&userTeam).Error; err == nil {
+	teamQuery := hc.DB.Model(&models.BndUserTeam{}).
+		Select("bnd_user_teams.team_id, bnd_user_teams.team_role").
+		Joins("JOIN teams ON bnd_user_teams.team_id = teams.id").
+		Where("bnd_user_teams.user_id = ? AND teams.hackathon_id = ?", claims.UserID, hackathonID)
+
+	fmt.Println("SQL запрос для поиска команды: %v", teamQuery.Statement.SQL.String())
+
+	if err := teamQuery.First(&userTeamInfo).Error; err != nil {
+		log.Printf("Ошибка: текущий пользователь не состоит в команде хакатона: %v", err)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Вы не состоите в команде этого хакатона"})
+		return
+	}
+	log.Printf("Найдена команда пользователя: TeamID=%d, TeamRole=%d", userTeamInfo.TeamID, userTeamInfo.TeamRole)
+
+	// Проверка, является ли текущий пользователь капитаном команды
+	if userTeamInfo.TeamRole != 2 {
+		log.Printf("Ошибка: пользователь не является капитаном команды (роль=%d)", userTeamInfo.TeamRole)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Только капитан команды может отправлять приглашения"})
+		return
+	}
+	log.Printf("Пользователь является капитаном команды")
+
+	// Проверка, есть ли у приглашаемого пользователя уже команда для этого хакатона
+	var targetUserTeam models.BndUserTeam
+	targetTeamQuery := hc.DB.Where("user_id = ? AND team_id IN (SELECT id FROM teams WHERE hackathon_id = ?)", targetUserID, hackathonID)
+	log.Printf("SQL запрос для проверки команды целевого пользователя: %v", targetTeamQuery.Statement.SQL.String())
+
+	if err := targetTeamQuery.First(&targetUserTeam).Error; err == nil {
+		log.Printf("Ошибка: целевой пользователь уже в команде: TeamID=%d", targetUserTeam.TeamID)
 		c.JSON(http.StatusConflict, gin.H{"error": "Пользователь уже состоит в команде для этого хакатона"})
 		return
 	}
+	fmt.Println("Целевой пользователь не состоит в команде для этого хакатона")
+
+	// Проверка, существует ли уже приглашение для этого пользователя в эту команду
+	var existingInvite models.TeamInvite
+	inviteQuery := hc.DB.Where("receiver_id = ? AND team_id = ? AND status = 0", targetUserID, userTeamInfo.TeamID)
+	log.Printf("SQL запрос для проверки существования приглашения: %v", inviteQuery.Statement.SQL.String())
+
+	if err := inviteQuery.First(&existingInvite).Error; err == nil {
+		log.Printf("Ошибка: приглашение уже существует: ID=%d", existingInvite.ID)
+		c.JSON(http.StatusConflict, gin.H{"error": "Приглашение уже отправлено этому пользователю"})
+		return
+	}
+	log.Printf("Приглашение не существует, можно создать новое")
+
+	// Вывод структуры таблицы TeamInvite для проверки полей
+	log.Printf("Структура TeamInvite: %+v", reflect.TypeOf(models.TeamInvite{}).Field(0))
 
 	// Создание приглашения
 	invite := models.TeamInvite{
-		UserID: userHackathon.UserID,
-		TeamID: team.ID,
+		TeamID: userTeamInfo.TeamID,
+		UserID: targetUserHackathon.UserID,
 		Status: 0,
 	}
+	log.Printf("Подготовлено новое приглашение: %+v", invite)
 
 	if err := hc.DB.Create(&invite).Error; err != nil {
+		log.Printf("Ошибка при создании приглашения: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при создании приглашения", "details": err.Error()})
 		return
 	}
+	log.Printf("Приглашение успешно создано: ID=%d", invite.ID)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Приглашение успешно отправлено"})
+	log.Printf("Метод InviteUser завершен успешно")
 }
 
 func (hc *TeamInviteController) AcceptTeamInvite(c *gin.Context) {
