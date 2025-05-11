@@ -108,6 +108,7 @@ const HackathonList = () => {
 
     const handleResetFilters = () => {
         setFilterData(initialFilterData)
+        searchHackathons()
     }
 
     const handleSearch = () => {
