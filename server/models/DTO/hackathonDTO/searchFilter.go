@@ -8,6 +8,7 @@ type FilterData struct {
 	MinTeamSize    int     `json:"minTeamSize"`
 	MaxTeamSize    int     `json:"maxTeamSize"`
 	TechnologyId   uint    `json:"technologyId"`
+	Role           int     `json:"role"`
 	TotalAward     float64 `json:"totalAward"`
 	Limit          int     `json:"limit"`
 	Offset         int     `json:"offset"`

@@ -10,11 +10,6 @@ import (
 func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	hackathonController := controllers.NewHackathonController(db, controllers.NewFileController(db))
 	inviteTeamController := controllers.NewTeamInviteController(db)
-	public := router.Group("/hackathons")
-	{
-		public.POST("", hackathonController.GetAll)
-
-	}
 
 	protected := router.Group("/hackathon")
 	protected.Use(middlewares.Auth(), middlewares.OrganizationOwnerPath(db))
@@ -26,6 +21,7 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	protected = router.Group("/hackathon")
 	protected.Use(middlewares.Auth())
 	{
+		protected.POST("/list", hackathonController.GetAll)
 		protected.POST("", hackathonController.CreateHackathon)
 		protected.GET("/:hackathon_id", hackathonController.GetByIDFull)
 		protected.GET("/team/accept/:invite_id", inviteTeamController.AcceptTeamInvite)

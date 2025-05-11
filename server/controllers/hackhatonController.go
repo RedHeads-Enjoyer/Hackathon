@@ -279,6 +279,18 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 		return
 	}
 
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		return
+	}
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+	userID := claims.UserID
+
 	// Базовый запрос для подсчета общего количества
 	// Добавляем фильтр по статусу = 1
 	countQuery := hc.DB.Model(&models.Hackathon{})
@@ -328,6 +340,18 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 				Where("ht.technology_id = ?", filterData.TechnologyId).
 				Group("hackathons.id") // Группировка для избежания дубликатов
 		}
+
+		if userID > 0 && filterData.Role != 0 {
+			switch filterData.Role {
+			case -1: // Не участник
+				query = query.Where("NOT EXISTS (SELECT 1 FROM bnd_user_hackathons WHERE user_id = ? AND hackathon_id = hackathons.id)", userID)
+			case 1, 2, 3: // Конкретная роль (участник, ментор, организатор)
+				query = query.Joins("JOIN bnd_user_hackathons buh ON buh.hackathon_id = hackathons.id").
+					Where("buh.user_id = ? AND buh.hackathon_role = ?", userID, filterData.Role)
+			}
+		}
+
+		return query
 
 		return query
 	}

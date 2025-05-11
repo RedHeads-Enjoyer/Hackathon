@@ -6,6 +6,8 @@ import Button from "../../../components/button/Button.tsx";
 import Pagination from "../../../components/pagination/Pagination.tsx";
 import SelectSearch from "../../../components/searchSelect/SearchSelect.tsx";
 import DatePicker from "../../../components/datePicker/DatePicker.tsx";
+import {Option} from "../../organozaton/types.ts";
+import Select from "../../../components/select/Select.tsx";
 
 type HackathonFilterProps = {
     filterData: HackathonFilterData;
@@ -23,6 +25,14 @@ const HackathonFilter = ({filterData, setFilterData, onResetFilters, onSearch}: 
             value: (page - 1) * filterData.limit
         });
     };
+
+    const roleOptions: Option[] = [
+        {value: -1, label: "Не участник"},
+        {value: 0,  label: "Любая"},
+        {value: 1, label: "Участник"},
+        {value: 2, label: "Ментор"},
+        {value: 3, label: "Организатор"},
+    ]
 
     return (
         <div className={classes.expandedCard}>
@@ -110,7 +120,16 @@ const HackathonFilter = ({filterData, setFilterData, onResetFilters, onSearch}: 
                             name="totalAward"
                             min={filterData.minTeamSize}
                         />
-
+                        <Select
+                            label="Роль"
+                            options={roleOptions}
+                            value={filterData.role}
+                            onChange={(value) => setFilterData({
+                                name: 'role',
+                                value: value
+                            })}
+                            placeholder="Выберите состояние"
+                        />
 
 
 
