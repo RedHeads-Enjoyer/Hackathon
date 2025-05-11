@@ -40,14 +40,6 @@ func (cc *ChatController) WebSocketHandler(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("ПОЛУЧЕН ЗАПРОС НА WEBSOCKET")
-	fmt.Println("URL:", c.Request.URL.String())
-	fmt.Println("Заголовки:", c.Request.Header)
-
-	// Проверка токена
-	token := c.Query("token")
-	fmt.Println("Полученный токен:", token)
-
 	// Получаем пользователя из токена
 	userClaims, exists := c.Get("user_claims")
 	if !exists {
@@ -74,11 +66,8 @@ func (cc *ChatController) WebSocketHandler(c *gin.Context) {
 	// ТОЛЬКО ОДИН АПГРЕЙД СОЕДИНЕНИЯ
 	conn, err := cc.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		fmt.Println("ОШИБКА АПГРЕЙДА:", err)
 		return
 	}
-
-	fmt.Println("СОЕДИНЕНИЕ УСПЕШНО УСТАНОВЛЕНО")
 
 	// Регистрируем клиента
 	cc.clientsMu.Lock()
@@ -111,7 +100,6 @@ func (cc *ChatController) handleMessages(conn *websocket.Conn, chatID uint, user
 
 		err := conn.ReadJSON(&msg)
 		if err != nil {
-			fmt.Println("Ошибка чтения сообщения:", err)
 			break
 		}
 
@@ -372,10 +360,49 @@ func (cc *ChatController) GetChatMessages(c *gin.Context) {
 		return
 	}
 
+	// Получаем информацию о чате
+	var chat models.Chat
+	if err := cc.DB.First(&chat, chatID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении информации о чате"})
+		return
+	}
+
+	// Получаем роли пользователей в хакатоне
+	var userRoles map[uint]int
+	if chat.HackathonID > 0 {
+		userRoles = make(map[uint]int)
+		var userHackathons []models.BndUserHackathon
+		if err := cc.DB.Where("hackathon_id = ?", chat.HackathonID).
+			Find(&userHackathons).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении ролей пользователей"})
+			return
+		}
+
+		// Заполняем мапу ролей
+		for _, uh := range userHackathons {
+			userRoles[uh.UserID] = uh.HackathonRole
+		}
+	}
+
 	// Преобразуем все сообщения в DTO
 	messagesDTO := make([]chatMessageDTO.Get, len(messages))
 	for i, msg := range messages {
-		messagesDTO[i] = chatMessageDTO.ConvertToMessageDTO(msg)
+		// Получаем базовое DTO
+		messageDTO := chatMessageDTO.ConvertToMessageDTO(msg)
+
+		// Добавляем префикс к имени пользователя в зависимости от роли
+		if userRoles != nil {
+			if role, exists := userRoles[msg.UserID]; exists {
+				switch role {
+				case 2:
+					messageDTO.Username = "(ментор) " + messageDTO.Username
+				case 3:
+					messageDTO.Username = "(организатор) " + messageDTO.Username
+				}
+			}
+		}
+
+		messagesDTO[i] = messageDTO
 	}
 
 	c.JSON(http.StatusOK, gin.H{"messages": messagesDTO})

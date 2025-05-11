@@ -935,6 +935,9 @@ func (hc *HackathonController) GetByIDFull(c *gin.Context) {
 		})
 	}
 
+	currentTime := time.Now()
+	canEdit := currentTime.Before(hackathon.RegDateFrom)
+
 	// Создаем DTO с полной информацией о хакатоне
 	fullInfo := hackathonDTO.FullBaseInfo{
 		ID:               hackathon.ID,
@@ -958,6 +961,8 @@ func (hc *HackathonController) GetByIDFull(c *gin.Context) {
 		Awards:       awardsDTOs,
 		Technologies: techDTOs,
 		Criteria:     criteriaDTOs,
+
+		CanEdit: canEdit,
 
 		HackathonRole: hackathonRole,
 	}

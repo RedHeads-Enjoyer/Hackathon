@@ -36,5 +36,7 @@ type FullBaseInfo struct {
 	Technologies []technologyDTO.GetShort `json:"technologies"`
 	Criteria     []criteriaDTO.Get        `json:"criteria"`
 
+	CanEdit bool `json:"canEdit"`
+
 	HackathonRole int `json:"hackathonRole"`
 }

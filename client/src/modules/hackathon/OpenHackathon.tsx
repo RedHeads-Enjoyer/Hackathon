@@ -270,7 +270,7 @@ const OpenHackathon = () => {
                                     </div>
 
                                     <div className={classes.manageButtons}>
-                                        {hackathon.hackathonRole === HackathonRole.OWNER &&
+                                        {hackathon.hackathonRole === HackathonRole.OWNER && hackathon.canEdit &&
                                             <Button
                                                 variant={'secondary'}
                                                 onClick={() => navigate(`/hackathon/${hackathon.id}/edit`)}
@@ -344,19 +344,6 @@ const OpenHackathon = () => {
                                     <div className={classes.statLabel}>Участников</div>
                                 </div>
                             </div>
-
-                            <div className={classes.statItem}>
-                                <div className={classes.statIcon}>👨‍💻</div>
-                                <div className={classes.statContent}>
-                                    <div className={classes.statValue}>
-                                        {hackathon.minTeamSize === hackathon.maxTeamSize
-                                            ? `${hackathon.minTeamSize}`
-                                            : `${hackathon.minTeamSize}-${hackathon.maxTeamSize}`}
-                                    </div>
-                                    <div className={classes.statLabel}>Размер команды</div>
-                                </div>
-                            </div>
-
                             <div className={classes.statItem}>
                                 <div className={classes.statIcon}>🏆</div>
                                 <div className={classes.statContent}>

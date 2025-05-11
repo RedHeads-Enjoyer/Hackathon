@@ -28,9 +28,9 @@ const HackathonDashboard = () => {
         HackathonAPI.getMyRole(hackathonId)
             .then(info => {
                 setHackathonInfo(info);
-                if (info.role === 1 && (hackathonInfo.isEvaluation || hackathonInfo.isWork || hackathonInfo.isRegistration)) {
+                if (info.role === 1 && (info.isEvaluation || info.isWork || info.isRegistration)) {
                     setActiveTab('participants');
-                } else if (info.role > 1 && (hackathonInfo.isEvaluation || hackathonInfo.isWork || hackathonInfo.isRegistration)) {
+                } else if (info.role > 1 && (info.isEvaluation || info.isWork || info.isRegistration)) {
                     setActiveTab('chats');
                 } else {
                     setActiveTab('results')

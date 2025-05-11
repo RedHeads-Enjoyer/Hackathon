@@ -176,6 +176,8 @@ export type HackathonFullData = {
     technologies: TechnologyShort[];
     criteria: Criteria[];
 
+    canEdit?: boolean,
+
     hackathonRole: number;
 };
 
