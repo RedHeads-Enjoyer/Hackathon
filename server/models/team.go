@@ -12,7 +12,6 @@ type Team struct {
 
 	HackathonID uint      `json:"hackathon_id"`
 	Hackathon   Hackathon `gorm:"foreignKey:HackathonID" json:"-"`
-	Awards      []Award   `gorm:"many2many:team_awards;" json:"awards,omitempty"`
 	Scores      []Score   `gorm:"foreignKey:TeamID" json:"scores,omitempty"`
 }
 

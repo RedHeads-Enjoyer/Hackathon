@@ -342,3 +342,15 @@ export interface HackathonInfo {
     isEvaluation: boolean,
     role: number
 }
+
+export type ResultsSearchData = {
+    list: Result[],
+    maxScore: number
+}
+
+export type Result = {
+    teamName: string,
+    score: number,
+    project: FileShort,
+    award: Award
+}

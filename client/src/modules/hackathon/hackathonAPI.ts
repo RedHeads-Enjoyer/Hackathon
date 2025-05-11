@@ -9,7 +9,7 @@ import {
     HackathonSearchData,
     ParticipantFilterData,
     ParticipantSearchData, ProjectFilterData,
-    ProjectSearchData,
+    ProjectSearchData, ResultsSearchData,
     TeamCreate,
     TeamData,
     TeamInvite, ValidateCriteria
@@ -131,6 +131,8 @@ export const HackathonAPI = {
             method: "GET",
             url: `chat/${chatId}/messages`,
             params: { limit, offset }
-        })
+        }),
+    getResults: async(hackathonId: number) =>
+        request<ResultsSearchData>({method: "GET", url: `hackathon/${hackathonId}/results`})
 
 };

@@ -20,6 +20,7 @@ import (
 	"server/models/DTO/technologyDTO"
 	"server/models/DTO/userDTO"
 	"server/types"
+	"sort"
 	"strconv"
 	"time"
 	_ "time"
@@ -2501,5 +2502,205 @@ func (h *HackathonController) SubmitProjectRating(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Оценки успешно сохранены",
+	})
+}
+
+func (hc *HackathonController) GetResults(c *gin.Context) {
+	// Получаем ID хакатона из параметров URL
+	hackathonIDStr := c.Param("hackathon_id")
+	hackathonID, err := strconv.ParseUint(hackathonIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат ID хакатона"})
+		return
+	}
+
+	// Проверяем существование хакатона
+	var hackathon models.Hackathon
+	if err := hc.DB.First(&hackathon, hackathonID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
+		return
+	}
+
+	// Получаем максимально возможный балл (сумма maxScore всех критериев)
+	var maxScore float64
+	if err := hc.DB.Model(&models.Criteria{}).
+		Where("hackathon_id = ?", hackathonID).
+		Select("COALESCE(SUM(max_score), 0)").
+		Scan(&maxScore).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при подсчете максимального балла"})
+		return
+	}
+
+	// Получаем все критерии для этого хакатона
+	var criteria []models.Criteria
+	if err := hc.DB.Where("hackathon_id = ?", hackathonID).Find(&criteria).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении критериев"})
+		return
+	}
+
+	// Создаем мапу критериев для быстрого доступа
+	criteriaMap := make(map[uint]models.Criteria)
+	for _, criterion := range criteria {
+		criteriaMap[criterion.ID] = criterion
+	}
+
+	// Получаем все команды с их суммарными баллами
+	type TeamWithScore struct {
+		ID    uint
+		Name  string
+		Score float64
+	}
+
+	var teamsWithScores []TeamWithScore
+	// Используем raw SQL для получения команд с суммарными баллами
+	if err := hc.DB.Raw(`  
+		SELECT t.id, t.name, COALESCE(SUM(s.score), 0) as score  
+		FROM teams t  
+		LEFT JOIN scores s ON t.id = s.team_id  
+		WHERE t.hackathon_id = ?  
+		GROUP BY t.id, t.name  
+		ORDER BY score DESC  
+	`, hackathonID).Scan(&teamsWithScores).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении команд: " + err.Error()})
+		return
+	}
+
+	// Определяем место каждой команды
+	teamPlaces := make(map[uint]int)
+	currentPlace := 1
+	previousScore := -1.0 // Инициализируем значением, которое не может быть у команд
+
+	for _, team := range teamsWithScores {
+		// Если текущий балл отличается от предыдущего, увеличиваем место
+		if previousScore != team.Score {
+			currentPlace = len(teamPlaces) + 1
+			previousScore = team.Score
+		}
+		teamPlaces[team.ID] = currentPlace
+	}
+
+	// Получаем все награды для этого хакатона
+	var awards []models.Award
+	if err := hc.DB.Where("hackathon_id = ?", hackathonID).Find(&awards).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении наград"})
+		return
+	}
+
+	// Создаем маппинг для быстрого поиска награды по месту
+	awardsByPlace := make(map[int]models.Award)
+	for _, award := range awards {
+		for place := award.PlaceFrom; place <= award.PlaceTo; place++ {
+			awardsByPlace[place] = award
+		}
+	}
+
+	// Создаем мапу баллов команд для быстрого доступа
+	teamScores := make(map[uint]float64)
+	for _, team := range teamsWithScores {
+		teamScores[team.ID] = team.Score
+	}
+
+	// Получаем все команды с предзагрузкой проектов
+	var teams []models.Team
+	if err := hc.DB.Where("hackathon_id = ?", hackathonID).
+		Preload("Project").
+		Find(&teams).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении команд"})
+		return
+	}
+
+	// Получаем все оценки для всех команд и группируем их по ID команды
+	var allScores []models.Score
+	if err := hc.DB.Joins("JOIN teams ON scores.team_id = teams.id").
+		Where("teams.hackathon_id = ?", hackathonID).
+		Find(&allScores).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении оценок"})
+		return
+	}
+
+	// Группируем оценки по командам
+	teamScoresDetailed := make(map[uint][]models.Score)
+	for _, score := range allScores {
+		teamScoresDetailed[score.TeamID] = append(teamScoresDetailed[score.TeamID], score)
+	}
+
+	// Формируем ответ
+	type AwardInfo struct {
+		MoneyAmount  float64 `json:"moneyAmount"`
+		Additionally string  `json:"additionally"`
+	}
+
+	type CriteriaScore struct {
+		CriteriaID   uint    `json:"criteriaId"`
+		CriteriaName string  `json:"criteriaName"`
+		MaxScore     float64 `json:"maxScore"`
+		Score        float64 `json:"score"`
+		Comment      string  `json:"comment"`
+	}
+
+	type Result struct {
+		TeamName string            `json:"teamName"`
+		Score    float64           `json:"score"`
+		Project  *fileDTO.GetShort `json:"project,omitempty"`
+		Award    *AwardInfo        `json:"award,omitempty"`
+		Criteria []CriteriaScore   `json:"criteria,omitempty"`
+	}
+
+	results := make([]Result, 0, len(teams))
+	for _, team := range teams {
+		result := Result{
+			TeamName: team.Name,
+			Score:    teamScores[team.ID], // Используем предварительно вычисленные баллы
+		}
+
+		// Добавляем информацию о проекте, если он есть
+		if team.Project != nil {
+			result.Project = &fileDTO.GetShort{
+				ID:   team.Project.ID,
+				Name: team.Project.Name,
+				Size: team.Project.Size,
+				Type: team.Project.Type,
+			}
+		}
+
+		// Добавляем информацию о награде, если команда в призовых местах
+		if place, exists := teamPlaces[team.ID]; exists {
+			if award, hasAward := awardsByPlace[place]; hasAward {
+				result.Award = &AwardInfo{
+					MoneyAmount:  award.MoneyAmount,
+					Additionally: award.Additionally,
+				}
+			}
+		}
+
+		// Добавляем информацию о баллах по каждому критерию
+		if scores, hasScores := teamScoresDetailed[team.ID]; hasScores {
+			criteriaScores := make([]CriteriaScore, 0, len(scores))
+			for _, score := range scores {
+				// Находим информацию о критерии
+				if criterion, exists := criteriaMap[score.CriteriaID]; exists {
+					criteriaScores = append(criteriaScores, CriteriaScore{
+						CriteriaID:   criterion.ID,
+						CriteriaName: criterion.Name,
+						MaxScore:     criterion.MaxScore,
+						Score:        score.Score,
+						Comment:      score.Comment,
+					})
+				}
+			}
+			result.Criteria = criteriaScores
+		}
+
+		results = append(results, result)
+	}
+
+	// Сортируем результаты по баллам (убывание)
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Score > results[j].Score
+	})
+
+	c.JSON(http.StatusOK, gin.H{
+		"list":     results,
+		"maxScore": maxScore,
 	})
 }

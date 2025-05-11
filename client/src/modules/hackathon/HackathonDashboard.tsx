@@ -9,6 +9,7 @@ import {useParams} from "react-router-dom";
 import Loader from "../../components/loader/Loader.tsx";
 import ValidateSection from "./components/ValidateSection.tsx";
 import {HackathonInfo} from "./types.ts";
+import ResultSection from "./components/ResultSection.tsx";
 
 const HackathonDashboard = () => {
     const [activeTab, setActiveTab] = useState('participants');
@@ -27,10 +28,12 @@ const HackathonDashboard = () => {
         HackathonAPI.getMyRole(hackathonId)
             .then(info => {
                 setHackathonInfo(info);
-                if (info.role === 1) {
+                if (info.role === 1 && (hackathonInfo.isEvaluation || hackathonInfo.isWork || hackathonInfo.isRegistration)) {
                     setActiveTab('participants');
-                } else {
+                } else if (info.role > 1 && (hackathonInfo.isEvaluation || hackathonInfo.isWork || hackathonInfo.isRegistration)) {
                     setActiveTab('chats');
+                } else {
+                    setActiveTab('results')
                 }
             })
             .finally(() => setHackathonInfoLoading(false));
@@ -68,9 +71,7 @@ const HackathonDashboard = () => {
                                 >
                                     Чаты
                                 </button>
-
                             }
-
                             {hackathonInfo.isWork &&
                                 <button
                                     className={`${classes.tab_button} ${activeTab === 'projects' ? classes.active : ''}`}
@@ -82,21 +83,36 @@ const HackathonDashboard = () => {
                         </div>
                             </>
                     ) : (
-                        <div className={classes.dashboard_tabs}>
-                            <button
-                                className={`${classes.tab_button} ${activeTab === 'chats' ? classes.active : ''}`}
-                                onClick={() => setActiveTab('chats')}
-                            >
-                                Чаты
-                            </button>
-                            <button
-                                className={`${classes.tab_button} ${activeTab === 'validate' ? classes.active : ''}`}
-                                onClick={() => setActiveTab('validate')}
-                            >
-                                Оценка проектов
-                            </button>
+                        <>
 
-                        </div>
+                        {(hackathonInfo.isEvaluation || hackathonInfo.isWork || hackathonInfo.isRegistration) ?
+                            <>
+                                <div className={classes.dashboard_tabs}>
+                                    <button
+                                        className={`${classes.tab_button} ${activeTab === 'chats' ? classes.active : ''}`}
+                                        onClick={() => setActiveTab('chats')}
+                                    >
+                                        Чаты
+                                    </button>
+                                    <button
+                                        className={`${classes.tab_button} ${activeTab === 'validate' ? classes.active : ''}`}
+                                        onClick={() => setActiveTab('validate')}
+                                    >
+                                        Оценка проектов
+                                    </button>
+
+                                </div>
+                            </>
+                            :
+                            <button
+                                className={`${classes.tab_button} ${activeTab === 'results' ? classes.active : ''}`}
+                                onClick={() => setActiveTab('results')}
+                            >
+                                Итоги
+                            </button>
+                        }
+
+                        </>
                     )}
 
                     <div className={classes.dashboard_content}>
@@ -106,11 +122,13 @@ const HackathonDashboard = () => {
                                 {activeTab === 'teams' && <TeamSection />}
                                 {activeTab === 'chats' && <ChatSection />}
                                 {activeTab === 'projects' && <ProjectsSection />}
+                                {activeTab === 'results' && <ResultSection />}
                             </>
                         ) : (
                             <>
                                 {activeTab === 'chats' && <ChatSection />}
                                 {activeTab === 'validate' && <ValidateSection />}
+                                {activeTab === 'results' && <ResultSection />}
                             </>
                         )}
                     </div>
