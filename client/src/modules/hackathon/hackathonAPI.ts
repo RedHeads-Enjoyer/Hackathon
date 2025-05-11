@@ -11,7 +11,7 @@ import {
     ProjectSearchData,
     TeamCreate,
     TeamData,
-    TeamInvite
+    TeamInvite, ValidateCriteria
 } from "./types.ts";
 
 export const HackathonAPI = {
@@ -121,5 +121,7 @@ export const HackathonAPI = {
         request<number>({method: "GET", url: `hackathon/${hackathonId}/role`}),
     getProjectsForValidate: async(hackathonId: number, filterData: ProjectFilterData) =>
         request<ProjectSearchData>({method: "POST", url: `hackathon/${hackathonId}/validate/projects`, data: filterData}),
+    submitProjectRatings: async(hackathonId: number, teamId: number, criteria: ValidateCriteria[]) =>
+        request<any>({method: "POST", url: `hackathon/${hackathonId}/team/${teamId}/rating`, data: criteria})
 
 };

@@ -2239,6 +2239,7 @@ func (hc *HackathonController) GetValidateProjects(c *gin.Context) {
 			},
 			"summary":  summaryValue,
 			"teamName": team.Name,
+			"teamId":   team.ID,
 		}
 
 		validateProjects = append(validateProjects, projectInfo)
@@ -2280,4 +2281,130 @@ func (hc *HackathonController) GetValidateProjects(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *HackathonController) SubmitProjectRating(c *gin.Context) {
+	// Получаем ID хакатона и команды из параметров URL
+	hackathonIDStr := c.Param("hackathon_id")
+	teamIDStr := c.Param("team_id")
+
+	hackathonID, err := strconv.ParseUint(hackathonIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID хакатона"})
+		return
+	}
+
+	teamID, err := strconv.ParseUint(teamIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID команды"})
+		return
+	}
+
+	// Получаем ID текущего пользователя из контекста
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+	userID := claims.UserID
+
+	// Проверяем, имеет ли пользователь роль судьи (2 или 3) в этом хакатоне
+	var userHackathon models.BndUserHackathon
+	result := h.DB.Where("user_id = ? AND hackathon_id = ?", userID, hackathonID).First(&userHackathon)
+
+	if result.Error != nil || (userHackathon.HackathonRole != 2 && userHackathon.HackathonRole != 3) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "У вас нет прав для оценки проектов в этом хакатоне"})
+		return
+	}
+
+	// Проверяем, существует ли команда в данном хакатоне
+	var teamCount int64
+	if err := h.DB.Model(&models.Team{}).
+		Where("id = ? AND hackathon_id = ?", teamID, hackathonID).
+		Count(&teamCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при проверке команды"})
+		return
+	}
+
+	if teamCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Команда не найдена или не принадлежит данному хакатону"})
+		return
+	}
+
+	// Получаем список критериев для хакатона
+	var criteria []models.Criteria
+	if err := h.DB.Where("hackathon_id = ?", hackathonID).
+		Order("id").Find(&criteria).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении критериев"})
+		return
+	}
+
+	// Разбираем тело запроса - массив оценок
+	var criteriaInputs []hackathonDTO.ValidateCriteriaInput
+	if err := c.ShouldBindJSON(&criteriaInputs); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат данных"})
+		return
+	}
+
+	// Проверяем, что количество оценок совпадает с количеством критериев
+	if len(criteriaInputs) != len(criteria) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":    "Количество оценок не совпадает с количеством критериев",
+			"expected": len(criteria),
+			"received": len(criteriaInputs),
+		})
+		return
+	}
+
+	// Валидируем оценки и сохраняем их в транзакции
+	err = h.DB.Transaction(func(tx *gorm.DB) error {
+		// Удаляем существующие оценки данного судьи для этой команды
+		if err := tx.Where("team_id = ?", teamID).
+			Delete(&models.Score{}).Error; err != nil {
+			return err
+		}
+
+		// Создаем новые оценки для каждого критерия
+		for i, input := range criteriaInputs {
+			criterion := criteria[i]
+
+			// Проверка, что оценка в допустимом диапазоне
+			if input.Value < int(criterion.MinScore) || input.Value > int(criterion.MaxScore) {
+				return fmt.Errorf(
+					"оценка для критерия '%s' должна быть в диапазоне от %d до %d, получено: %d",
+					criterion.Name, criterion.MinScore, criterion.MaxScore, input.Value,
+				)
+			}
+
+			// Создаем запись оценки (используем UserID для идентификации судьи)
+			score := models.Score{
+				TeamID:     uint(teamID),
+				CriteriaID: criterion.ID,
+				Score:      float64(input.Value),
+				Comment:    input.Comment,
+			}
+
+			if err := tx.Create(&score).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Оценки успешно сохранены",
+	})
 }

@@ -286,6 +286,7 @@ export type ProjectSearchData = {
 }
 
 export type ValidateProject = {
+    teamId: number,
     teamName: string,
     project: FileShort,
     summary: number | null,

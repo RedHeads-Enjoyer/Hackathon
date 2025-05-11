@@ -50,14 +50,14 @@ const ValidateProjectItem = (props: ValidateProjectItemProps) => {
 
         // Здесь должен быть код отправки оценок на сервер
         // Например:
-        // HackathonAPI.submitProjectRatings(props.hackathonId, props.project.teamId, localCriteria)
-        //     .then(() => {
-        //         setExpanded(false);
-        //         if (props.onUpdateRatings) props.onUpdateRatings();
-        //     })
-        //     .finally(() => {
-        //         setIsRatingLoading(false);
-        //     });
+        HackathonAPI.submitProjectRatings(props.hackathonId, props.project.teamId, localCriteria)
+            .then(() => {
+                setExpanded(false);
+                if (props.onUpdateRatings) props.onUpdateRatings();
+            })
+            .finally(() => {
+                setIsRatingLoading(false);
+            });
 
         // Временная имитация для демонстрации
         setTimeout(() => {
@@ -167,7 +167,7 @@ const ValidateProjectItem = (props: ValidateProjectItemProps) => {
                                             type="number"
                                             min={criterion.minScore}
                                             max={criterion.maxScore}
-                                            value={criterion.value || ''}
+                                            value={criterion.value === 0 || criterion.value ? criterion.value : ''}
                                             onChange={(e) => handleCriteriaValueChange(index, e)}
                                         />
                                     </div>
