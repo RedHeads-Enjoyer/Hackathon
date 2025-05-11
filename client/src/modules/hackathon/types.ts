@@ -345,6 +345,7 @@ export interface HackathonInfo {
 
 export type ResultsSearchData = {
     list: Result[],
+    criteria: ResCriteria[]
     maxScore: number
 }
 
@@ -353,4 +354,11 @@ export type Result = {
     score: number,
     project: FileShort,
     award: Award
+}
+
+export  type ResCriteria = {
+    comment: string,
+    name: string,
+    maxScore: number,
+    score: number
 }
