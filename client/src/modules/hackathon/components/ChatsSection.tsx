@@ -219,28 +219,31 @@ const ChatSection = () => {
                         </div>
 
                         {/* Ввод сообщения */}
-                        <div className={classes.message_input_container}>
-                        <TextArea
-                            value={messageText}
-                            onChange={(e) => setMessageText(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    sendMessage();
-                                }
-                            }}
-                            className={classes.message_input}
-                            placeholder="Введите сообщение..."
-                            disabled={!isConnected}
-                        />
-                            <Button
-                                onClick={sendMessage}
-                                variant={"primary"}
-                                disabled={!messageText.trim() || !isConnected}
-                            >
-                                Отправить
-                            </Button>
-                        </div>
+                        {/* Ввод сообщения */}
+                        {selectedChat && chats.find(chat => chat.id === selectedChat)?.writeAccess && (
+                            <div className={classes.message_input_container}>
+                                <TextArea
+                                    value={messageText}
+                                    onChange={(e) => setMessageText(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            sendMessage();
+                                        }
+                                    }}
+                                    className={classes.message_input}
+                                    placeholder="Введите сообщение..."
+                                    disabled={!isConnected}
+                                />
+                                <Button
+                                    onClick={sendMessage}
+                                    variant={"primary"}
+                                    disabled={!messageText.trim() || !isConnected}
+                                >
+                                    Отправить
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

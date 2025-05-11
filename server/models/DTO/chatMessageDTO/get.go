@@ -6,11 +6,12 @@ import (
 )
 
 type Get struct {
-	ID        uint      `json:"id"`
-	Content   string    `json:"content"`
-	Username  string    `json:"username"`
-	CreatedAt time.Time `json:"createdAt"`
-	UserID    uint      `json:"userId"`
+	ID          uint      `json:"id"`
+	Content     string    `json:"content"`
+	Username    string    `json:"username"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UserID      uint      `json:"userId"`
+	WriteAccess bool      `json:"writeAccess"`
 }
 
 func ConvertToMessageDTO(message models.ChatMessage) Get {

@@ -311,6 +311,7 @@ export interface ChatItem {
     type: number;
     team_id?: number;
     name: string;
+    writeAccess: boolean
 }
 
 export interface User {

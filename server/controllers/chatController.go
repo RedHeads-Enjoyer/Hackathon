@@ -200,10 +200,11 @@ func (cc *ChatController) GetAvailableChats(c *gin.Context) {
 
 	// Структура для ответа с дополнительными полями
 	type ChatResponse struct {
-		ID     uint   `json:"id"`
-		Type   int    `json:"type"`
-		TeamID *uint  `json:"team_id,omitempty"`
-		Name   string `json:"name"`
+		ID          uint   `json:"id"`
+		Type        int    `json:"type"`
+		TeamID      *uint  `json:"team_id,omitempty"`
+		Name        string `json:"name"`
+		WriteAccess bool   `json:"writeAccess"` // Добавляем поле для прав на запись
 	}
 
 	var chatResponses []ChatResponse
@@ -223,11 +224,15 @@ func (cc *ChatController) GetAvailableChats(c *gin.Context) {
 	}
 
 	for _, chat := range generalChats {
+		// Проверяем права на запись
+		writeAccess, _ := cc.checkChatAccess(userID, chat.ID, true)
+
 		chatResponses = append(chatResponses, ChatResponse{
-			ID:     chat.ID,
-			Type:   chat.Type,
-			TeamID: chat.TeamID,
-			Name:   "Общий чат",
+			ID:          chat.ID,
+			Type:        chat.Type,
+			TeamID:      chat.TeamID,
+			Name:        "Общий чат",
+			WriteAccess: writeAccess,
 		})
 	}
 
@@ -238,11 +243,15 @@ func (cc *ChatController) GetAvailableChats(c *gin.Context) {
 		var organizerChats []models.Chat
 		if err := cc.DB.Where("hackathon_id = ? AND type = 2", hackathonID).Find(&organizerChats).Error; err == nil {
 			for _, chat := range organizerChats {
+				// Проверяем права на запись
+				writeAccess, _ := cc.checkChatAccess(userID, chat.ID, true)
+
 				chatResponses = append(chatResponses, ChatResponse{
-					ID:     chat.ID,
-					Type:   chat.Type,
-					TeamID: chat.TeamID,
-					Name:   "Чат организаторов",
+					ID:          chat.ID,
+					Type:        chat.Type,
+					TeamID:      chat.TeamID,
+					Name:        "Чат организаторов",
+					WriteAccess: writeAccess,
 				})
 			}
 		}
@@ -257,11 +266,15 @@ func (cc *ChatController) GetAvailableChats(c *gin.Context) {
 					if err := cc.DB.Where("hackathon_id = ? AND team_id = ? AND type = 3",
 						hackathonID, team.ID).Find(&teamChats).Error; err == nil {
 						for _, chat := range teamChats {
+							// Проверяем права на запись
+							writeAccess, _ := cc.checkChatAccess(userID, chat.ID, true)
+
 							chatResponses = append(chatResponses, ChatResponse{
-								ID:     chat.ID,
-								Type:   chat.Type,
-								TeamID: chat.TeamID,
-								Name:   "Чат команды " + team.Name,
+								ID:          chat.ID,
+								Type:        chat.Type,
+								TeamID:      chat.TeamID,
+								Name:        "Чат команды " + team.Name,
+								WriteAccess: writeAccess,
 							})
 						}
 					}
@@ -280,11 +293,15 @@ func (cc *ChatController) GetAvailableChats(c *gin.Context) {
 					if err := cc.DB.Where("hackathon_id = ? AND team_id = ? AND type = 3",
 						hackathonID, userTeam.TeamID).Find(&teamChats).Error; err == nil {
 						for _, chat := range teamChats {
+							// Проверяем права на запись
+							writeAccess, _ := cc.checkChatAccess(userID, chat.ID, true)
+
 							chatResponses = append(chatResponses, ChatResponse{
-								ID:     chat.ID,
-								Type:   chat.Type,
-								TeamID: chat.TeamID,
-								Name:   "Чат команды " + team.Name,
+								ID:          chat.ID,
+								Type:        chat.Type,
+								TeamID:      chat.TeamID,
+								Name:        "Чат команды " + team.Name,
+								WriteAccess: writeAccess,
 							})
 						}
 					}
