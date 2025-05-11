@@ -12,6 +12,7 @@ type ValidateProjectItemProps = {
     criteria: ValidateCriteria[];
     hackathonId: number;
     onUpdateRatings?: () => void;
+    maxScore: number;
 };
 
 // Структура для хранения ошибок по индексам критериев
@@ -175,7 +176,7 @@ const ValidateProjectItem = (props: ValidateProjectItemProps) => {
                     <div>
                         {localSummary !== null ? (
                             <span className={`${classes.status} ${classes.ratedStatus}`}>
-                                {localSummary} баллов
+                                {localSummary} / {props.maxScore}
                             </span>
                         ) : (
                             <span className={`${classes.status} ${classes.unratedStatus}`}>

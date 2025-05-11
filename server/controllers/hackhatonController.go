@@ -2133,14 +2133,14 @@ func (hc *HackathonController) GetValidateProjects(c *gin.Context) {
 
 	// Получаем параметры фильтрации
 	var filter hackathonDTO.GetValidateProjectsFilter
-	if err := c.ShouldBindQuery(&filter); err != nil {
+
+	if err := c.ShouldBindJSON(&filter); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат параметров фильтрации"})
 		return
 	}
 
-	// Устанавливаем значения по умолчанию, если не указаны
 	if filter.Limit <= 0 {
-		filter.Limit = 10 // Значение по умолчанию
+		filter.Limit = 10
 	}
 	if filter.Offset < 0 {
 		filter.Offset = 0
@@ -2166,47 +2166,93 @@ func (hc *HackathonController) GetValidateProjects(c *gin.Context) {
 		return
 	}
 
-	// Базовый запрос для получения команд с проектами
-	query := hc.DB.Model(&models.Team{}).
-		Where("hackathon_id = ?", hackathonID).
-		Preload("Project").
-		Preload("Scores")
-
-	// Применяем фильтрацию по наличию оценок
-	if filter.Validate == 1 { // Только с оценкой
-		query = query.Joins("INNER JOIN scores ON scores.team_id = teams.id")
-		query = query.Where("EXISTS (SELECT 1 FROM scores s WHERE s.team_id = teams.id)")
-	} else if filter.Validate == -1 { // Только без оценки
-		query = query.Where("NOT EXISTS (SELECT 1 FROM scores s WHERE s.team_id = teams.id)")
-	}
-
-	// Получаем общее количество записей для пагинации
-	var totalCount int64
-	if err := query.Count(&totalCount).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при подсчете записей"})
+	// Получаем все команды хакатона с проектами
+	var allTeams []models.Team
+	if err := hc.DB.Where("hackathon_id = ?", hackathonID).Preload("Project").Find(&allTeams).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении команд"})
 		return
 	}
 
-	// Применяем лимит и смещение
-	query = query.Offset(filter.Offset).Limit(filter.Limit)
+	// Получаем все оценки для команд хакатона
+	var allScores []models.Score
+	teamIDs := make([]uint, 0, len(allTeams))
+	for _, team := range allTeams {
+		teamIDs = append(teamIDs, team.ID)
+	}
 
-	// Получаем команды с проектами
-	var teams []models.Team
-	if err := query.Find(&teams).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении проектов"})
-		return
+	if len(teamIDs) > 0 {
+		if err := hc.DB.Where("team_id IN ?", teamIDs).Find(&allScores).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении оценок"})
+			return
+		}
+	}
+
+	// Создаем карту команд с оценками
+	teamsWithScores := make(map[uint]bool)
+	for _, score := range allScores {
+		teamsWithScores[score.TeamID] = true
+	}
+
+	// Фильтруем команды в соответствии с критерием
+	var filteredTeams []models.Team
+
+	for _, team := range allTeams {
+		hasScores := teamsWithScores[team.ID]
+
+		// Применяем фильтр
+		if filter.Validate == 1 && hasScores {
+			// Только с оценками
+			filteredTeams = append(filteredTeams, team)
+		} else if filter.Validate == -1 && !hasScores {
+			// Только без оценок
+			filteredTeams = append(filteredTeams, team)
+		} else if filter.Validate == 0 {
+			// Все команды
+			filteredTeams = append(filteredTeams, team)
+		}
+	}
+
+	// Вычисляем общее количество для пагинации
+	totalCount := int64(len(filteredTeams))
+
+	// Применяем пагинацию
+	start := filter.Offset
+	end := filter.Offset + filter.Limit
+	if start > int(totalCount) {
+		start = int(totalCount)
+	}
+	if end > int(totalCount) {
+		end = int(totalCount)
+	}
+
+	// Получаем подмножество для текущей страницы
+	var paginatedTeams []models.Team
+	if start < end {
+		paginatedTeams = filteredTeams[start:end]
 	}
 
 	// Получаем критерии оценки для этого хакатона
 	var criteria []models.Criteria
-	if err := hc.DB.Where("hackathon_id = ?", hackathonID).Find(&criteria).Error; err != nil {
+	if err := hc.DB.Where("hackathon_id = ?", hackathonID).Order("id").Find(&criteria).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении критериев оценки"})
 		return
 	}
 
+	// Подсчитываем максимально возможное количество баллов
+	var maxScore uint
+	for _, criterion := range criteria {
+		maxScore += criterion.MaxScore
+	}
+
+	// Создаем карту оценок по командам
+	scoreByTeam := make(map[uint][]models.Score)
+	for _, score := range allScores {
+		scoreByTeam[score.TeamID] = append(scoreByTeam[score.TeamID], score)
+	}
+
 	// Формируем ответ в соответствии с ожидаемой структурой на фронтенде
 	var validateProjects []gin.H
-	for _, team := range teams {
+	for _, team := range paginatedTeams {
 		// Проверяем, есть ли у команды загруженный проект
 		if team.Project == nil {
 			continue // Пропускаем команды без проектов
@@ -2216,8 +2262,10 @@ func (hc *HackathonController) GetValidateProjects(c *gin.Context) {
 		var summaryScore float64
 		var hasScore bool
 
-		if len(team.Scores) > 0 {
-			for _, score := range team.Scores {
+		teamScores := scoreByTeam[team.ID]
+		if len(teamScores) > 0 {
+			// Находим сумму всех оценок
+			for _, score := range teamScores {
 				summaryScore += score.Score
 			}
 			hasScore = true
@@ -2231,7 +2279,6 @@ func (hc *HackathonController) GetValidateProjects(c *gin.Context) {
 		// Создаем объект ValidateProject
 		projectInfo := gin.H{
 			"project": gin.H{
-
 				"id":   team.Project.ID,
 				"name": team.Project.Name,
 				"type": team.Project.Type,
@@ -2245,21 +2292,22 @@ func (hc *HackathonController) GetValidateProjects(c *gin.Context) {
 		validateProjects = append(validateProjects, projectInfo)
 	}
 
-	// Создаем объекты ValidateCriteria
+	// Создаем карту оценок критериев
+	criteriaScores := make(map[uint]models.Score)
+	for _, score := range allScores {
+		criteriaScores[score.CriteriaID] = score
+	}
+
+	// Создаем объекты ValidateCriteria с заполненными оценками
 	var validateCriteria []gin.H
 	for _, criterion := range criteria {
-		// Для каждого критерия ищем соответствующую оценку пользователя
-		var value float64
-		var comment string
+		// Получаем оценку для данного критерия, если она есть
+		var value int = 0
+		var comment string = ""
 
-		// Для текущего пользователя и критерия
-		var userScore models.Score
-		hc.DB.Where("criteria_id = ? AND EXISTS (SELECT 1 FROM teams t WHERE t.id = team_id AND t.hackathon_id = ?)",
-			criterion.ID, hackathonID).First(&userScore)
-
-		if userScore.ID > 0 {
-			value = userScore.Score
-			comment = userScore.Comment
+		if score, exists := criteriaScores[criterion.ID]; exists {
+			value = int(score.Score)
+			comment = score.Comment
 		}
 
 		criteriaInfo := gin.H{
@@ -2273,11 +2321,12 @@ func (hc *HackathonController) GetValidateProjects(c *gin.Context) {
 		validateCriteria = append(validateCriteria, criteriaInfo)
 	}
 
-	// Итоговый ответ
+	// Итоговый ответ с добавлением maxScore
 	response := gin.H{
 		"list":     validateProjects,
 		"criteria": validateCriteria,
 		"total":    totalCount,
+		"maxScore": maxScore,
 	}
 
 	c.JSON(http.StatusOK, response)

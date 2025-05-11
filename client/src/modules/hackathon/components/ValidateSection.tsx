@@ -25,6 +25,7 @@ const ValidateSection = () => {
 
     const initialProjectData: ProjectSearchData = {
         total: 0,
+        maxScore: 0,
         criteria: [],
         list: []
     }
@@ -43,7 +44,8 @@ const ValidateSection = () => {
                 setProjects(prevState => ({
                     ...prevState,
                     list: data.list,
-                    criteria: data.criteria
+                    criteria: data.criteria,
+                    maxScore: data.maxScore
                 }));
                 setFilterData(prevState => ({
                     ...prevState,
@@ -112,7 +114,12 @@ const ValidateSection = () => {
                 projects.list?.length > 0 ? (
                     projects.list.map((project) => (
                         <div key={`project_${project.project.id}`}>
-                            <ValidateProjectItem project={project} criteria={projects.criteria} hackathonId={hackathonId}/>
+                            <ValidateProjectItem
+                                project={project}
+                                criteria={projects.criteria}
+                                hackathonId={hackathonId}
+                                maxScore={projects.maxScore}
+                            />
                         </div>
                     ))
                 ) : (
