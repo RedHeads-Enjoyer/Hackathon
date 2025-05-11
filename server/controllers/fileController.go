@@ -39,7 +39,7 @@ func (fc *FileController) UploadFile(c *gin.Context, file *multipart.FileHeader,
 	}
 
 	// Проверка максимального размера файла (например, 10MB)
-	const maxFileSize = 10 * 1024 * 1024 // 10MB в байтах
+	const maxFileSize = 1 * 1024 * 1024 * 1024 // 10MB в байтах
 	if file.Size > maxFileSize {
 		return nil, errors.New("размер файла превышает допустимый предел")
 	}

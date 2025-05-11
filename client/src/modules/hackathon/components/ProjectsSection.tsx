@@ -3,11 +3,12 @@ import { useParams } from "react-router-dom";
 import PageLabel from "../../../components/pageLabel/PageLabel.tsx";
 import classes from "../hackathon.module.css";
 import Error from "../../../components/error/Error.tsx";
-import FileUpload from "../../../components/fileUpload/FileUpload.tsx";
+import FileUpload, {ExistingFile} from "../../../components/fileUpload/FileUpload.tsx";
 import Button from "../../../components/button/Button.tsx";
 import Modal from "../../../components/modal/Modal.tsx";
 import { HackathonAPI } from "../hackathonAPI.ts";
 import Loader from "../../../components/loader/Loader.tsx";
+import {FileShort} from "../types.ts";
 
 const ProjectSection = () => {
     const { id } = useParams<{ id: string }>();
@@ -27,23 +28,43 @@ const ProjectSection = () => {
     const [hasChanges, setHasChanges] = useState<boolean>(false);
 
     // Fetch existing project files
+    const convertToExistingFiles = (serverFiles: FileShort[]): ExistingFile[] => {
+        return serverFiles.map(file => {
+            // Создаем базовый объект
+            const baseFile: Partial<ExistingFile> = {
+                id: file.id,
+                name: file.name || 'Файл',
+                size: file.size || 0,
+                type: file.type || 'application/octet-stream',
+                isExisting: true
+            };
+
+            // Добавляем все методы File для совместимости
+            return {
+                ...baseFile,
+                lastModified: new Date().getTime(),
+                webkitRelativePath: '',
+                arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+                slice: () => new Blob(),
+                stream: () => new ReadableStream(),
+                text: () => Promise.resolve(''),
+            } as ExistingFile;
+        });
+    };
+
+    // Fetch existing project files
     useEffect(() => {
         const fetchProjectFiles = async () => {
             try {
+                setIsLoading(true);
                 const teamProject = await HackathonAPI.getTeamProject(hackathonId);
 
                 // If there's a project with files
-                if (teamProject) {
-                    const projectFiles = teamProject.map(file => ({
-                        ...file,
-                        isExisting: true
-                    }));
+                if (teamProject && teamProject.length > 0) {
+                    const projectFiles = convertToExistingFiles(teamProject);
 
                     setExistingFiles(projectFiles);
-                    setFormData(prev => ({
-                        ...prev,
-                        documents: [...projectFiles]
-                    }));
+                    setFormData({ documents: [...projectFiles] });
                 }
             } catch (err) {
                 const errorMessage = (err as Error).message || "Ошибка при загрузке данных проекта";
@@ -57,12 +78,12 @@ const ProjectSection = () => {
     }, [hackathonId]);
 
     // Handle file changes (both adding new and removing existing)
-    const handleFilesChange = (files: File[]) => {
+    const handleFilesChange = (files: (File | ExistingFile)[]) => {
         // Check which existing files were removed
         const currentExistingFileIds = new Set(
             files
-                .filter(file => (file as any).isExisting)
-                .map(file => (file as any).id)
+                .filter((file): file is ExistingFile => 'isExisting' in file && file.isExisting === true)
+                .map(file => file.id)
         );
 
         // Find IDs of existing files that are no longer in the current list
@@ -77,21 +98,15 @@ const ProjectSection = () => {
         }
 
         // Update the documents state
-        setFormData(prev => ({
-            ...prev,
-            documents: files
-        }));
+        setFormData({ documents: files });
 
         // Check if there are new files (not existing ones)
-        const hasNewFiles = files.some(file => !(file as any).isExisting);
+        const hasNewFiles = files.some(file => !('isExisting' in file));
         if (hasNewFiles) {
             setHasChanges(true);
         }
 
-        setFormDataError(prev => ({
-            ...prev,
-            documents: undefined
-        }));
+        setFormDataError({ documents: undefined });
     };
 
     // Handle project upload
@@ -118,7 +133,7 @@ const ProjectSection = () => {
             formDataToSend.append('data', JSON.stringify(projectData));
 
             // Add only new files (not existing ones)
-            const newFiles = formData.documents.filter(file => !(file as any).isExisting);
+            const newFiles = formData.documents.filter(file => !('isExisting' in file)) as File[];
             newFiles.forEach(file => {
                 formDataToSend.append('files', file);
             });
@@ -126,30 +141,16 @@ const ProjectSection = () => {
             // Call the API
             await HackathonAPI.uploadProject(hackathonId, formDataToSend);
 
-            // Update UI after successful upload
-            setUploadLoading(false);
+            // После успешной загрузки получаем свежие данные с сервера
+            const freshProjectFiles = await HackathonAPI.getTeamProject(hackathonId);
+
+            // Преобразуем файлы для работы с компонентом
+            const updatedFiles = convertToExistingFiles(freshProjectFiles);
+
+            setExistingFiles(updatedFiles);
+            setFormData({ documents: updatedFiles });
             setHasChanges(false);
-
-            // Reset deleted files tracking since they're now gone from the server
             setFilesToDelete([]);
-
-            // Update existing files state
-            const updatedExistingFiles = [
-                ...formData.documents
-                    .filter(file => (file as any).isExisting && !filesToDelete.includes((file as any).id))
-                    .map(file => ({...(file as any)})),
-                ...newFiles.map(file => ({
-                    ...file,
-                    isExisting: true,
-                    // Note: In a real app, you'd need to get the new IDs from the server response
-                    id: Date.now() + Math.random() // Temporary ID for demo purposes
-                }))
-            ];
-
-            setExistingFiles(updatedExistingFiles);
-            setFormData({
-                documents: updatedExistingFiles
-            });
 
         } catch (err) {
             const errorMessage = (err as Error).message || "Ошибка при загрузке проекта";

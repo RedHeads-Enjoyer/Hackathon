@@ -1,5 +1,6 @@
 import {request, requestFile} from "../../config.ts";
 import {
+    FileShort,
     HackathonFilterData,
     HackathonFormData,
     HackathonFullData,
@@ -109,5 +110,5 @@ export const HackathonAPI = {
     uploadProject: async(hackathonId: number, data: FormData) =>
         request<any>({method: "POST", url: `hackathon/${hackathonId}/project`, data}),
     getTeamProject: async(hackathonId: number) =>
-        request<File[]>({method: "GET", url: `hackathon/${hackathonId}/project`}),
+        request<FileShort[]>({method: "GET", url: `hackathon/${hackathonId}/project`}),
 };
