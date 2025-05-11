@@ -20,6 +20,10 @@ const TeamSection = () => {
     const [teamInvites, setTeamInvites] = useState<TeamInvite[]>([])
     const [acceptLoading, setAcceptLoading] = useState<boolean>(false)
     const [rejectLoading, setRejectLoading] = useState<boolean>(false)
+    const [isDisbandLoading, setIsDisbandLoading] = useState<boolean>(false)
+    const [isDisbandModalOpen, setIsDisbandModalOpen] = useState<boolean>(false)
+    const [isLeaveModalOpen, setIsLeaveModalOpen] = useState<boolean>(false)
+    const [isLeaveLoading, setIsLeaveLoading] = useState<boolean>(false)
 
     const [formData, setFormData] = useState<TeamCreate>({
         name: ""
@@ -31,7 +35,8 @@ const TeamSection = () => {
 
     const [team, setTeam] = useState<TeamData>({
         name: "",
-        participants: []
+        participants: [],
+        teamRole: 0
     })
 
     const [teamLoading, setTeamLoading] = useState<boolean>(true)
@@ -141,6 +146,30 @@ const TeamSection = () => {
         }
     }
 
+    const handleDisband = () => {
+        setIsDisbandLoading(true)
+        setIsDisbandModalOpen(false)
+        HackathonAPI.deleteTeam(hackathonId)
+            .then(() => {
+                searchTeam()
+            })
+            .finally(() => {
+                setIsDisbandLoading(false)
+            })
+    }
+
+    const handleLeave = () => {
+        setIsLeaveLoading(true)
+        setIsLeaveModalOpen(false)
+        HackathonAPI.leaveTeam(hackathonId)
+            .then(() => {
+                searchTeam()
+            })
+            .finally(() => {
+                setIsLeaveLoading(false)
+            })
+    }
+
 
     return (
         <div className={classes.page_wrapper}>
@@ -222,17 +251,60 @@ const TeamSection = () => {
                         </>
                         :
                         <div>
-                            <PageLabel size={'h3'}>{`Комана ${team.name}`} </PageLabel>
+                            <PageLabel size={'h3'}>{`Команда ${team.name}`}</PageLabel>
                             {team.participants.length > 0 && (
-                                team.participants.map((part) => (
-                                    <div key={`participants_${part.id}`}>
-                                        <TeamParticipantItem
-                                            hackathonId={hackathonId}
-                                            participant={part}
-                                            searchTeam={searchTeam}
-                                        />
-                                    </div>
-                                ))
+                                <>
+                                    {team.participants.map((part) => (
+                                        <div key={`participants_${part.id}`}>
+                                            <TeamParticipantItem
+                                                hackathonId={hackathonId}
+                                                participant={part}
+                                                searchTeam={searchTeam}
+                                                teamRole={team.teamRole}
+                                            />
+                                        </div>
+                                    ))}
+                                    {team.teamRole == 2 ?
+                                            <Button
+                                            variant={"danger"}
+                                            size={"sm"}
+                                            loading={isDisbandLoading}
+                                            onClick={() => setIsDisbandModalOpen(true)}
+                                        >
+                                            Расформировать команду
+                                        </Button>
+                                        :
+                                        <Button
+                                            variant={"danger"}
+                                            size={"sm"}
+                                            loading={isLeaveLoading}
+                                            onClick={() => setIsLeaveModalOpen(true)}
+                                        >
+                                            Выйти из команды
+                                        </Button>
+                                    }
+
+                                    <Modal
+                                        isOpen={isDisbandModalOpen}
+                                        rejectText={"Отмена"}
+                                        confirmText={"Подтверждаю"}
+                                        title={"Подтверждение действия"}
+                                        onReject={() => setIsDisbandModalOpen(false)}
+                                        onConfirm={handleDisband}
+                                    >
+                                        <p>Подтвердите расформирование команды</p>
+                                    </Modal>
+                                    <Modal
+                                        isOpen={isLeaveModalOpen}
+                                        rejectText={"Отмена"}
+                                        confirmText={"Подтверждаю"}
+                                        title={"Подтверждение действия"}
+                                        onReject={() => setIsLeaveModalOpen(false)}
+                                        onConfirm={handleLeave}
+                                    >
+                                        <p>Подтвердите выход из команды</p>
+                                    </Modal>
+                                </>
                             )}
                         </div>
                     }

@@ -102,4 +102,8 @@ export const HackathonAPI = {
         request<any>({method: "GET", url: `hackathon/team/accept/${inviteId}`}),
     rejectTeamInvite: async (inviteId: number) =>
         request<any>({method: "GET", url: `hackathon/team/reject/${inviteId}`}),
+    leaveTeam: async(hackathonId: number) =>
+        request<any>({method: "GET", url: `hackathon/team/leave/${hackathonId}`}),
+    kickTeam: async(hackathonId: number, userId: number) =>
+        request<any>({method: "GET", url: `hackathon/team/kick/${hackathonId}/${userId}`})
 };

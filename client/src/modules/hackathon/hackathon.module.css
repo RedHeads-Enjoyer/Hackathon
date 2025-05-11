@@ -1885,7 +1885,9 @@
 }
 
 .team_card {
+    margin-bottom: 12px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    height: fit-content;
 }

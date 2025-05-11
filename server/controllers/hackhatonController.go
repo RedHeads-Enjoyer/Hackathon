@@ -1342,6 +1342,7 @@ func (hc *HackathonController) GetTeam(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"name":         nil, // Возвращаем null вместо пустой строки
 				"participants": []interface{}{},
+				"teamRole":     0, // Нет роли, т.к. не в команде
 			})
 			return
 		}
@@ -1357,6 +1358,7 @@ func (hc *HackathonController) GetTeam(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"name":         nil,
 				"participants": []interface{}{},
+				"teamRole":     0,
 			})
 			return
 		}
@@ -1388,6 +1390,7 @@ func (hc *HackathonController) GetTeam(c *gin.Context) {
 	teamData := userDTO.TeamData{
 		Name:         &userTeam.Name,
 		Participants: participants,
+		TeamRole:     userTeamLink.TeamRole, // Добавляем роль текущего пользователя
 	}
 
 	c.JSON(http.StatusOK, teamData)
@@ -1670,4 +1673,184 @@ func (hc *HackathonController) DeleteTeam(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Команда успешно удалена"})
+}
+
+func (hc *HackathonController) LeaveTeam(c *gin.Context) {
+	// Получение данных пользователя из контекста
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+	userID := claims.UserID
+
+	// Получение ID хакатона из URL
+	hackathonIDStr := c.Param("hackathon_id")
+	hackathonID, err := strconv.ParseUint(hackathonIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный идентификатор хакатона"})
+		return
+	}
+
+	// Начинаем транзакцию
+	tx := hc.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Проверяем наличие пользователя в команде и его роль
+	var userTeam struct {
+		TeamID   uint
+		TeamRole int
+	}
+
+	if err := tx.Table("bnd_user_teams").
+		Select("bnd_user_teams.team_id, bnd_user_teams.team_role").
+		Joins("JOIN teams ON bnd_user_teams.team_id = teams.id").
+		Where("bnd_user_teams.user_id = ? AND teams.hackathon_id = ?", userID, hackathonID).
+		First(&userTeam).Error; err != nil {
+		tx.Rollback()
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Вы не состоите в команде этого хакатона"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при проверке членства в команде"})
+		}
+		return
+	}
+
+	// Проверяем, не является ли пользователь капитаном
+	if userTeam.TeamRole == 2 {
+		tx.Rollback()
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Капитан не может покинуть команду. Вы можете только расформировать команду."})
+		return
+	}
+
+	// Удаляем связь пользователя с командой
+	if err := tx.Where("user_id = ? AND team_id = ?", userID, userTeam.TeamID).Delete(&models.BndUserTeam{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при выходе из команды"})
+		return
+	}
+
+	// Фиксируем транзакцию
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при сохранении изменений"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Вы успешно покинули команду"})
+}
+
+func (hc *HackathonController) KickTeam(c *gin.Context) {
+	// Получение данных пользователя из контекста
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+	captainID := claims.UserID
+
+	// Получение ID хакатона из URL
+	hackathonIDStr := c.Param("hackathon_id")
+	hackathonID, err := strconv.ParseUint(hackathonIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный идентификатор хакатона"})
+		return
+	}
+
+	// Получение ID пользователя для исключения из URL параметров
+	userToKickIDStr := c.Param("user_id")
+	if userToKickIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Не указан ID пользователя для исключения"})
+		return
+	}
+
+	userToKickID, err := strconv.ParseUint(userToKickIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный ID пользователя для исключения"})
+		return
+	}
+
+	// Начинаем транзакцию
+	tx := hc.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Проверяем, является ли текущий пользователь капитаном команды
+	var captainTeam struct {
+		TeamID   uint
+		TeamRole int
+	}
+
+	if err := tx.Table("bnd_user_teams").
+		Select("bnd_user_teams.team_id, bnd_user_teams.team_role").
+		Joins("JOIN teams ON bnd_user_teams.team_id = teams.id").
+		Where("bnd_user_teams.user_id = ? AND teams.hackathon_id = ?", captainID, hackathonID).
+		First(&captainTeam).Error; err != nil {
+		tx.Rollback()
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Вы не состоите в команде этого хакатона"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при проверке членства в команде"})
+		}
+		return
+	}
+
+	// Проверяем, что пользователь является капитаном
+	if captainTeam.TeamRole != 2 {
+		tx.Rollback()
+		c.JSON(http.StatusForbidden, gin.H{"error": "Только капитан команды может исключать участников"})
+		return
+	}
+
+	// Проверяем, что исключаемый пользователь находится в той же команде
+	var userToKickTeam models.BndUserTeam
+	if err := tx.Where("user_id = ? AND team_id = ?", userToKickID, captainTeam.TeamID).First(&userToKickTeam).Error; err != nil {
+		tx.Rollback()
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Указанный пользователь не является участником вашей команды"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при проверке участника команды"})
+		}
+		return
+	}
+
+	// Проверяем, что исключаемый пользователь не является капитаном
+	if userToKickTeam.TeamRole == 2 {
+		tx.Rollback()
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Нельзя исключить капитана команды"})
+		return
+	}
+
+	// Удаляем связь пользователя с командой
+	if err := tx.Delete(&userToKickTeam).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при исключении участника из команды"})
+		return
+	}
+
+	// Фиксируем транзакцию
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при сохранении изменений"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Участник успешно исключен из команды"})
 }

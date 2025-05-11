@@ -2,13 +2,14 @@ import classes from '../hackathon.module.css';
 import {TeamParticipant} from '../types.ts';
 import Button from "../../../components/button/Button.tsx";
 import {useState} from "react";
-import Modal from "../../../components/modal/Modal.tsx";
 import {HackathonAPI} from "../hackathonAPI.ts";
+import Modal from "../../../components/modal/Modal.tsx";
 
 type ParticipantItemProps = {
     participant: TeamParticipant;
     hackathonId: number;
     searchTeam: () => void;
+    teamRole: number;
 };
 
 const teamRoles: Record<number, string> = {
@@ -17,18 +18,18 @@ const teamRoles: Record<number, string> = {
 };
 
 const ParticipantItem = (props: ParticipantItemProps) => {
-    const [isDisbandModalOpen, setIsDisbandModalOpen] = useState<boolean>(false)
-    const [isDisbandLoading, setIsDisbandLoading] = useState<boolean>(false)
+    const [isKickModalOpen, setIsKickModalOpen] = useState<boolean>(false)
+    const [isKickLoading, setIsKickLoading] = useState<boolean>(false)
 
-    const handleDisband = () => {
-        setIsDisbandLoading(true)
-        setIsDisbandModalOpen(false)
-        HackathonAPI.deleteTeam(props.hackathonId)
+    const handleKick = () => {
+        setIsKickLoading(true)
+        setIsKickModalOpen(false)
+        HackathonAPI.kickTeam(props.hackathonId, props.participant.id)
             .then(() => {
                 props.searchTeam()
             })
             .finally(() => {
-                setIsDisbandLoading(false)
+                setIsKickLoading(false)
             })
     }
 
@@ -39,24 +40,23 @@ const ParticipantItem = (props: ParticipantItemProps) => {
                 <h3 className={classes.title}>{props.participant.username}</h3>
                 <p className={classes.info}>Роль: {roleName}</p>
             </div>
-            {props.participant.teamRole == 2 ?
+            {props.teamRole == 2 && props.participant.teamRole == 1 &&
                 <Button
-                    variant={"danger"}
                     size={"sm"}
-                    loading={isDisbandLoading}
-                    onClick={() => setIsDisbandModalOpen(true)}
-                >
-                    Расформировать команду
-                </Button> : <></>}
+                    variant={"danger"}
+                    loading={isKickLoading}
+                    onClick={() => setIsKickModalOpen(true)}
+                >Выгнать</Button>
+            }
             <Modal
-               isOpen={isDisbandModalOpen}
-               rejectText={"Отмена"}
-               confirmText={"Подтверждаю"}
-               title={"Подтверждение действия"}
-               onReject={() => setIsDisbandModalOpen(false)}
-               onConfirm={handleDisband}
+                isOpen={isKickModalOpen}
+                rejectText={"Отмена"}
+                confirmText={"Подтверждаю"}
+                title={"Подтверждение действия"}
+                onReject={() => setIsKickModalOpen(false)}
+                onConfirm={handleKick}
             >
-                <p>Подтвердите расформирование команды</p>
+                <p>Подтвердите кик участника</p>
             </Modal>
         </div>
     );

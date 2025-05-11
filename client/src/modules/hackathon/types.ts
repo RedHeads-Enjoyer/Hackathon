@@ -254,6 +254,7 @@ export type TeamCreate = {
 export type TeamData = {
     name: string,
     participants: TeamParticipant[]
+    teamRole: number;
 }
 
 export type TeamParticipant = {
