@@ -237,6 +237,8 @@ const TeamSection = () => {
                                     Создать команду
                                 </Button>
                             </div>
+                            <p className={classes.help_text}>Если на момент начала этапа работы у вас не будет команды,
+                                то вы никак не сможете загрузить проект</p>
                             <Modal
                                 isOpen={isPublishModalOpen}
                                 title={"Подтверждение создание команды"}
