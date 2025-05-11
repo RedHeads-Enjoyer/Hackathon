@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
-import PageLabel from "../../../components/pageLabel/PageLabel.tsx";
 import classes from "../hackathon.module.css";
 
 import {HackathonAPI} from "../hackathonAPI.ts";
@@ -161,15 +160,13 @@ const ChatSection = () => {
     };
 
     return (
-        <div className={classes.page_wrapper}>
-            <PageLabel size="h3">Чаты - {hackathonName}</PageLabel>
-
+        <div className={classes.chat_wrapper}>
             {loading && chats.length === 0 ? (
                 <div className={classes.loading}>Загрузка чатов...</div>
             ) : (
                 <div className={classes.chats}>
-                    <div className={classes.info_block} style={{flex: "0 0 300px", marginRight: "16px"}}>
-                        <h3 className={classes.block_title}>Список чатов</h3>
+                    <div className={classes.chat_info_block} style={{flex: "0 0 300px", marginRight: "16px"}}>
+                        <h3 className={classes.block_title}>Чаты - {hackathonName}</h3>
                         <div className={classes.chat_list}>
                             {Array.isArray(chats) && chats.length > 0 ? (
                                 chats.map(chat => (

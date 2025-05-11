@@ -35,7 +35,7 @@ const HackathonDashboard = () => {
             {hackathonRoleLoading ? (
                 <Loader/>
             ) : (
-                <div>
+                <>
                     {hackathonRole === 1 ? (
                         <div className={classes.dashboard_tabs}>
                             <button
@@ -95,7 +95,7 @@ const HackathonDashboard = () => {
                             </>
                         )}
                     </div>
-                </div>
+                </>
             )}
         </div>
     );
