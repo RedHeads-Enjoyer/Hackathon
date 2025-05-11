@@ -77,7 +77,7 @@ const ChatSection = () => {
                 .then(response => {
                     // Сортируем сообщения от старых к новым для отображения  
                     setMessages(response.messages.sort((a, b) =>
-                        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
                     ));
                 })
                 .catch(error => {
@@ -106,6 +106,7 @@ const ChatSection = () => {
 
             // Обрабатываем новые сообщения  
             const unsubscribe = socketRef.current.onMessage(newMessage => {
+                console.log("Полученное сообщение:", JSON.stringify(newMessage, null, 2));
                 if (newMessage.error) {
                     console.error("Ошибка сокета:", newMessage.error);
                     setConnectionError(`Ошибка: ${newMessage.error}`);
@@ -171,7 +172,7 @@ const ChatSection = () => {
                             {Array.isArray(chats) && chats.length > 0 ? (
                                 chats.map(chat => (
                                     <div
-                                        key={chat.id}
+                                        key={`chat_${chat.id}`}
                                         className={`${classes.chat_item} ${selectedChat === chat.id ? classes.selected : ''}`}
                                         onClick={() => setSelectedChat(chat.id)}
                                     >
@@ -193,8 +194,7 @@ const ChatSection = () => {
                             {connectionError && <div className={classes.error_message}>{connectionError}</div>}
                         </div>
 
-                        <div className={classes.messages_container}
-                             style={{flex: "1", overflowY: "auto", marginBottom: "16px"}}>
+                        <div className={classes.messages_container}>
                             {loading ? (
                                 <Loader/>
                             ) : messages.length === 0 ? (
@@ -203,15 +203,14 @@ const ChatSection = () => {
                                 messages.map(msg => (
                                     <div
                                         key={msg.id}
-                                        className={`${classes.message} ${msg.user_id === user?.user?.id ? classes.my_message : ''}`}
+                                        className={`${classes.message} ${msg.userId === user?.user?.id ? classes.my_message : ''}`}
                                     >
                                         <div className={classes.message_header}>
-                                            <span
-                                                className={classes.message_author}>{msg.user?.name || 'Пользователь'}</span>
-                                            <span className={classes.message_time}>
-                                            {new Date(msg.created_at).toLocaleTimeString()}
-                                        </span>
-                                        </div>
+                                                <span className={classes.message_author}>{msg.username || 'Пользователь'}</span>
+                                        <span className={classes.message_time}>
+  {new Date(msg.createdAt).toLocaleTimeString()}
+</span>
+                                    </div>
                                         <div className={classes.message_content}>{msg.content}</div>
                                     </div>
                                 ))

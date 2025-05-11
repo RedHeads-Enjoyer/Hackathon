@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"server/models"
+	"server/models/DTO/chatMessageDTO"
 	"server/types"
 	"strconv"
 	"sync"
@@ -63,10 +64,10 @@ func (cc *ChatController) WebSocketHandler(c *gin.Context) {
 	// Используем поле UserID вместо ID
 	userID := claims.UserID
 
-	// Проверяем права доступа (на запись)
-	hasAccess, err := cc.checkChatAccess(userID, uint(chatID), true)
+	// Проверяем права доступа (на ЧТЕНИЕ)
+	hasAccess, err := cc.checkChatAccess(userID, uint(chatID), false)
 	if err != nil || !hasAccess {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Нет прав на отправку сообщений в этот чат"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "Нет прав на чтение сообщений из этого чата"})
 		return
 	}
 
@@ -93,6 +94,8 @@ func (cc *ChatController) WebSocketHandler(c *gin.Context) {
 
 // handleMessages обрабатывает сообщения от клиента
 func (cc *ChatController) handleMessages(conn *websocket.Conn, chatID uint, userID uint) {
+	hasWriteAccess, _ := cc.checkChatAccess(userID, chatID, true)
+
 	defer func() {
 		// Удаляем клиента при закрытии соединения
 		cc.clientsMu.Lock()
@@ -102,7 +105,6 @@ func (cc *ChatController) handleMessages(conn *websocket.Conn, chatID uint, user
 	}()
 
 	for {
-		// Читаем сообщение
 		var msg struct {
 			Content string `json:"content"`
 		}
@@ -111,6 +113,12 @@ func (cc *ChatController) handleMessages(conn *websocket.Conn, chatID uint, user
 		if err != nil {
 			fmt.Println("Ошибка чтения сообщения:", err)
 			break
+		}
+
+		// Если у пользователя нет прав на запись, отправляем ошибку
+		if !hasWriteAccess {
+			conn.WriteJSON(gin.H{"error": "Нет прав на отправку сообщений в этот чат"})
+			continue
 		}
 
 		fmt.Printf("Получено сообщение от пользователя %d: %s\n", userID, msg.Content)
@@ -154,11 +162,14 @@ func (cc *ChatController) broadcastMessage(chatID uint, message models.ChatMessa
 	clients := cc.clients[chatID]
 	cc.clientsMu.Unlock()
 
+	// Преобразуем модель в DTO перед отправкой
+	messageDTO := chatMessageDTO.ConvertToMessageDTO(message)
+
 	fmt.Printf("Отправка сообщения %d всем клиентам (%d) в чате %d\n",
 		message.ID, len(clients), chatID)
 
 	for client := range clients {
-		err := client.WriteJSON(message)
+		err := client.WriteJSON(messageDTO)
 		if err != nil {
 			fmt.Println("Ошибка отправки сообщения клиенту:", err)
 		}
@@ -236,24 +247,46 @@ func (cc *ChatController) GetAvailableChats(c *gin.Context) {
 			}
 		}
 
-		// Получаем командный чат (тип 3), если пользователь в команде
-		var userTeam models.BndUserTeam
-		if err := cc.DB.Where("user_id = ? AND team_id IN (SELECT id FROM teams WHERE hackathon_id = ?)",
-			userID, hackathonID).First(&userTeam).Error; err == nil {
+		// Проверяем роль пользователя
+		if userHackathon.HackathonRole >= 2 {
+			// Для ролей 2 и 3 получаем ВСЕ командные чаты
+			var allTeams []models.Team
+			if err := cc.DB.Where("hackathon_id = ?", hackathonID).Find(&allTeams).Error; err == nil {
+				for _, team := range allTeams {
+					var teamChats []models.Chat
+					if err := cc.DB.Where("hackathon_id = ? AND team_id = ? AND type = 3",
+						hackathonID, team.ID).Find(&teamChats).Error; err == nil {
+						for _, chat := range teamChats {
+							chatResponses = append(chatResponses, ChatResponse{
+								ID:     chat.ID,
+								Type:   chat.Type,
+								TeamID: chat.TeamID,
+								Name:   "Чат команды " + team.Name,
+							})
+						}
+					}
+				}
+			}
+		} else {
+			// Для обычных пользователей - только чаты их команд
+			var userTeam models.BndUserTeam
+			if err := cc.DB.Where("user_id = ? AND team_id IN (SELECT id FROM teams WHERE hackathon_id = ?)",
+				userID, hackathonID).First(&userTeam).Error; err == nil {
 
-			// Получаем информацию о команде для названия чата
-			var team models.Team
-			if err := cc.DB.First(&team, userTeam.TeamID).Error; err == nil {
-				var teamChats []models.Chat
-				if err := cc.DB.Where("hackathon_id = ? AND team_id = ? AND type = 3",
-					hackathonID, userTeam.TeamID).Find(&teamChats).Error; err == nil {
-					for _, chat := range teamChats {
-						chatResponses = append(chatResponses, ChatResponse{
-							ID:     chat.ID,
-							Type:   chat.Type,
-							TeamID: chat.TeamID,
-							Name:   "Чат команды " + team.Name,
-						})
+				// Получаем информацию о команде для названия чата
+				var team models.Team
+				if err := cc.DB.First(&team, userTeam.TeamID).Error; err == nil {
+					var teamChats []models.Chat
+					if err := cc.DB.Where("hackathon_id = ? AND team_id = ? AND type = 3",
+						hackathonID, userTeam.TeamID).Find(&teamChats).Error; err == nil {
+						for _, chat := range teamChats {
+							chatResponses = append(chatResponses, ChatResponse{
+								ID:     chat.ID,
+								Type:   chat.Type,
+								TeamID: chat.TeamID,
+								Name:   "Чат команды " + team.Name,
+							})
+						}
 					}
 				}
 			}
@@ -290,9 +323,9 @@ func (cc *ChatController) GetChatMessages(c *gin.Context) {
 	userID := claims.UserID
 
 	// Проверяем права доступа (на чтение)
-	hasAccess, err := cc.checkChatAccess(userID, uint(chatID), false)
+	hasAccess, err := cc.checkChatAccess(userID, uint(chatID), false) // false = проверка на чтение
 	if err != nil || !hasAccess {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Нет доступа к чату"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "Нет прав на чтение сообщений из этого чата"})
 		return
 	}
 
@@ -322,7 +355,13 @@ func (cc *ChatController) GetChatMessages(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"messages": messages})
+	// Преобразуем все сообщения в DTO
+	messagesDTO := make([]chatMessageDTO.Get, len(messages))
+	for i, msg := range messages {
+		messagesDTO[i] = chatMessageDTO.ConvertToMessageDTO(msg)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"messages": messagesDTO})
 }
 
 // Проверка прав доступа к чату

@@ -321,11 +321,9 @@ export interface User {
 export interface ChatMessage {
     id: number;
     content: string;
-    user_id: number;
-    chat_id: number;
-    created_at: string;
-    is_edited: boolean;
-    user: User;
+    username: string;
+    createdAt: string;
+    userId: number;
 }
 
 export interface ChatListResponse {
