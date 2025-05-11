@@ -39,15 +39,13 @@ func (cc *ChatController) WebSocketHandler(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("WebSocket запрос получен!")
+	fmt.Println("ПОЛУЧЕН ЗАПРОС НА WEBSOCKET")
+	fmt.Println("URL:", c.Request.URL.String())
+	fmt.Println("Заголовки:", c.Request.Header)
 
-	conn, err := cc.upgrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		fmt.Println("Ошибка обновления соединения:", err)
-		return
-	}
-
-	fmt.Println("WebSocket соединение уста1новлено!")
+	// Проверка токена
+	token := c.Query("token")
+	fmt.Println("Полученный токен:", token)
 
 	// Получаем пользователя из токена
 	userClaims, exists := c.Get("user_claims")
@@ -55,11 +53,14 @@ func (cc *ChatController) WebSocketHandler(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
 		return
 	}
+
 	claims, ok := userClaims.(*types.Claims)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
 		return
 	}
+
+	// Используем поле UserID вместо ID
 	userID := claims.UserID
 
 	// Проверяем права доступа (на запись)
@@ -69,12 +70,14 @@ func (cc *ChatController) WebSocketHandler(c *gin.Context) {
 		return
 	}
 
-	// Устанавливаем WebSocket соединение
-	conn, err = cc.upgrader.Upgrade(c.Writer, c.Request, nil)
+	// ТОЛЬКО ОДИН АПГРЕЙД СОЕДИНЕНИЯ
+	conn, err := cc.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось установить соединение"})
+		fmt.Println("ОШИБКА АПГРЕЙДА:", err)
 		return
 	}
+
+	fmt.Println("СОЕДИНЕНИЕ УСПЕШНО УСТАНОВЛЕНО")
 
 	// Регистрируем клиента
 	cc.clientsMu.Lock()
@@ -106,8 +109,11 @@ func (cc *ChatController) handleMessages(conn *websocket.Conn, chatID uint, user
 
 		err := conn.ReadJSON(&msg)
 		if err != nil {
+			fmt.Println("Ошибка чтения сообщения:", err)
 			break
 		}
+
+		fmt.Printf("Получено сообщение от пользователя %d: %s\n", userID, msg.Content)
 
 		// Проверяем доступ (на всякий случай)
 		hasAccess, _ := cc.checkChatAccess(userID, chatID, true)
@@ -124,14 +130,18 @@ func (cc *ChatController) handleMessages(conn *websocket.Conn, chatID uint, user
 		}
 
 		if err := cc.DB.Create(&chatMessage).Error; err != nil {
+			fmt.Println("Ошибка сохранения сообщения:", err)
 			conn.WriteJSON(gin.H{"error": "Ошибка сохранения сообщения"})
 			continue
 		}
 
 		// Загружаем информацию о пользователе для отправки
 		if err := cc.DB.Preload("User").First(&chatMessage, chatMessage.ID).Error; err != nil {
+			fmt.Println("Ошибка загрузки информации о пользователе:", err)
 			continue
 		}
+
+		fmt.Printf("Сообщение сохранено (ID: %d) и готово к отправке\n", chatMessage.ID)
 
 		// Отправляем сообщение всем подключенным клиентам
 		cc.broadcastMessage(chatID, chatMessage)
@@ -141,10 +151,18 @@ func (cc *ChatController) handleMessages(conn *websocket.Conn, chatID uint, user
 // broadcastMessage отправляет сообщение всем клиентам в чате
 func (cc *ChatController) broadcastMessage(chatID uint, message models.ChatMessage) {
 	cc.clientsMu.Lock()
-	for client := range cc.clients[chatID] {
-		client.WriteJSON(message)
-	}
+	clients := cc.clients[chatID]
 	cc.clientsMu.Unlock()
+
+	fmt.Printf("Отправка сообщения %d всем клиентам (%d) в чате %d\n",
+		message.ID, len(clients), chatID)
+
+	for client := range clients {
+		err := client.WriteJSON(message)
+		if err != nil {
+			fmt.Println("Ошибка отправки сообщения клиенту:", err)
+		}
+	}
 }
 
 func (cc *ChatController) GetAvailableChats(c *gin.Context) {
@@ -165,6 +183,8 @@ func (cc *ChatController) GetAvailableChats(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
 		return
 	}
+
+	// Используем поле UserID вместо ID
 	userID := claims.UserID
 
 	// Структура для ответа с дополнительными полями
@@ -265,6 +285,8 @@ func (cc *ChatController) GetChatMessages(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
 		return
 	}
+
+	// Используем поле UserID вместо ID
 	userID := claims.UserID
 
 	// Проверяем права доступа (на чтение)

@@ -13,12 +13,8 @@ export class ChatSocket {
 
     async connect() {
         try {
-            // Проверяем и обновляем токен перед подключением
             await this.ensureFreshToken();
-
-            // Получаем свежий токен
             const token = localStorage.getItem('access_token');
-
             if (!token) {
                 console.error('Отсутствует токен доступа');
                 return;
@@ -29,18 +25,39 @@ export class ChatSocket {
             }
 
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            // Меняем путь в соответствии с серверным маршрутом (без /ws/)
             const wsUrl = `${protocol}//${window.location.host}/chat/${this.chatId}?token=${token}`;
 
             console.log("Подключение к WebSocket:", wsUrl);
             this.socket = new WebSocket(wsUrl);
 
-            // ...остальной код onmessage, onopen, etc...
+            // Добавляем обработчики событий
+            this.socket.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    this.messageHandlers.forEach(handler => handler(message));
+                } catch (e) {
+                    console.error('Ошибка при обработке сообщения:', e);
+                }
+            };
+
+            this.socket.onopen = () => {
+                console.log(`Соединение с чатом ${this.chatId} установлено`);
+                this.connectionState = true;
+            };
+
+            this.socket.onclose = (event) => {
+                console.log(`Соединение с чатом ${this.chatId} закрыто`, event);
+                this.connectionState = false;
+            };
+
+            this.socket.onerror = (error) => {
+                console.error('Ошибка WebSocket:', error);
+                this.connectionState = false;
+            };
         } catch (error) {
             console.error('Ошибка при подключении WebSocket:', error);
         }
     }
-
     // Новый метод для обновления токена
     private async ensureFreshToken() {
         try {

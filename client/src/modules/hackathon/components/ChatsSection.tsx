@@ -149,14 +149,22 @@ const ChatSection = () => {
 
     // Отправка сообщения
     const sendMessage = () => {
-        if (!messageText.trim() || !selectedChat || !socketRef.current) return;
+        if (!messageText.trim() || !selectedChat || !socketRef.current) {
+            console.error("Не выполнены условия для отправки:", {
+                messageText: messageText.trim() ? "Есть" : "Пусто",
+                selectedChat,
+                socketExists: !!socketRef.current
+            });
+            return;
+        }
 
+        console.log("ОТПРАВКА СООБЩЕНИЯ:", messageText);
         const success = socketRef.current.sendMessage(messageText);
+        console.log("Результат отправки:", success);
 
         if (success) {
             setMessageText("");
         } else {
-            // Если сообщение не отправлено, обновляем состояние ошибки
             setConnectionError("Не удалось отправить сообщение. Проверьте соединение.");
         }
     };
