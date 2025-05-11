@@ -111,4 +111,6 @@ export const HackathonAPI = {
         request<any>({method: "POST", url: `hackathon/${hackathonId}/project`, data}),
     getTeamProject: async(hackathonId: number) =>
         request<FileShort[]>({method: "GET", url: `hackathon/${hackathonId}/project`}),
+    getMyRole: async(hackathonId: number) =>
+        request<number>({method: "GET", url: `hackathon/${hackathonId}/role`})
 };

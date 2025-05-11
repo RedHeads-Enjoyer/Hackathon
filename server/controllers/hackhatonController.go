@@ -2078,3 +2078,46 @@ func (hc *HackathonController) UploadTeamProject(c *gin.Context) {
 
 	c.JSON(http.StatusOK, "")
 }
+
+// GetHackathonRole возвращает роль текущего пользователя в хакатоне
+func (hc *HackathonController) GetHackathonRole(c *gin.Context) {
+	// Получаем ID хакатона из параметров URL
+	hackathonIDStr := c.Param("hackathon_id")
+	hackathonID, err := strconv.ParseUint(hackathonIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат ID хакатона"})
+		return
+	}
+
+	// Получаем данные текущего пользователя из JWT токена
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+	userID := claims.UserID
+
+	// Ищем запись связи пользователя с хакатоном
+	var userHackathon models.BndUserHackathon
+	result := hc.DB.Where("user_id = ? AND hackathon_id = ?", userID, hackathonID).First(&userHackathon)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// Пользователь не связан с хакатоном
+			c.JSON(http.StatusOK, 0)
+			return
+		}
+		// Возникла другая ошибка БД
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при проверке роли"})
+		return
+	}
+
+	// Возвращаем роль пользователя в хакатоне
+	c.JSON(http.StatusOK, userHackathon.HackathonRole)
+}
