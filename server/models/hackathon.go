@@ -18,9 +18,6 @@ type Hackathon struct {
 	EvalDateFrom time.Time `json:"eval_date_from,omitempty"`
 	EvalDateTo   time.Time `json:"eval_date_to,omitempty"`
 
-	MaxTeamSize int `json:"max_team_size,omitempty"`
-	MinTeamSize int `json:"min_team_size,omitempty"`
-
 	OrganizationID uint          `gorm:"not null" json:"organization_id"`
 	Organization   *Organization `gorm:"foreignKey:OrganizationID" json:"organization,omitempty"`
 

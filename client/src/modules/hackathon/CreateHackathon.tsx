@@ -34,8 +34,6 @@ const CreateHackathon: React.FC = () => {
         workDateTo: '',
         evalDateFrom: '',
         evalDateTo: '',
-        minTeamSize: 1,
-        maxTeamSize: 5,
         organizationId: 0,
         stages: [],
         criteria: [],
@@ -101,22 +99,6 @@ const CreateHackathon: React.FC = () => {
 
         if (!formData.workDateTo) {
             errors.workDateTo = "Дата не может быть пустой";
-        }
-
-        if (!formData.minTeamSize) {
-            errors.minTeamSize = "Размер команды не может быть пустым";
-        }
-
-        if (formData.minTeamSize && formData.minTeamSize == 0) {
-            errors.minTeamSize = "Размер команды не может быть 0";
-        }
-
-        if (!formData.maxTeamSize) {
-            errors.maxTeamSize = "Размер команды не может быть пустым";
-        }
-
-        if (formData.maxTeamSize && formData.maxTeamSize == 0) {
-            errors.maxTeamSize = "Размер команды не может быть 0";
         }
 
         if (formData.stages.length === 0) {
@@ -386,35 +368,6 @@ const CreateHackathon: React.FC = () => {
                         onChange={(value) => handleDateChange('evalDateTo', value)}
                         minDate={formData.evalDateFrom || formData.workDateTo || formData.workDateFrom || formData.regDateTo || formData.regDateFrom}
                         error={formErrors.evalDateTo}
-                        required
-                    />
-                </div>
-            </div>
-
-            {/* Блок 3: Размер команд */}
-            <div className={classes.info_block}>
-                <h4 className={classes.block_title}>Размер команд</h4>
-                <div className={classes.team_size_grid}>
-                    <Input
-                        label="Минимальный размер команды"
-                        type="number"
-                        value={formData.minTeamSize}
-                        onChange={handleChange}
-                        name="minTeamSize"
-                        min={1}
-                        max={formData.maxTeamSize}
-                        error={formErrors.minTeamSize}
-                        required
-                    />
-                    <Input
-                        label="Максимальный размер команды"
-                        type="number"
-                        value={formData.maxTeamSize}
-                        onChange={handleChange}
-                        name="maxTeamSize"
-                        min={formData.minTeamSize}
-                        max={20}
-                        error={formErrors.maxTeamSize}
                         required
                     />
                 </div>

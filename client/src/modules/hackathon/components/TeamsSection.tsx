@@ -10,6 +10,7 @@ import Modal from "../../../components/modal/Modal.tsx";
 import Button from "../../../components/button/Button.tsx";
 import Loader from "../../../components/loader/Loader.tsx";
 import TeamParticipantItem from "./TeamParticipantItem.tsx";
+import {safeFormatDate} from "../OpenHackathon.tsx";
 
 const TeamSection = () => {
     const { id } = useParams<{ id: string }>();
@@ -17,6 +18,8 @@ const TeamSection = () => {
     const [isCreate, setIsCreate] = useState<boolean>(false)
     const [isPublishModalOpen, setIsPublishModalOpen] = useState<boolean>(false)
     const [teamInvites, setTeamInvites] = useState<TeamInvite[]>([])
+    const [acceptLoading, setAcceptLoading] = useState<boolean>(false)
+    const [rejectLoading, setRejectLoading] = useState<boolean>(false)
 
     const [formData, setFormData] = useState<TeamCreate>({
         name: ""
@@ -43,7 +46,8 @@ const TeamSection = () => {
             .then((data) => {
                 console.log(data)
                 if (!data.name) {
-
+                    HackathonAPI.getTeamInvites(hackathonId)
+                        .then(data => setTeamInvites(data))
                     setIsCreate(true)
                 } else {
                     setTeam(data);
@@ -114,14 +118,78 @@ const TeamSection = () => {
         }
     };
 
+    const handleReject = (id: number) => {
+        setRejectLoading(true)
+        HackathonAPI.rejectTeamInvite(id)
+            .then(() => searchTeam())
+            .finally(() => setRejectLoading(false))
+    }
+
+    const handleAccept = (id: number) => {
+        setAcceptLoading(true)
+        HackathonAPI.acceptTeamInvite(id)
+            .then(() => searchTeam())
+            .finally(() => setAcceptLoading(false))
+    }
+
+    const getStatusText = (status: number) => {
+        switch(status) {
+            case 0: return "Ожидает ответа";
+            case 1: return "Принято";
+            case -1: return "Отклонено";
+            default: return "Неизвестный статус";
+        }
+    }
+
 
     return (
         <div className={classes.page_wrapper}>
             {teamLoading ? < Loader/> :
                 <>
-                    <PageLabel size={'h3'}>{isCreate ? "Создание команды" : `Команда ${team.name}`}</PageLabel>
+
                     {isCreate ?
+                        <>
+                        <PageLabel size={'h3'}>Приглашения в команды</PageLabel>
+                            {teamInvites.length == 0 ?
+                                <div className={classes.card}><p>Приглашений нет</p></div> :
+                                teamInvites.map(invite => (
+                                    <div key={`invite${invite.id}`} className={classes.card}>
+                                        <div>
+                                            <p>{invite.teamName} {getStatusText(invite.status)}</p>
+                                        </div>
+
+                                        <div className={classes.cardBody}>
+                                            <p className={classes.info}>
+                                                Получено: {safeFormatDate(invite.createdAt)}
+                                            </p>
+
+                                            {invite.status === 0 && (
+                                                <div className={classes.publish_section}>
+                                                    <Button
+                                                        onClick={() => handleReject(invite.id)}
+                                                        variant="secondary"
+                                                        size={"sm"}
+                                                        loading={rejectLoading}
+                                                    >
+                                                        Отклонить
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => handleAccept(invite.id)}
+                                                        variant="primary"
+                                                        size={"sm"}
+                                                        loading={acceptLoading}
+                                                    >
+                                                        Принять
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            }
+                        <PageLabel size={'h3'}>Создание команды</PageLabel>
                         <div className={classes.info_block}>
+
                             <Input
                                 label="Название команды"
                                 type="text"
@@ -151,8 +219,10 @@ const TeamSection = () => {
                                 <p>Подтвердите введенные данные.</p>
                             </Modal>
                         </div>
+                        </>
                         :
                         <div>
+                            <PageLabel size={'h3'}>{`Комана ${team.name}`} </PageLabel>
                             {team.participants.length > 0 && (
                                 team.participants.map((part) => (
                                     <div key={`participants_${part.id}`}>

@@ -17,8 +17,6 @@ type Update struct {
 	WorkDateTo            *time.Time           `json:"work_date_to,omitempty"`
 	EvalDateFrom          *time.Time           `json:"eval_date_from,omitempty"`
 	EvalDateTo            *time.Time           `json:"eval_date_to,omitempty"`
-	MaxTeamSize           *int                 `json:"max_team_size,omitempty"`
-	MinTeamSize           *int                 `json:"min_team_size,omitempty"`
 	OrganizationID        *uint                `json:"organization_id,omitempty"`
 	Steps                 []stepDTO.Create     `json:"steps,omitempty"`
 	Awards                []awardDTO.Create    `json:"awards,omitempty"`
@@ -61,14 +59,6 @@ func (dto *Update) ToModel(existingHackathon models.Hackathon) models.Hackathon 
 
 	if dto.EvalDateTo != nil {
 		existingHackathon.EvalDateTo = *dto.EvalDateTo
-	}
-
-	if dto.MaxTeamSize != nil {
-		existingHackathon.MaxTeamSize = *dto.MaxTeamSize
-	}
-
-	if dto.MinTeamSize != nil {
-		existingHackathon.MinTeamSize = *dto.MinTeamSize
 	}
 
 	if dto.OrganizationID != nil {

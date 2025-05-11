@@ -28,6 +28,8 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 	{
 		protected.POST("", hackathonController.CreateHackathon)
 		protected.GET("/:hackathon_id", hackathonController.GetByIDFull)
+		protected.GET("/team/accept/:invite_id", inviteTeamController.AcceptTeamInvite)
+		protected.GET("/team/reject/:invite_id", inviteTeamController.RejectTeamInvite)
 	}
 
 	protected = router.Group("/hackathon")
@@ -56,6 +58,5 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 		protected.GET("/team/invite/:hackathon_id/:user_id", inviteTeamController.InviteUser)
 		protected.DELETE("/team/:hackathon_id", hackathonController.DeleteTeam)
 		protected.GET("/:hackathon_id/team/invite", inviteTeamController.GetTeamInvitesForMe)
-
 	}
 }

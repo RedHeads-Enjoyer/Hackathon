@@ -31,8 +31,6 @@ export interface HackathonFormData {
     workDateTo: string;
     evalDateFrom: string;
     evalDateTo: string;
-    minTeamSize: number;
-    maxTeamSize: number;
     organizationId: number;
     stages: Stage[];
     criteria: Criteria[];

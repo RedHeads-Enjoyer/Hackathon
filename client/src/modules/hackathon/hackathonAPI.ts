@@ -24,10 +24,6 @@ export const HackathonAPI = {
             eval_date_from: new Date(data.evalDateFrom).toISOString(),
             eval_date_to: new Date(data.evalDateTo).toISOString(),
 
-            // Размеры команд
-            min_team_size: data.minTeamSize,
-            max_team_size: data.maxTeamSize,
-
             // ID организации
             organization_id: data.organizationId,
 
@@ -101,6 +97,9 @@ export const HackathonAPI = {
     deleteTeam: async (hackathonId: number) =>
         request<any>({method: 'DELETE', url: `hackathon/team/${hackathonId}`}),
     getTeamInvites: async (hackathonId: number) =>
-        request<TeamInvite[]>({method: "GET", url: `${hackathonId}/team/invite`})
-
+        request<TeamInvite[]>({method: "GET", url: `hackathon/${hackathonId}/team/invite`}),
+    acceptTeamInvite: async (inviteId: number) =>
+        request<any>({method: "GET", url: `hackathon/team/accept/${inviteId}`}),
+    rejectTeamInvite: async (inviteId: number) =>
+        request<any>({method: "GET", url: `hackathon/team/reject/${inviteId}`}),
 };

@@ -280,12 +280,11 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 
 	// Базовый запрос для подсчета общего количества
 	// Добавляем фильтр по статусу = 1
-	countQuery := hc.DB.Model(&models.Hackathon{}).Where("status = ?", 0)
+	countQuery := hc.DB.Model(&models.Hackathon{})
 
 	// Базовый запрос для получения данных с предзагрузкой связанных данных
 	// Также фильтруем по статусу = 1
 	dataQuery := hc.DB.Model(&models.Hackathon{}).
-		Where("status = ?", 0).
 		Preload("Organization").
 		Preload("Technologies").
 		Preload("Awards").
@@ -315,14 +314,6 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 				query = query.Where("hackathons.reg_date_from <= ? OR hackathons.work_date_from <= ? OR hackathons.eval_date_from <= ?",
 					endDate, endDate, endDate)
 			}
-		}
-
-		if filterData.MinTeamSize > 0 {
-			query = query.Where("hackathons.min_team_size >= ?", filterData.MinTeamSize)
-		}
-
-		if filterData.MaxTeamSize > 0 {
-			query = query.Where("hackathons.max_team_size <= ?", filterData.MaxTeamSize)
 		}
 
 		if filterData.TotalAward > 0 {
@@ -418,8 +409,6 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 			LogoId:           logoId,
 			Technologies:     technologies,
 			TotalAward:       totalAward,
-			MinTeamSize:      h.MinTeamSize,
-			MaxTeamSize:      h.MaxTeamSize,
 			UserCount:        int(userCount),
 		}
 
@@ -959,11 +948,9 @@ func (hc *HackathonController) GetByIDFull(c *gin.Context) {
 		EvalDateFrom: hackathon.EvalDateFrom,
 		EvalDateTo:   hackathon.EvalDateTo,
 
-		LogoId:      0, // По умолчанию 0, обновим если логотип есть
-		TotalAward:  totalAward,
-		MinTeamSize: hackathon.MinTeamSize,
-		MaxTeamSize: hackathon.MaxTeamSize,
-		UserCount:   int(userCount),
+		LogoId:     0, // По умолчанию 0, обновим если логотип есть
+		TotalAward: totalAward,
+		UserCount:  int(userCount),
 
 		Files:        filesDTOs,
 		Steps:        stepsDTOs,
@@ -1149,10 +1136,12 @@ func (pc *HackathonController) GetParticipants(c *gin.Context) {
 
 	// Строим запрос с использованием моделей GORM и выбираем нужные поля
 	query := pc.DB.Model(&models.User{}).
-		Select("users.id, users.username, users.email, teams.name AS team_name").
+		Select("DISTINCT users.id, users.username, users.email, teams.name AS team_name").
 		Joins("JOIN bnd_user_hackathons buh ON users.id = buh.user_id").
-		Joins("LEFT JOIN bnd_user_teams but ON users.id = but.user_id").
-		Joins("LEFT JOIN teams ON but.team_id = teams.id AND teams.hackathon_id = ?", hackathonID).
+		Joins("LEFT JOIN (SELECT but.user_id, but.team_id FROM bnd_user_teams but "+
+			"JOIN teams t ON but.team_id = t.id WHERE t.hackathon_id = ?) AS filtered_teams "+
+			"ON users.id = filtered_teams.user_id", hackathonID).
+		Joins("LEFT JOIN teams ON filtered_teams.team_id = teams.id").
 		Where("buh.hackathon_id = ?", hackathonID)
 
 	// Добавляем фильтр по имени/email
@@ -1592,11 +1581,9 @@ func (hc *HackathonController) GetByIDEditFull(c *gin.Context) {
 		EvalDateFrom: hackathon.EvalDateFrom,
 		EvalDateTo:   hackathon.EvalDateTo,
 
-		LogoId:      0,
-		TotalAward:  totalAward,
-		MinTeamSize: hackathon.MinTeamSize,
-		MaxTeamSize: hackathon.MaxTeamSize,
-		UserCount:   int(userCount),
+		LogoId:     0,
+		TotalAward: totalAward,
+		UserCount:  int(userCount),
 
 		Files:         filesDTOs,
 		Steps:         stepsDTOs,
@@ -1652,6 +1639,13 @@ func (hc *HackathonController) DeleteTeam(c *gin.Context) {
 		First(&team).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusNotFound, gin.H{"error": "Не найдена команда с нужными правами в данном хакатоне"})
+		return
+	}
+
+	// Delete team invitations
+	if err := tx.Where("team_id = ?", team.ID).Delete(&models.TeamInvite{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении приглашений в команду"})
 		return
 	}
 
