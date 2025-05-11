@@ -19,7 +19,7 @@ export interface AuthResponse {
 }
 
 export interface User {
-    id: string;
+    id: number;
     username: string;
     systemRole: number;
 }

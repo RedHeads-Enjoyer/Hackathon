@@ -36,7 +36,6 @@ function App() {
                 return
             }
             try {
-                console.log("ver")
                 const userData = await authAPI.verify();
                 dispatch(loginSuccess(userData));
             } catch (error) {

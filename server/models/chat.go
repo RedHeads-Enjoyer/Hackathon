@@ -10,6 +10,5 @@ type Chat struct {
 	Team        *Team      `gorm:"foreignKey:TeamID" json:"team,omitempty"`
 	Type        int        `json:"type"`
 
-	Members  []User        `gorm:"many2many:user_chat" json:"members,omitempty"`
 	Messages []ChatMessage `gorm:"foreignKey:ChatID" json:"messages,omitempty"`
 }

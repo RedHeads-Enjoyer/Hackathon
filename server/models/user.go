@@ -15,7 +15,6 @@ type User struct {
 	Teams        []BndUserTeam      `gorm:"foreignKey:UserID" json:"teams,omitempty"`
 	Technologies []Technology       `gorm:"many2many:user_technologies;" json:"technologies,omitempty"`
 
-	Chats    []Chat        `gorm:"many2many:user_chat" json:"-"`
 	Messages []ChatMessage `gorm:"foreignKey:UserID" json:"-"`
 
 	Organizations []Organization `gorm:"foreignKey:OwnerID" json:"organizations,omitempty"`

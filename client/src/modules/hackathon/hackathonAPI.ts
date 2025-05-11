@@ -1,5 +1,6 @@
 import {request, requestFile} from "../../config.ts";
 import {
+    ChatListResponse, ChatMessagesResponse,
     FileShort,
     HackathonFilterData,
     HackathonFormData,
@@ -122,6 +123,14 @@ export const HackathonAPI = {
     getProjectsForValidate: async(hackathonId: number, filterData: ProjectFilterData) =>
         request<ProjectSearchData>({method: "POST", url: `hackathon/${hackathonId}/validate/projects`, data: filterData}),
     submitProjectRatings: async(hackathonId: number, teamId: number, criteria: ValidateCriteria[]) =>
-        request<any>({method: "POST", url: `hackathon/${hackathonId}/team/${teamId}/rating`, data: criteria})
+        request<any>({method: "POST", url: `hackathon/${hackathonId}/team/${teamId}/rating`, data: criteria}),
+    getAvailableChats: async(hackathonId: number) =>
+        request<ChatListResponse>({method: "GET", url: `hackathon/${hackathonId}/chats`}),
+    getChatMessages: async(chatId: number, limit: number = 50, offset: number = 0) =>
+        request<ChatMessagesResponse>({
+            method: "GET",
+            url: `chat/${chatId}/messages`,
+            params: { limit, offset }
+        })
 
 };

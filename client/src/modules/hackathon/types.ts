@@ -305,3 +305,34 @@ export type ProjectsFilterUpdate = {
     name: keyof ProjectFilterData;
     value: any;
 };
+
+export interface ChatItem {
+    id: number;
+    type: number;
+    team_id?: number;
+    name: string;
+}
+
+export interface User {
+    id: number;
+    name: string;
+}
+
+export interface ChatMessage {
+    id: number;
+    content: string;
+    user_id: number;
+    chat_id: number;
+    created_at: string;
+    is_edited: boolean;
+    user: User;
+}
+
+export interface ChatListResponse {
+    chats: ChatItem[];
+    hackathon_name: string;
+}
+
+export interface ChatMessagesResponse {
+    messages: ChatMessage[];
+}

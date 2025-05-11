@@ -13,10 +13,23 @@ import (
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token, err := extractToken(c)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-			return
+		var token string
+		var err error
+
+		// Для WebSocket подключений проверяем токен в URL параметре
+		if strings.HasPrefix(c.Request.URL.Path, "/ws/") {
+			token = c.Query("token")
+			if token == "" {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token parameter required for WebSocket"})
+				return
+			}
+		} else {
+			// Для обычных HTTP запросов используем заголовок Authorization
+			token, err = extractToken(c)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+				return
+			}
 		}
 
 		claims, err := parseToken(token)
