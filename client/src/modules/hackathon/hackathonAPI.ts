@@ -105,5 +105,9 @@ export const HackathonAPI = {
     leaveTeam: async(hackathonId: number) =>
         request<any>({method: "GET", url: `hackathon/team/leave/${hackathonId}`}),
     kickTeam: async(hackathonId: number, userId: number) =>
-        request<any>({method: "GET", url: `hackathon/team/kick/${hackathonId}/${userId}`})
+        request<any>({method: "GET", url: `hackathon/team/kick/${hackathonId}/${userId}`}),
+    uploadProject: async(hackathonId: number, data: FormData) =>
+        request<any>({method: "POST", url: `hackathon/${hackathonId}/project`, data}),
+    getTeamProject: async(hackathonId: number) =>
+        request<File[]>({method: "GET", url: `hackathon/${hackathonId}/project`}),
 };

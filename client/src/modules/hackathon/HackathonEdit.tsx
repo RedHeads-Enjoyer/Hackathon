@@ -40,8 +40,6 @@ const HackathonEdit: React.FC = () => {
         workDateTo: '',
         evalDateFrom: '',
         evalDateTo: '',
-        minTeamSize: 1,
-        maxTeamSize: 5,
         organizationId: 0,
         stages: [],
         criteria: [],
@@ -120,8 +118,6 @@ const HackathonEdit: React.FC = () => {
                     evalDateFrom: formatDate(data.evalDateFrom),
                     evalDateTo: formatDate(data.evalDateTo),
 
-                    minTeamSize: data.minTeamSize || 1,
-                    maxTeamSize: data.maxTeamSize || 5,
                     organizationId: data.organizationId || 0,
 
                     stages: data.steps?.map(step => ({
@@ -227,23 +223,6 @@ const HackathonEdit: React.FC = () => {
             errors.workDateTo = "Дата не может быть пустой";
         }
 
-        // Проверка размера команды
-        if (!formData.minTeamSize) {
-            errors.minTeamSize = "Размер команды не может быть пустым";
-        }
-
-        if (formData.minTeamSize && formData.minTeamSize === 0) {
-            errors.minTeamSize = "Размер команды не может быть 0";
-        }
-
-        if (!formData.maxTeamSize) {
-            errors.maxTeamSize = "Размер команды не может быть пустым";
-        }
-
-        if (formData.maxTeamSize && formData.maxTeamSize === 0) {
-            errors.maxTeamSize = "Размер команды не может быть 0";
-        }
-
         // Проверка наличия этапов
         if (formData.stages.length === 0) {
             errors.stages = "Добавьте хотя бы один этап хакатона";
@@ -312,10 +291,6 @@ const HackathonEdit: React.FC = () => {
                 work_date_to: new Date(formData.workDateTo).toISOString(),
                 eval_date_from: new Date(formData.evalDateFrom).toISOString(),
                 eval_date_to: new Date(formData.evalDateTo).toISOString(),
-
-                // Размеры команд
-                min_team_size: formData.minTeamSize,
-                max_team_size: formData.maxTeamSize,
 
                 // ID организации
                 organization_id: formData.organizationId,
@@ -642,35 +617,7 @@ const HackathonEdit: React.FC = () => {
                     />
                 </div>
             </div>
-
-            {/* Блок 3: Размер команд */}
-            <div className={classes.info_block}>
-                <h4 className={classes.block_title}>Размер команд</h4>
-                <div className={classes.team_size_grid}>
-                    <Input
-                        label="Минимальный размер команды"
-                        type="number"
-                        value={formData.minTeamSize}
-                        onChange={handleChange}
-                        name="minTeamSize"
-                        min={1}
-                        max={formData.maxTeamSize}
-                        error={formErrors.minTeamSize}
-                        required
-                    />
-                    <Input
-                        label="Максимальный размер команды"
-                        type="number"
-                        value={formData.maxTeamSize}
-                        onChange={handleChange}
-                        name="maxTeamSize"
-                        min={formData.minTeamSize}
-                        max={20}
-                        error={formErrors.maxTeamSize}
-                        required
-                    />
-                </div>
-            </div>
+            
 
             {/* Остальные секции */}
             <StepsListWithDates

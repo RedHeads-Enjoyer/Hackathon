@@ -30,3 +30,23 @@ type Hackathon struct {
 	Awards       []*Award           `gorm:"foreignKey:HackathonID" json:"awards,omitempty"`
 	Criteria     []*Criteria        `gorm:"foreignKey:HackathonID" json:"criteria,omitempty"`
 }
+
+func (h *Hackathon) AfterCreate(tx *gorm.DB) error {
+	generalChat := Chat{
+		HackathonID: h.ID,
+		Type:        1,
+	}
+	if err := tx.Create(&generalChat).Error; err != nil {
+		return err
+	}
+
+	organizerChat := Chat{
+		HackathonID: h.ID,
+		Type:        2,
+	}
+	if err := tx.Create(&organizerChat).Error; err != nil {
+		return err
+	}
+
+	return nil
+}

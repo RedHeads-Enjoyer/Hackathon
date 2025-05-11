@@ -21,5 +21,6 @@ func Router() *gin.Engine {
 
 	r.Static("/uploads", "./data/uploads")
 
+	r.MaxMultipartMemory = 1024 << 20
 	return r
 }

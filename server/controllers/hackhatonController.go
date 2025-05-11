@@ -1854,3 +1854,227 @@ func (hc *HackathonController) KickTeam(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Участник успешно исключен из команды"})
 }
+
+// GetTeamProject возвращает информацию о проекте команды участника хакатона
+
+func (hc *HackathonController) GetTeamProject(c *gin.Context) {
+	// Получаем ID хакатона из параметров URL
+	hackathonIDStr := c.Param("hackathon_id")
+	hackathonID, err := strconv.ParseUint(hackathonIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат ID хакатона"})
+		return
+	}
+
+	// Получаем данные текущего пользователя из JWT токена
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+	userID := claims.UserID
+
+	// Находим команду пользователя для данного хакатона
+	var userTeam struct {
+		TeamID uint
+	}
+	if err := hc.DB.Table("bnd_user_teams").
+		Select("team_id").
+		Joins("JOIN teams ON bnd_user_teams.team_id = teams.id").
+		Where("bnd_user_teams.user_id = ? AND teams.hackathon_id = ?", userID, hackathonID).
+		First(&userTeam).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Вы не состоите в команде на этом хакатоне"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при поиске команды"})
+		}
+		return
+	}
+
+	// Получаем информацию о команде с проектом
+	var team models.Team
+	if err := hc.DB.Preload("Project").First(&team, userTeam.TeamID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Команда не найдена"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении данных команды"})
+		}
+		return
+	}
+
+	// Инициализируем пустой массив файлов
+	files := []fileDTO.GetShort{}
+
+	// Если у команды есть проект, добавляем его в массив файлов
+	if team.Project != nil {
+		// Создаем DTO для файла проекта
+		fileDTO := fileDTO.GetShort{
+			ID:   team.Project.ID,
+			Name: team.Project.Name,
+			Type: team.Project.Type,
+			Size: team.Project.Size,
+		}
+		files = append(files, fileDTO)
+	}
+
+	// Возвращаем только массив файлов
+	c.JSON(http.StatusOK, files)
+}
+
+// UploadTeamProject загружает или обновляет проект команды на хакатоне
+func (hc *HackathonController) UploadTeamProject(c *gin.Context) {
+	// Получаем ID хакатона из параметров URL
+	hackathonIDStr := c.Param("hackathon_id")
+	hackathonID, err := strconv.ParseUint(hackathonIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат ID хакатона"})
+		return
+	}
+
+	// Получаем данные текущего пользователя из JWT токена
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+	userID := claims.UserID
+
+	// Устанавливаем userID в контекст для FileController
+	c.Set("userID", userID)
+
+	// Находим команду пользователя для данного хакатона
+	var userTeam struct {
+		TeamID uint
+	}
+	if err := hc.DB.Table("bnd_user_teams").
+		Select("team_id").
+		Joins("JOIN teams ON bnd_user_teams.team_id = teams.id").
+		Where("bnd_user_teams.user_id = ? AND teams.hackathon_id = ?", userID, hackathonID).
+		First(&userTeam).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Вы не состоите в команде на этом хакатоне"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при поиске команды"})
+		}
+		return
+	}
+
+	// Начинаем транзакцию
+	tx := hc.DB.Begin()
+	if tx.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при начале транзакции"})
+		return
+	}
+
+	// Функция для отката транзакции с возвратом ошибки
+	rollbackWithError := func(statusCode int, message string) {
+		tx.Rollback()
+		c.JSON(statusCode, gin.H{"error": message})
+	}
+
+	// Получаем информацию о команде с проектом
+	var team models.Team
+	if err := tx.Preload("Project").First(&team, userTeam.TeamID).Error; err != nil {
+		rollbackWithError(http.StatusInternalServerError, "Ошибка при получении данных команды")
+		return
+	}
+
+	// Парсим multipart форму
+	if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
+		rollbackWithError(http.StatusBadRequest, "Ошибка при парсинге формы: "+err.Error())
+		return
+	}
+
+	// Обрабатываем JSON данные из запроса
+	var requestData struct {
+		FilesToDelete []uint `json:"files_to_delete"`
+	}
+
+	// Получаем JSON данные из поля 'data'
+	projectDataJSON := c.Request.FormValue("data")
+	if projectDataJSON != "" {
+		if err := json.Unmarshal([]byte(projectDataJSON), &requestData); err != nil {
+			rollbackWithError(http.StatusBadRequest, "Ошибка при разборе JSON данных")
+			return
+		}
+	}
+
+	// Проверяем наличие файлов для загрузки
+	form, formErr := c.MultipartForm()
+	hasNewFiles := formErr == nil && form != nil && form.File["files"] != nil && len(form.File["files"]) > 0
+
+	// Проверяем, есть ли операции для выполнения
+	if !hasNewFiles && len(requestData.FilesToDelete) == 0 {
+		rollbackWithError(http.StatusBadRequest, "Не указаны файлы для загрузки или удаления")
+		return
+	}
+
+	// Обработка удаления файлов
+	if len(requestData.FilesToDelete) > 0 && team.Project != nil {
+		for _, fileID := range requestData.FilesToDelete {
+			if team.Project.ID == fileID {
+				// Удаляем файл проекта
+				if err := tx.Delete(&models.File{}, fileID).Error; err != nil {
+					rollbackWithError(http.StatusInternalServerError, "Ошибка при удалении файла проекта")
+					return
+				}
+				team.Project = nil
+				break
+			}
+		}
+	}
+
+	// Загрузка нового проекта
+	if hasNewFiles {
+		// Если уже есть проект и мы его не удалили в предыдущем шаге, удаляем
+		if team.Project != nil {
+			oldFileID := team.Project.ID
+
+			// Удаляем старый файл (если его нет в списке filesToDelete)
+			alreadyDeleted := false
+			for _, id := range requestData.FilesToDelete {
+				if id == oldFileID {
+					alreadyDeleted = true
+					break
+				}
+			}
+
+			if !alreadyDeleted {
+				if err := tx.Delete(&models.File{}, oldFileID).Error; err != nil {
+					rollbackWithError(http.StatusInternalServerError, "Ошибка при удалении старого файла проекта")
+					return
+				}
+			}
+		}
+
+		// Загружаем файл проекта
+		newFile, err := hc.FileController.UploadFile(c, form.File["files"][0], team.ID, "team")
+		if err != nil {
+			rollbackWithError(http.StatusInternalServerError, "Ошибка при загрузке файла проекта: "+err.Error())
+			return
+		}
+
+		// Обновляем проект команды
+		team.Project = newFile
+	}
+
+	// Применяем транзакцию
+	if err := tx.Commit().Error; err != nil {
+		rollbackWithError(http.StatusInternalServerError, "Ошибка при сохранении изменений")
+		return
+	}
+
+	c.JSON(http.StatusOK, "")
+}
