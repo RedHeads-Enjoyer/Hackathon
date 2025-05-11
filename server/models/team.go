@@ -5,7 +5,7 @@ import "gorm.io/gorm"
 type Team struct {
 	gorm.Model
 
-	Name string `gorm:"size:50;unique;not null" json:"name"`
+	Name string `gorm:"size:50;not null" json:"name"`
 
 	Project *File         `gorm:"polymorphic:Owner;polymorphicValue:team" json:"project,omitempty"`
 	Users   []BndUserTeam `gorm:"foreignKey:TeamID" json:"users,omitempty"`

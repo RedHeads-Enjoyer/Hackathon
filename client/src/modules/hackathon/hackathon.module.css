@@ -1879,5 +1879,13 @@
 }
 
 .publish_section {
+    display: flex;
+    gap: 12px;
     margin-top: 12px;
+}
+
+.team_card {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }

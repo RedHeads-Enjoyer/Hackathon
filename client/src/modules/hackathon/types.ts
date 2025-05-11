@@ -263,3 +263,10 @@ export type TeamParticipant = {
     username: string,
     teamRole: number
 }
+
+export type TeamInvite = {
+    id: number;
+    teamName: string;
+    status: number;
+    createdAt: string;
+}

@@ -1270,6 +1270,13 @@ func (hc *HackathonController) CreateTeam(c *gin.Context) {
 		return
 	}
 
+	// Проверка уникальности названия команды в рамках хакатона
+	var existingTeam models.Team
+	if err := hc.DB.Where("hackathon_id = ? AND name = ?", hackathonID, team.Name).First(&existingTeam).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Команда с таким названием уже существует в этом хакатоне"})
+		return
+	}
+
 	// Проверка, состоит ли пользователь уже в команде в этом хакатоне
 	var userTeam models.BndUserTeam
 	if err := hc.DB.Where("user_id = ? AND team_id IN (SELECT id FROM teams WHERE hackathon_id = ?)", userID, hackathonID).First(&userTeam).Error; err == nil {
@@ -1279,7 +1286,7 @@ func (hc *HackathonController) CreateTeam(c *gin.Context) {
 
 	// Установка HackathonID в модель команды
 	teamModel := team.ToModel()
-	teamModel.HackathonID = uint(hackathonID) // Убедитесь, что HackathonID установлен
+	teamModel.HackathonID = uint(hackathonID)
 
 	// Создание команды
 	if err := hc.DB.Create(&teamModel).Error; err != nil {
@@ -1607,4 +1614,66 @@ func (hc *HackathonController) GetByIDEditFull(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, fullInfo)
+}
+
+func (hc *HackathonController) DeleteTeam(c *gin.Context) {
+	userClaims, exists := c.Get("user_claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
+		return
+	}
+
+	claims, ok := userClaims.(*types.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
+		return
+	}
+
+	userID := claims.UserID
+	hackathonID, err := strconv.ParseUint(c.Param("hackathon_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID хакатона"})
+		return
+	}
+
+	// Start a transaction
+	tx := hc.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Find the team where user has role 2 in this hackathon
+	var team models.Team
+	if err := tx.Table("teams").
+		Joins("JOIN bnd_user_teams ON bnd_user_teams.team_id = teams.id").
+		Where("teams.hackathon_id = ? AND bnd_user_teams.user_id = ? AND bnd_user_teams.team_role = 2", hackathonID, userID).
+		First(&team).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusNotFound, gin.H{"error": "Не найдена команда с нужными правами в данном хакатоне"})
+		return
+	}
+
+	// Delete team relationships
+	if err := tx.Where("team_id = ?", team.ID).Delete(&models.BndUserTeam{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении связей команды"})
+		return
+	}
+
+	// Delete the team
+	if err := tx.Delete(&team).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении команды"})
+		return
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при сохранении изменений"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Команда успешно удалена"})
 }

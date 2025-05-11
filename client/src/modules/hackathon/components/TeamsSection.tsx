@@ -1,4 +1,4 @@
-import {TeamCreate, TeamData} from "../types.ts";
+import {TeamCreate, TeamData, TeamInvite} from "../types.ts";
 import React, {useEffect, useState} from "react";
 import {HackathonAPI} from "../hackathonAPI.ts";
 import {useParams} from "react-router-dom";
@@ -16,6 +16,7 @@ const TeamSection = () => {
     const hackathonId = id ? parseInt(id, 10) : 1;
     const [isCreate, setIsCreate] = useState<boolean>(false)
     const [isPublishModalOpen, setIsPublishModalOpen] = useState<boolean>(false)
+    const [teamInvites, setTeamInvites] = useState<TeamInvite[]>([])
 
     const [formData, setFormData] = useState<TeamCreate>({
         name: ""
@@ -40,10 +41,13 @@ const TeamSection = () => {
         setLoadingError(null);
         HackathonAPI.getTeam(hackathonId)
             .then((data) => {
+                console.log(data)
                 if (!data.name) {
+
                     setIsCreate(true)
                 } else {
                     setTeam(data);
+                    setIsCreate(false);
                 }
                 setTeamLoading(false)
             })
@@ -95,12 +99,13 @@ const TeamSection = () => {
             setFormErrors(validationErrors);
             setCreateError(null);
             setCreateLoading(false);
+            setFormData({name: ""})
             return;
         }
 
         try {
-            await HackathonAPI.createTeam(hackathonId, formData);
-            searchTeam()
+            HackathonAPI.createTeam(hackathonId, formData)
+                .then(() => searchTeam());
         } catch (err) {
             const errorMessage = (err as Error).message || "Ошибка при создании организации";
             setCreateError(errorMessage);
@@ -114,7 +119,7 @@ const TeamSection = () => {
         <div className={classes.page_wrapper}>
             {teamLoading ? < Loader/> :
                 <>
-                    <PageLabel size={'h3'}>{isCreate ? "Создание команды" : `Команда${ team.name}`}</PageLabel>
+                    <PageLabel size={'h3'}>{isCreate ? "Создание команды" : `Команда ${team.name}`}</PageLabel>
                     {isCreate ?
                         <div className={classes.info_block}>
                             <Input
@@ -151,7 +156,11 @@ const TeamSection = () => {
                             {team.participants.length > 0 && (
                                 team.participants.map((part) => (
                                     <div key={`participants_${part.id}`}>
-                                        <TeamParticipantItem participant={part} />
+                                        <TeamParticipantItem
+                                            hackathonId={hackathonId}
+                                            participant={part}
+                                            searchTeam={searchTeam}
+                                        />
                                     </div>
                                 ))
                             )}

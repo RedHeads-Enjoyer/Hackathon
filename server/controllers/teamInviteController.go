@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"reflect"
 	"server/models"
+	"server/models/DTO/teamInviteDTO"
 	"server/types"
+	"strconv"
 )
 
 type TeamInviteController struct {
@@ -267,14 +269,41 @@ func (hc *TeamInviteController) GetTeamInvitesForMe(c *gin.Context) {
 	claims := c.MustGet("user_claims").(*types.Claims)
 	userID := claims.UserID
 
-	// Получение приглашений для указанного пользователя
+	// Извлечение ID хакатона из URL
+	hackathonIDStr := c.Param("hackathon_id")
+	if hackathonIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Отсутствует идентификатор хакатона"})
+		return
+	}
+
+	// Преобразование ID хакатона из строки в uint
+	hackathonID, err := strconv.ParseUint(hackathonIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный идентификатор хакатона"})
+		return
+	}
+
+	// Получение приглашений для указанного пользователя в конкретном хакатоне
 	var invitations []models.TeamInvite
-	if err := hc.DB.Where("user_id = ?", userID).Preload("Team").Preload("User").Find(&invitations).Error; err != nil {
+	if err := hc.DB.Joins("JOIN teams ON team_invites.team_id = teams.id").
+		Where("team_invites.user_id = ? AND teams.hackathon_id = ?", userID, hackathonID).
+		Preload("Team").
+		Find(&invitations).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении приглашений", "details": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, invitations)
+	result := make([]teamInviteDTO.Get, len(invitations))
+	for i, invite := range invitations {
+		result[i] = teamInviteDTO.Get{
+			Id:        invite.ID,
+			TeamName:  invite.Team.Name,
+			Status:    invite.Status,
+			CreatedAt: invite.CreatedAt,
+		}
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 func (hc *TeamInviteController) GetTeamMembers(c *gin.Context) {

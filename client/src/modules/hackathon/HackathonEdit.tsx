@@ -518,6 +518,10 @@ const HackathonEdit: React.FC = () => {
         }));
     };
 
+    const handleCancelClick = () => {
+        navigate(`/hackathon/${id}`);
+    }
+
     // Если идет загрузка, показываем индикатор загрузки
     if (isLoading) {
         return (
@@ -731,6 +735,12 @@ const HackathonEdit: React.FC = () => {
 
             {/* Кнопка сохранения */}
             <div className={classes.publish_section}>
+                <Button
+                    onClick={handleCancelClick}
+                    variant={"secondary"}
+                >
+                    Отмена
+                </Button>
                 <Button
                     onClick={handleUpdateClick}
                     loading={updateHackathonLoading}
