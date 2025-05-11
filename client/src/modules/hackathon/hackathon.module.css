@@ -2252,3 +2252,8 @@
     margin-bottom: 8px;
 }
 
+.help_text {
+    color: var(--secondary-text-color);
+    font-size: 14px;
+    font-style: italic;
+}

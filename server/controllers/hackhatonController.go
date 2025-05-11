@@ -1478,6 +1478,13 @@ func (hc *HackathonController) GetByIDEditFull(c *gin.Context) {
 		return
 	}
 
+	// Проверяем, можно ли редактировать хакатон (до начала регистрации)
+	currentTime := time.Now()
+	if currentTime.After(hackathon.RegDateFrom) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Редактирование невозможно, регистрация уже началась"})
+		return
+	}
+
 	// Получаем роль пользователя в хакатоне
 	var userHackathon models.BndUserHackathon
 	hackathonRole := 0 // 0 = не участник

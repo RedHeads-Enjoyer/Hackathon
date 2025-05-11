@@ -329,7 +329,10 @@ const CreateHackathon: React.FC = () => {
                     <DatePicker
                         label="Окончание регистрации"
                         value={formData.regDateTo}
-                        onChange={(value) => handleDateChange('regDateTo', value)}
+                        onChange={(value) => {
+                            handleDateChange('regDateTo', value);
+                            handleDateChange('workDateFrom', value);
+                        }}
                         minDate={formData.regDateFrom}
                         maxDate={formData.workDateFrom || formData.workDateTo || formData.evalDateFrom || formData.evalDateTo}
                         error={formErrors.regDateTo}
@@ -338,7 +341,10 @@ const CreateHackathon: React.FC = () => {
                     <DatePicker
                         label="Начало работы"
                         value={formData.workDateFrom}
-                        onChange={(value) => handleDateChange('workDateFrom', value)}
+                        onChange={(value) => {
+                            handleDateChange('workDateFrom', value);
+                            handleDateChange('regDateTo', value);
+                        }}
                         minDate={formData.regDateTo || formData.regDateFrom}
                         maxDate={formData.workDateTo || formData.evalDateFrom || formData.evalDateTo}
                         error={formErrors.workDateFrom}
@@ -347,7 +353,10 @@ const CreateHackathon: React.FC = () => {
                     <DatePicker
                         label="Окончание работы"
                         value={formData.workDateTo}
-                        onChange={(value) => handleDateChange('workDateTo', value)}
+                        onChange={(value) => {
+                            handleDateChange('workDateTo', value);
+                            handleDateChange('evalDateFrom', value);
+                        }}
                         minDate={formData.workDateFrom || formData.regDateTo || formData.regDateFrom}
                         maxDate={formData.evalDateFrom || formData.evalDateTo}
                         error={formErrors.workDateTo}
@@ -356,7 +365,10 @@ const CreateHackathon: React.FC = () => {
                     <DatePicker
                         label="Начало оценки"
                         value={formData.evalDateFrom}
-                        onChange={(value) => handleDateChange('evalDateFrom', value)}
+                        onChange={(value) => {
+                            handleDateChange('workDateTo', value);
+                            handleDateChange('evalDateFrom', value);
+                        }}
                         minDate={formData.workDateTo || formData.workDateFrom || formData.regDateTo || formData.regDateFrom}
                         maxDate={formData.evalDateTo}
                         error={formErrors.evalDateFrom}
@@ -371,6 +383,10 @@ const CreateHackathon: React.FC = () => {
                         required
                     />
                 </div>
+                <p className={classes.help_text}>
+                    Дата окончания регистрации совпадает с датой начала работы, а дата окончания работы
+                    совпадает с датой начала оценки для обеспечения непрерывности процесса.
+                </p>
             </div>
 
             {/* Остальные секции */}
