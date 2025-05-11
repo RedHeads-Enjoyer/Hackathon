@@ -2,17 +2,18 @@ import React, {useEffect, useId, useRef} from 'react';
 import classes from './style.module.css';
 
 interface TextAreaProps {
-    label: string;
+    label?: string;
     name?: string;
     value: string;
     onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+    onKeyDown?: React.KeyboardEventHandler<HTMLTextAreaElement>; // Добавлен обработчик клавиш
     placeholder?: string;
     minRows?: number;
     maxRows?: number;
     disabled?: boolean;
     className?: string;
     error?: string;
-    required?: boolean; // Добавлен параметр required
+    required?: boolean;
 }
 
 const TextArea: React.FC<TextAreaProps> = ({
@@ -20,13 +21,14 @@ const TextArea: React.FC<TextAreaProps> = ({
                                                name = '',
                                                value,
                                                onChange,
+                                               onKeyDown, // Добавлен параметр
                                                placeholder = '',
                                                minRows = 3,
                                                maxRows = 8,
                                                disabled = false,
                                                className = '',
                                                error = '',
-                                               required = false, // Добавлен параметр с дефолтным значением
+                                               required = false,
                                            }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const id = useId();
@@ -51,7 +53,7 @@ const TextArea: React.FC<TextAreaProps> = ({
                 className={`${classes.label} ${disabled ? classes.labelDisabled : ''}`}
             >
                 {label}
-                {required && <span className={classes.required}> *</span>} {/* Звездочка для обязательного поля */}
+                {required && <span className={classes.required}> *</span>}
             </label>
 
             <div className={`${classes.textAreaContainer} ${disabled ? classes.disabled : ''} ${error ? classes.error : ''}`}>
@@ -64,10 +66,11 @@ const TextArea: React.FC<TextAreaProps> = ({
                     placeholder={placeholder}
                     disabled={disabled}
                     onChange={onChange}
+                    onKeyDown={onKeyDown} // Добавлен обработчик клавиш
                     rows={minRows}
                     aria-invalid={!!error}
                     aria-describedby={error ? `${id}-error` : undefined}
-                    required={required} // Добавлен атрибут required
+                    required={required}
                 />
             </div>
 
