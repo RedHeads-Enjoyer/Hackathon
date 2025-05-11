@@ -335,3 +335,10 @@ export interface ChatListResponse {
 export interface ChatMessagesResponse {
     messages: ChatMessage[];
 }
+
+export interface HackathonInfo {
+    isRegistration: boolean,
+    isWork: boolean,
+    isEvaluation: boolean,
+    role: number
+}

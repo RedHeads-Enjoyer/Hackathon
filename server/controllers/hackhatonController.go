@@ -1954,6 +1954,29 @@ func (hc *HackathonController) UploadTeamProject(c *gin.Context) {
 	// Устанавливаем userID в контекст для FileController
 	c.Set("userID", userID)
 
+	var hackathon models.Hackathon
+	if err := hc.DB.Select("work_date_from, work_date_to").First(&hackathon, hackathonID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
+		return
+	}
+
+	// Проверяем текущую дату относительно дат работы хакатона
+	currentTime := time.Now()
+	if currentTime.Before(hackathon.WorkDateFrom) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":          "Загрузка проекта будет доступна только после начала работы хакатона",
+			"work_date_from": hackathon.WorkDateFrom,
+		})
+		return
+	}
+	if currentTime.After(hackathon.WorkDateTo) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":        "Загрузка проекта недоступна, период работы хакатона завершен",
+			"work_date_to": hackathon.WorkDateTo,
+		})
+		return
+	}
+
 	// Находим команду пользователя для данного хакатона
 	var userTeam struct {
 		TeamID uint
@@ -2107,10 +2130,28 @@ func (hc *HackathonController) GetHackathonRole(c *gin.Context) {
 	var userHackathon models.BndUserHackathon
 	result := hc.DB.Where("user_id = ? AND hackathon_id = ?", userID, hackathonID).First(&userHackathon)
 
+	// Получаем информацию о хакатоне для определения состояний
+	var hackathon models.Hackathon
+	if err := hc.DB.First(&hackathon, hackathonID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Хакатон не найден"})
+		return
+	}
+
+	// Определяем текущие состояния хакатона
+	currentTime := time.Now()
+	isRegistration := currentTime.After(hackathon.RegDateFrom) && currentTime.Before(hackathon.RegDateTo)
+	isWork := currentTime.After(hackathon.WorkDateFrom) && currentTime.Before(hackathon.WorkDateTo)
+	isEvaluation := currentTime.After(hackathon.EvalDateFrom) && currentTime.Before(hackathon.EvalDateTo)
+
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// Пользователь не связан с хакатоном
-			c.JSON(http.StatusOK, 0)
+			c.JSON(http.StatusOK, gin.H{
+				"role":           0,
+				"isRegistration": isRegistration,
+				"isWork":         isWork,
+				"isEvaluation":   isEvaluation,
+			})
 			return
 		}
 		// Возникла другая ошибка БД
@@ -2118,8 +2159,13 @@ func (hc *HackathonController) GetHackathonRole(c *gin.Context) {
 		return
 	}
 
-	// Возвращаем роль пользователя в хакатоне
-	c.JSON(http.StatusOK, userHackathon.HackathonRole)
+	// Возвращаем роль пользователя в хакатоне и состояния хакатона
+	c.JSON(http.StatusOK, gin.H{
+		"role":           userHackathon.HackathonRole,
+		"isRegistration": isRegistration,
+		"isWork":         isWork,
+		"isEvaluation":   isEvaluation,
+	})
 }
 
 func (hc *HackathonController) GetValidateProjects(c *gin.Context) {

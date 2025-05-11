@@ -8,61 +8,79 @@ import {HackathonAPI} from "./hackathonAPI.ts";
 import {useParams} from "react-router-dom";
 import Loader from "../../components/loader/Loader.tsx";
 import ValidateSection from "./components/ValidateSection.tsx";
+import {HackathonInfo} from "./types.ts";
 
 const HackathonDashboard = () => {
     const [activeTab, setActiveTab] = useState('participants');
-    const [hackathonRole, setHackathonRole] = useState<number>(0)
-    const [hackathonRoleLoading, setHackathonRoleLoading] = useState<boolean>(true)
+    const [hackathonInfo, setHackathonInfo] = useState<HackathonInfo>({
+        isWork: false,
+        isRegistration: false,
+        isEvaluation: false,
+        role: 0
+    })
+    const [hackathonInfoLoading, setHackathonInfoLoading] = useState<boolean>(true)
 
     const { id } = useParams<{ id: string }>();
     const hackathonId = id ? parseInt(id, 10) : 1;
 
     useEffect(() => {
         HackathonAPI.getMyRole(hackathonId)
-            .then(role => {
-                setHackathonRole(role);
-                if (role === 1) {
+            .then(info => {
+                setHackathonInfo(info);
+                if (info.role === 1) {
                     setActiveTab('participants');
                 } else {
                     setActiveTab('chats');
                 }
             })
-            .finally(() => setHackathonRoleLoading(false));
+            .finally(() => setHackathonInfoLoading(false));
     }, [hackathonId]);
 
     return (
         <div className={classes.page_wrapper}>
-            {hackathonRoleLoading ? (
+            {hackathonInfoLoading ? (
                 <Loader/>
             ) : (
                 <>
-                    {hackathonRole === 1 ? (
-                        <div className={classes.dashboard_tabs}>
-                            <button
-                                className={`${classes.tab_button} ${activeTab === 'participants' ? classes.active : ''}`}
-                                onClick={() => setActiveTab('participants')}
-                            >
-                                Участники
-                            </button>
-                            <button
-                                className={`${classes.tab_button} ${activeTab === 'teams' ? classes.active : ''}`}
-                                onClick={() => setActiveTab('teams')}
-                            >
-                                Команда
-                            </button>
-                            <button
-                                className={`${classes.tab_button} ${activeTab === 'chats' ? classes.active : ''}`}
-                                onClick={() => setActiveTab('chats')}
-                            >
-                                Чаты
-                            </button>
-                            <button
-                                className={`${classes.tab_button} ${activeTab === 'projects' ? classes.active : ''}`}
-                                onClick={() => setActiveTab('projects')}
-                            >
-                                Загрузка проектов
-                            </button>
+                    {hackathonInfo.role === 1 ? (
+                            <>
+                                <div className={classes.dashboard_tabs}>
+                            {hackathonInfo.isRegistration &&
+                                <>
+                                <button
+                                    className={`${classes.tab_button} ${activeTab === 'participants' ? classes.active : ''}`}
+                                    onClick={() => setActiveTab('participants')}
+                                >
+                                    Участники
+                                </button>
+                                <button
+                                    className={`${classes.tab_button} ${activeTab === 'teams' ? classes.active : ''}`}
+                                    onClick={() => setActiveTab('teams')}
+                                >
+                                    Команда
+                                </button>
+                                </>
+                            }
+                            {(hackathonInfo.isEvaluation || hackathonInfo.isWork || hackathonInfo.isRegistration) &&
+                                <button
+                                    className={`${classes.tab_button} ${activeTab === 'chats' ? classes.active : ''}`}
+                                    onClick={() => setActiveTab('chats')}
+                                >
+                                    Чаты
+                                </button>
+
+                            }
+
+                            {hackathonInfo.isWork &&
+                                <button
+                                    className={`${classes.tab_button} ${activeTab === 'projects' ? classes.active : ''}`}
+                                    onClick={() => setActiveTab('projects')}
+                                >
+                                    Загрузка проектов
+                                </button>
+                            }
                         </div>
+                            </>
                     ) : (
                         <div className={classes.dashboard_tabs}>
                             <button
@@ -77,11 +95,12 @@ const HackathonDashboard = () => {
                             >
                                 Оценка проектов
                             </button>
+
                         </div>
                     )}
 
                     <div className={classes.dashboard_content}>
-                        {hackathonRole === 1 ? (
+                        {hackathonInfo.role === 1 ? (
                             <>
                                 {activeTab === 'participants' && <ParticipantsSection />}
                                 {activeTab === 'teams' && <TeamSection />}

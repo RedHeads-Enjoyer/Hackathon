@@ -250,7 +250,7 @@ func (cc *ChatController) GetAvailableChats(c *gin.Context) {
 					ID:          chat.ID,
 					Type:        chat.Type,
 					TeamID:      chat.TeamID,
-					Name:        "Чат организаторов",
+					Name:        "Новости",
 					WriteAccess: writeAccess,
 				})
 			}

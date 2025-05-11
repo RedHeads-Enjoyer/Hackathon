@@ -5,7 +5,7 @@ import {
     HackathonFilterData,
     HackathonFormData,
     HackathonFullData,
-    HackathonFullEditData,
+    HackathonFullEditData, HackathonInfo,
     HackathonSearchData,
     ParticipantFilterData,
     ParticipantSearchData, ProjectFilterData,
@@ -119,7 +119,7 @@ export const HackathonAPI = {
     getTeamProject: async(hackathonId: number) =>
         request<FileShort[]>({method: "GET", url: `hackathon/${hackathonId}/project`}),
     getMyRole: async(hackathonId: number) =>
-        request<number>({method: "GET", url: `hackathon/${hackathonId}/role`}),
+        request<HackathonInfo>({method: "GET", url: `hackathon/${hackathonId}/role`}),
     getProjectsForValidate: async(hackathonId: number, filterData: ProjectFilterData) =>
         request<ProjectSearchData>({method: "POST", url: `hackathon/${hackathonId}/validate/projects`, data: filterData}),
     submitProjectRatings: async(hackathonId: number, teamId: number, criteria: ValidateCriteria[]) =>
