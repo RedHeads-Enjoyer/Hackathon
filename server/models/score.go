@@ -11,6 +11,4 @@ type Score struct {
 
 	Team     Team     `gorm:"foreignKey:TeamID"`
 	Criteria Criteria `gorm:"foreignKey:CriteriaID"`
-	Judge    User     `gorm:"foreignKey:JudgeID"`
-	JudgeID  uint     `gorm:"not null" json:"judge_id"`
 }

@@ -5,7 +5,13 @@ import {
     HackathonFormData,
     HackathonFullData,
     HackathonFullEditData,
-    HackathonSearchData, ParticipantFilterData, ParticipantSearchData, TeamCreate, TeamData, TeamInvite
+    HackathonSearchData,
+    ParticipantFilterData,
+    ParticipantSearchData, ProjectFilterData,
+    ProjectSearchData,
+    TeamCreate,
+    TeamData,
+    TeamInvite
 } from "./types.ts";
 
 export const HackathonAPI = {
@@ -112,5 +118,8 @@ export const HackathonAPI = {
     getTeamProject: async(hackathonId: number) =>
         request<FileShort[]>({method: "GET", url: `hackathon/${hackathonId}/project`}),
     getMyRole: async(hackathonId: number) =>
-        request<number>({method: "GET", url: `hackathon/${hackathonId}/role`})
+        request<number>({method: "GET", url: `hackathon/${hackathonId}/role`}),
+    getProjectsForValidate: async(hackathonId: number, filterData: ProjectFilterData) =>
+        request<ProjectSearchData>({method: "POST", url: `hackathon/${hackathonId}/validate/projects`, data: filterData}),
+
 };

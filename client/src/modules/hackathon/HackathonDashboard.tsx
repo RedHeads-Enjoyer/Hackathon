@@ -7,6 +7,7 @@ import ProjectsSection from "./components/ProjectsSection.tsx";
 import {HackathonAPI} from "./hackathonAPI.ts";
 import {useParams} from "react-router-dom";
 import Loader from "../../components/loader/Loader.tsx";
+import ValidateSection from "./components/ValidateSection.tsx";
 
 const HackathonDashboard = () => {
     const [activeTab, setActiveTab] = useState('participants');
@@ -90,7 +91,7 @@ const HackathonDashboard = () => {
                         ) : (
                             <>
                                 {activeTab === 'chats' && <ChatSection />}
-                                {activeTab === 'validate' && <ProjectsSection />}
+                                {activeTab === 'validate' && <ValidateSection />}
                             </>
                         )}
                     </div>

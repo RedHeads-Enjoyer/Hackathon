@@ -1891,3 +1891,140 @@
     justify-content: space-between;
     height: fit-content;
 }
+
+/* Основные стили для карточки */
+.validateCard {
+    transition: border-color 0.2s ease;
+    transform: none;
+}
+
+/* Стили для неразвернутой карточки (уменьшенная высота) */
+.card.validateCard {
+    padding: 0; /* Убираем внутренний отступ */
+    min-height: auto; /* Минимальная высота по контенту */
+    height: auto; /* Высота по контенту */
+}
+
+/* Заголовок карточки */
+.cardHeader {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px; /* Уменьшенный отступ для компактности */
+    min-height: 50px; /* Фиксированная минимальная высота */
+    flex-wrap: nowrap; /* Запрещаем перенос */
+}
+
+/* Название команды (ограничиваем ширину для длинных имен) */
+.cardHeader .title {
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    padding-right: 10px; /* Отступ для статуса */
+}
+
+/* Контейнер для статуса */
+.cardHeader > div {
+    flex-shrink: 0; /* Запрещаем сжатие */
+    min-width: 90px; /* Минимальная ширина */
+    text-align: center;
+}
+
+/* Статусы оценки - компактные версии */
+.ratedStatus, .unratedStatus {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: var(--border-radius);
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.ratedStatus {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: var(--success-color);
+}
+
+.unratedStatus {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: var(--accent-color);
+}
+
+/* Блок с файлом */
+.fileContainer {
+    margin-bottom: 12px;
+}
+
+.downloadableFile {
+    cursor: pointer;
+    margin: 0 0 10px 0;
+    border: 1px solid var(--input-border-color);
+    transition: border-color 0.2s ease;
+}
+
+/* Заголовок критериев */
+.criteriaTitle {
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: var(--light-text-color);
+}
+
+/* Контейнер для критериев */
+.criteriaContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 12px;
+}
+
+/* Элемент критерия */
+.criterionItem {
+    margin-bottom: 12px;
+    transform: none !important;
+    transition: border-color 0.2s ease;
+    width: 100%;
+}
+
+/* Диапазон баллов */
+.criterionScoreRange {
+    margin-bottom: 8px;
+}
+
+/* Поля ввода критерия */
+.criterionInputs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Блок с кнопками */
+.buttonsContainer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+/* Стиль для расширенной карточки */
+.expandedCard.validateCard {
+    padding-bottom: 16px;
+}
+
+/* Стили для мобильной версии */
+@media (max-width: 576px) {
+    .cardHeader {
+        padding: 10px 12px;
+    }
+
+    .cardHeader > div {
+        min-width: 80px;
+    }
+
+    .ratedStatus, .unratedStatus {
+        padding: 3px 6px;
+        font-size: 11px;
+    }
+}

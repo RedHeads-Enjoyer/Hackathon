@@ -63,5 +63,6 @@ func HackathonRouter(router *gin.Engine, db *gorm.DB) {
 		protected.GET("/team/invite/:hackathon_id/:user_id", inviteTeamController.InviteUser)
 		protected.DELETE("/team/:hackathon_id", hackathonController.DeleteTeam)
 		protected.GET("/:hackathon_id/team/invite", inviteTeamController.GetTeamInvitesForMe)
+		protected.POST("/:hackathon_id/validate/projects", hackathonController.GetValidateProjects)
 	}
 }

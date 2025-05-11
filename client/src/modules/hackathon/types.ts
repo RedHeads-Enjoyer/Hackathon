@@ -269,3 +269,37 @@ export type TeamInvite = {
     status: number;
     createdAt: string;
 }
+
+
+
+export type ProjectFilterData = {
+    validate: number,
+    limit: number,
+    offset: number,
+    total: number
+}
+
+export type ProjectSearchData = {
+    list: ValidateProject[],
+    criteria: ValidateCriteria[]
+    total: number
+}
+
+export type ValidateProject = {
+    teamName: string,
+    project: FileShort,
+    summary: number | null,
+}
+
+export type ValidateCriteria = {
+    name: string,
+    maxScore: number,
+    minScore: number,
+    value: number,
+    comment: string,
+}
+
+export type ProjectsFilterUpdate = {
+    name: keyof ProjectFilterData;
+    value: any;
+};
