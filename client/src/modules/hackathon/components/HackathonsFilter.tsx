@@ -17,7 +17,9 @@ type HackathonFilterProps = {
 };
 
 const HackathonFilter = ({filterData, setFilterData, onResetFilters, onSearch}: HackathonFilterProps) => {
-    const [isExpanded, setIsExpanded] = useState<boolean>(false)
+    const [isExpanded, setIsExpanded] = useState<boolean>(false);
+    // Добавляем счетчик сбросов для управления ключами SelectSearch
+    const [resetCount, setResetCount] = useState<number>(0);
 
     const handlePaginationChange = (page: number) => {
         setFilterData({
@@ -26,13 +28,19 @@ const HackathonFilter = ({filterData, setFilterData, onResetFilters, onSearch}: 
         });
     };
 
+    // Обработчик сброса с увеличением счетчика
+    const handleReset = () => {
+        onResetFilters();
+        setResetCount(prev => prev + 1); // Увеличиваем счетчик при сбросе
+    };
+
     const roleOptions: Option[] = [
         {value: -1, label: "Не участник"},
         {value: 0,  label: "Любая"},
         {value: 1, label: "Участник"},
         {value: 2, label: "Ментор"},
         {value: 3, label: "Организатор"},
-    ]
+    ];
 
     return (
         <div className={classes.expandedCard}>
@@ -65,6 +73,7 @@ const HackathonFilter = ({filterData, setFilterData, onResetFilters, onSearch}: 
 
                         <div>
                             <SelectSearch
+                                key={`org-select-${resetCount}`} // Добавляем динамический ключ
                                 label={"Выберите организацию"}
                                 url={"organizations/options"}
                                 onChange={(value) => setFilterData({
@@ -78,6 +87,7 @@ const HackathonFilter = ({filterData, setFilterData, onResetFilters, onSearch}: 
 
                         <div>
                             <SelectSearch
+                                key={`tech-select-${resetCount}`} // Добавляем динамический ключ
                                 label={"Выберите технологию"}
                                 url={"technologies/options"}
                                 onChange={(value) => setFilterData({
@@ -130,17 +140,13 @@ const HackathonFilter = ({filterData, setFilterData, onResetFilters, onSearch}: 
                             })}
                             placeholder="Выберите состояние"
                         />
-
-
-
                     </div>
                     <div className={classes.filterControls}>
-                        <Button onClick={onResetFilters}>Сбросить фильтры</Button>
+                        <Button onClick={handleReset}>Сбросить фильтры</Button>
                         <Button onClick={onSearch}>Найти</Button>
                     </div>
                 </div>
             }
-
         </div>
     );
 };

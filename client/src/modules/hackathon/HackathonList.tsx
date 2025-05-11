@@ -41,10 +41,10 @@ const HackathonList = () => {
     const navigate = useNavigate()
 
     useEffect(() => {
-        searchHackathons()
+        searchHackathons(filterData)
     }, [filterData.offset])
 
-    const searchHackathons = () => {
+    const searchHackathons = (filterData: HackathonFilterData) => {
         setSearhLoading(true)
         setSearchError(null);
         setHackathons(initialHackathonData)
@@ -108,11 +108,11 @@ const HackathonList = () => {
 
     const handleResetFilters = () => {
         setFilterData(initialFilterData)
-        searchHackathons()
+        searchHackathons(initialFilterData)
     }
 
     const handleSearch = () => {
-        searchHackathons()
+        searchHackathons(filterData)
     }
     return (
         <div className={classes.page_wrapper}>
