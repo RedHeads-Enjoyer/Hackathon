@@ -567,6 +567,7 @@ const HackathonEdit: React.FC = () => {
                         label="Начало регистрации"
                         value={formData.regDateFrom}
                         onChange={(value) => handleDateChange('regDateFrom', value)}
+                        minDate={new Date().toISOString().split('T')[0]}
                         maxDate={formData.regDateTo || formData.workDateFrom || formData.workDateTo || formData.evalDateFrom || formData.evalDateTo}
                         error={formErrors.regDateFrom}
                         required
