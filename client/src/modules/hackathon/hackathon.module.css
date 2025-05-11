@@ -2245,3 +2245,10 @@
     flex: 1; /* Занимает доступное пространство */
     overflow-y: auto; /* Включает скроллинг сообщений */
 }
+
+.criteriaResContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 1fr);
+    margin-bottom: 8px;
+}
+

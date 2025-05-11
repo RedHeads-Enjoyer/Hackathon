@@ -2531,31 +2531,50 @@ func (hc *HackathonController) GetResults(c *gin.Context) {
 		return
 	}
 
-	// Получаем все критерии для этого хакатона
-	var criteria []models.Criteria
-	if err := hc.DB.Where("hackathon_id = ?", hackathonID).Find(&criteria).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении критериев"})
-		return
-	}
-
-	// Создаем мапу критериев для быстрого доступа
-	criteriaMap := make(map[uint]models.Criteria)
-	for _, criterion := range criteria {
-		criteriaMap[criterion.ID] = criterion
-	}
-
 	// Получаем все команды для этого хакатона
 	var teams []models.Team
 	if err := hc.DB.Where("hackathon_id = ?", hackathonID).
 		Preload("Project").
-		Preload("Scores").          // Предзагружаем оценки
-		Preload("Scores.Criteria"). // Предзагружаем связанные критерии для оценок
 		Find(&teams).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении команд"})
 		return
 	}
 
-	// Создаем структуру для хранения команд с их суммарными баллами
+	// Собираем все ID команд
+	var teamIDs []uint
+	for _, team := range teams {
+		teamIDs = append(teamIDs, team.ID)
+	}
+
+	// Структура для хранения данных соединенных таблиц
+	type ScoreWithCriteria struct {
+		TeamID       uint    `gorm:"column:team_id"`
+		ScoreID      uint    `gorm:"column:id"`
+		CriteriaID   uint    `gorm:"column:criteria_id"`
+		Score        float64 `gorm:"column:score"`
+		Comment      string  `gorm:"column:comment"`
+		CriteriaName string  `gorm:"column:name"`
+		MaxScore     uint    `gorm:"column:max_score"`
+	}
+
+	// Используем GORM для соединения таблиц
+	var scoresWithCriteria []ScoreWithCriteria
+	if err := hc.DB.Model(&models.Score{}).
+		Select("scores.team_id, scores.id, scores.criteria_id, scores.score, scores.comment, criteria.name, criteria.max_score").
+		Joins("INNER JOIN criteria ON scores.criteria_id = criteria.id").
+		Where("scores.team_id IN ?", teamIDs).
+		Scan(&scoresWithCriteria).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении оценок: " + err.Error()})
+		return
+	}
+
+	// Группируем оценки по командам
+	teamScoresMap := make(map[uint][]ScoreWithCriteria)
+	for _, score := range scoresWithCriteria {
+		teamScoresMap[score.TeamID] = append(teamScoresMap[score.TeamID], score)
+	}
+
+	// Рассчитываем суммарные баллы для каждой команды
 	type TeamWithScore struct {
 		ID    uint
 		Name  string
@@ -2564,9 +2583,8 @@ func (hc *HackathonController) GetResults(c *gin.Context) {
 
 	var teamsWithScores []TeamWithScore
 	for _, team := range teams {
-		// Подсчитываем сумму баллов для команды
 		var totalScore float64
-		for _, score := range team.Scores {
+		for _, score := range teamScoresMap[team.ID] {
 			totalScore += score.Score
 		}
 
@@ -2585,10 +2603,9 @@ func (hc *HackathonController) GetResults(c *gin.Context) {
 	// Определяем место каждой команды
 	teamPlaces := make(map[uint]int)
 	currentPlace := 1
-	previousScore := -1.0 // Инициализируем значением, которое не может быть у команд
+	previousScore := -1.0
 
 	for _, team := range teamsWithScores {
-		// Если текущий балл отличается от предыдущего, увеличиваем место
 		if previousScore != team.Score {
 			currentPlace = len(teamPlaces) + 1
 			previousScore = team.Score
@@ -2612,9 +2629,9 @@ func (hc *HackathonController) GetResults(c *gin.Context) {
 	}
 
 	// Создаем мапу баллов команд для быстрого доступа
-	teamScores := make(map[uint]float64)
+	teamScoresTotal := make(map[uint]float64)
 	for _, team := range teamsWithScores {
-		teamScores[team.ID] = team.Score
+		teamScoresTotal[team.ID] = team.Score
 	}
 
 	// Формируем ответ
@@ -2624,40 +2641,41 @@ func (hc *HackathonController) GetResults(c *gin.Context) {
 	}
 
 	type CriteriaScore struct {
-		CriteriaName string  `json:"name"`
-		MaxScore     uint    `json:"maxScore"`
-		Score        float64 `json:"score"`
-		Comment      string  `json:"comment"`
+		Name     string  `json:"name"`
+		MaxScore uint    `json:"maxScore"`
+		Score    float64 `json:"score"`
+		Comment  string  `json:"comment"`
 	}
 
 	type Result struct {
 		TeamName string            `json:"teamName"`
 		Score    float64           `json:"score"`
-		Project  *fileDTO.GetShort `json:"project"`
-		Award    *AwardInfo        `json:"award"`
+		Project  *fileDTO.GetShort `json:"project,omitempty"`
+		Award    *AwardInfo        `json:"award,omitempty"`
 		Criteria []CriteriaScore   `json:"criteria"`
 	}
 
 	// Формируем массив результатов
 	results := make([]Result, 0, len(teams))
 	for _, team := range teams {
-		// Создаем массив критериев для текущей команды
-		criteriaScores := make([]CriteriaScore, 0, len(team.Scores))
+		// Получаем оценки для текущей команды
+		teamScores := teamScoresMap[team.ID]
+
+		criteriaScores := make([]CriteriaScore, 0, len(teamScores))
 
 		// Перебираем все оценки команды
-		for _, score := range team.Scores {
-			// Добавляем информацию о критерии и баллах
+		for _, score := range teamScores {
 			criteriaScores = append(criteriaScores, CriteriaScore{
-				CriteriaName: score.Criteria.Name,
-				MaxScore:     score.Criteria.MaxScore,
-				Score:        score.Score,
-				Comment:      score.Comment,
+				Name:     score.CriteriaName,
+				MaxScore: score.MaxScore,
+				Score:    score.Score,
+				Comment:  score.Comment,
 			})
 		}
 
 		result := Result{
 			TeamName: team.Name,
-			Score:    teamScores[team.ID],
+			Score:    teamScoresTotal[team.ID],
 			Criteria: criteriaScores,
 		}
 

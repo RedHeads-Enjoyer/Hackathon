@@ -71,19 +71,6 @@ const ResultItem = (props: ResultItemProps) => {
             {/* Развернутый вид с дополнительной информацией */}
             {expanded && (
                 <div className={classes.expandedFilters}>
-                    {/* Индикатор прогресса */}
-                    <div className={classes.progressContainer}>
-                        <div className={classes.progressBackground}>
-                            <div
-                                className={`${classes.progressBar} ${getProgressClass()}`}
-                                style={{ width: `${scorePercent}%` }}
-                            ></div>
-                        </div>
-                        <div className={classes.progressText}>
-                            {scorePercent}% от максимального балла
-                        </div>
-                    </div>
-
                     {/* Информация о проекте */}
                     {props.result.project && (
                         <div className={classes.fileContainer}>
@@ -102,6 +89,32 @@ const ResultItem = (props: ResultItemProps) => {
                                 <div className={classes.fileDownload}>
                                     <i className="fas fa-download"></i>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Информация о критериях */}
+                    {props.result.criteria && props.result.criteria.length > 0 && (
+                        <div className={classes.criteriaResContainer}>
+                            <h4 className={classes.sectionTitle}>Критерии оценки:</h4>
+                            <div className={classes.criteriaContainer}>
+                                {props.result.criteria.map((criterion, index) => (
+                                    <div key={index} className={classes.criterionCard}>
+                                        <div></div>
+                                        <div className={classes.criterionTitle}>
+                                            {criterion.name} <span className={`${classes.message_author}`}>
+                        {criterion.score} / {criterion.maxScore}
+                    </span>
+
+                                        </div>
+
+                                        {criterion.comment && (
+                                            <div className={classes.criteriaComment}>
+                                                <div className={classes.commentText}>{criterion.comment}</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
