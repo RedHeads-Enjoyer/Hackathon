@@ -411,3 +411,37 @@ func (oc *OrganizationController) GetMyOptions(c *gin.Context) {
 	// Возвращаем результаты
 	c.JSON(http.StatusOK, options)
 }
+
+func (oc *OrganizationController) GetOptions(c *gin.Context) {
+	// Parse search options from request body
+	var searchOption organizationDTO.SearchOption
+	if err := c.ShouldBindJSON(&searchOption); err != nil {
+		// If there's an error parsing, we'll just proceed with empty search
+		// This allows the endpoint to work both with and without search parameters
+		searchOption.Name = ""
+	}
+
+	// Базовый запрос с фильтрацией по статусу 1
+	query := oc.DB.Model(&models.Organization{}).
+		Where("status = ?", 1) // Добавляем условие по статусу
+
+	// Add search condition if search parameter is provided
+	if searchOption.Name != "" {
+		query = query.Where("legal_name ILIKE ?", "%"+searchOption.Name+"%")
+	}
+
+	// Добавляем сортировку по алфавиту
+	query = query.Order("legal_name ASC")
+
+	// Получаем только нужные поля
+	var options []organizationDTO.GetOption
+
+	// Используем алиасы, соответствующие полям структуры
+	if err := query.Select("id as value, legal_name as label").Find(&options).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении списка организаций"})
+		return
+	}
+
+	// Возвращаем результаты
+	c.JSON(http.StatusOK, options)
+}

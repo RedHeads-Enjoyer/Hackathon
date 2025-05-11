@@ -104,7 +104,8 @@ export type HackathonFilterData = {
     maxTeamSize: number,
     limit: number,
     offset: number,
-    total: number
+    total: number,
+    role: number
 }
 
 export type Option = {

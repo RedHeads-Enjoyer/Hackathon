@@ -20,6 +20,7 @@ const HackathonList = () => {
         minTeamSize: 1,
         technologyId: 0,
         totalAward: 0,
+        role: 0,
         limit: 20,
         total: 0,
         offset: 0,

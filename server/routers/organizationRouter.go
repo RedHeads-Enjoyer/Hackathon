@@ -21,6 +21,7 @@ func OrganizationRouter(router *gin.Engine, db *gorm.DB) {
 	{
 		protected.POST("/my", organizationController.GetMy)
 		protected.POST("/my/options", organizationController.GetMyOptions)
+		protected.POST("/options", organizationController.GetOptions)
 	}
 
 	protected = router.Group("/organizations")

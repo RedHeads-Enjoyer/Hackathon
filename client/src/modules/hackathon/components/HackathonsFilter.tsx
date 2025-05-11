@@ -56,7 +56,7 @@ const HackathonFilter = ({filterData, setFilterData, onResetFilters, onSearch}: 
                         <div>
                             <SelectSearch
                                 label={"Выберите организацию"}
-                                url={"organizations/my/options"}
+                                url={"organizations/options"}
                                 onChange={(value) => setFilterData({
                                     name: 'organizationId',
                                     value: value.value
@@ -97,31 +97,6 @@ const HackathonFilter = ({filterData, setFilterData, onResetFilters, onSearch}: 
                                 value: value
                             })}
                             minDate={filterData.startDate}
-                        />
-
-                        <Input
-                            label="Минимальный размер команды от"
-                            type="number"
-                            value={filterData.minTeamSize}
-                            onChange={(value) => setFilterData({
-                                name: 'minTeamSize',
-                                value: value.target.value
-                            })}
-                            name="minTeamSize"
-                            min={1}
-                            max={filterData.maxTeamSize}
-                        />
-
-                        <Input
-                            label="Максимальный размер команды до"
-                            type="number"
-                            value={filterData.maxTeamSize}
-                            onChange={(value) => setFilterData({
-                                name: 'maxTeamSize',
-                                value: value.target.value
-                            })}
-                            name="maxTeamSize"
-                            min={filterData.minTeamSize}
                         />
 
                         <Input

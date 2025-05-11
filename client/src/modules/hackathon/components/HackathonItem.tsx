@@ -25,8 +25,6 @@ const HackathonItem: React.FC<HackathonItemProps> = ({ hackathon, onClick }) => 
         logoId,
         technologies,
         totalAward,
-        minTeamSize,
-        maxTeamSize,
         usersCount
     } = hackathon;
 
@@ -195,12 +193,6 @@ const HackathonItem: React.FC<HackathonItemProps> = ({ hackathon, onClick }) => 
                     <div className={classes.statIcon}>👥</div>
                     <div className={classes.statValue}>{usersCount}</div>
                     <div className={classes.statLabel}>Участников</div>
-                </div>
-
-                <div className={classes.statItem}>
-                    <div className={classes.statIcon}>👨‍💻</div>
-                    <div className={classes.statValue}>{minTeamSize}-{maxTeamSize}</div>
-                    <div className={classes.statLabel}>Команда</div>
                 </div>
             </div>
 
