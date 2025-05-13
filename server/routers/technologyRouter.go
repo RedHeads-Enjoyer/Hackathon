@@ -10,12 +10,7 @@ import (
 func TechnologyRouter(router *gin.Engine, db *gorm.DB) {
 	technologyController := controllers.NewTechnologyController(db)
 
-	public := router.Group("/technologies")
-	{
-		public.POST("", technologyController.GetAll)
-	}
-
-	protected := router.Group("/technologies")
+	protected := router.Group("/technology")
 	protected.Use(middlewares.Auth())
 	{
 		protected.POST("/options", technologyController.GetOptions)
@@ -25,6 +20,7 @@ func TechnologyRouter(router *gin.Engine, db *gorm.DB) {
 	protected.Use(middlewares.Auth(), middlewares.SystemRole(2))
 	{
 		protected.POST("", technologyController.Create)
+		protected.POST("/list", technologyController.GetAll)
 		protected.PUT("/:id", technologyController.Update)
 		protected.DELETE("/:id", technologyController.Delete)
 	}
