@@ -295,7 +295,7 @@ const CreateHackathon: React.FC = () => {
 
                         <SelectSearch
                             label={"Выберите организацию"}
-                            url={"organizations/my/options"}
+                            url={"organization/my/options"}
                             onChange={handleOrganizationIdChange}
                             notFound={<p>Подтвержденная организация с таким названием не найдена. <Link to={"/organization/create"}>Создать организацию</Link></p>}
                             placeholder={"Введите название"}

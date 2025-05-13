@@ -75,7 +75,7 @@ const HackathonFilter = ({filterData, setFilterData, onResetFilters, onSearch}: 
                             <SelectSearch
                                 key={`org-select-${resetCount}`} // Добавляем динамический ключ
                                 label={"Выберите организацию"}
-                                url={"organizations/options"}
+                                url={"organization/options"}
                                 onChange={(value) => setFilterData({
                                     name: 'organizationId',
                                     value: value.value

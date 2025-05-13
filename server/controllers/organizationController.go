@@ -280,24 +280,22 @@ func (oc *OrganizationController) SetStatus(c *gin.Context) {
 }
 
 func (oc *OrganizationController) GetMy(c *gin.Context) {
+	// Парсинг параметров фильтрации из тела запроса
+	var filterData organizationDTO.OrganizationFilterData
+	if err := c.ShouldBindJSON(&filterData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат фильтров"})
+		return
+	}
+
 	userClaims, exists := c.Get("user_claims")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима аутентификация"})
-		c.Abort()
 		return
 	}
 
 	claims, ok := userClaims.(*types.Claims)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при извлечении данных пользователя"})
-		c.Abort()
-		return
-	}
-
-	// Парсинг параметров фильтрации из тела запроса
-	var filterData organizationDTO.OrganizationFilterData
-	if err := c.ShouldBindJSON(&filterData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат фильтров"})
 		return
 	}
 
@@ -340,23 +338,50 @@ func (oc *OrganizationController) GetMy(c *gin.Context) {
 		return
 	}
 
-	// Применение пагинации только к запросу данных
+	// Применение пагинации
 	if filterData.Limit > 0 {
 		dataQuery = dataQuery.Limit(filterData.Limit)
+	} else {
+		dataQuery = dataQuery.Limit(20) // Значение по умолчанию
 	}
+
 	if filterData.Offset > 0 {
 		dataQuery = dataQuery.Offset(filterData.Offset)
 	}
 
+	// Сортировка по дате создания
+	dataQuery = dataQuery.Order("created_at DESC")
+
+	// Получаем организации
 	var organizations []models.Organization
 	if err := dataQuery.Find(&organizations).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении организаций"})
 		return
 	}
 
+	// Преобразуем в DTO с краткой информацией
+	organizationInfoList := make([]organizationDTO.Get, 0, len(organizations))
+
+	for _, org := range organizations {
+		// Создаем ShortInfo с camelCase именами полей
+		info := organizationDTO.Get{
+			ID:           org.ID,
+			LegalName:    org.LegalName,
+			INN:          org.INN,
+			OGRN:         org.OGRN,
+			ContactEmail: org.ContactEmail,
+			Website:      org.Website,
+			CreatedAt:    org.CreatedAt,
+			UpdatedAt:    org.UpdatedAt,
+			Status:       org.Status,
+		}
+
+		organizationInfoList = append(organizationInfoList, info)
+	}
+
 	// Возвращаем данные с информацией о пагинации
 	c.JSON(http.StatusOK, gin.H{
-		"list":   organizations,
+		"list":   organizationInfoList,
 		"total":  totalCount,
 		"limit":  filterData.Limit,
 		"offset": filterData.Offset,
