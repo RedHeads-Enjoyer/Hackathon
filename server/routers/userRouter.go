@@ -24,7 +24,7 @@ func UserRouter(router *gin.Engine, db *gorm.DB) {
 		public.DELETE("/:id", userController.Delete)
 	}
 
-	protected = router.Group("/users")
+	protected = router.Group("/user")
 	protected.Use(middlewares.Auth())
 	{
 		protected.POST("/options", userController.GetOptions)

@@ -65,7 +65,7 @@ const MentorStackInput = (({
                 <div className={classes.inputContainer}>
                     <SearchSelect
                         label={"Выберите ментора"}
-                        url={"/users/options"}
+                        url={"/user/options"}
                         onChange={addMentor}
                         notFound={<p>Ментор не найден.</p>}
                         placeholder={"Введите логин или email ментора"}
