@@ -12,6 +12,7 @@ func AuthRouter(router *gin.Engine, db *gorm.DB) {
 
 	public := router.Group("/auth")
 	{
+		public.POST("/refresh", authController.RefreshTokenHandler)
 		public.POST("/register", authController.RegisterHandler)
 		public.POST("/login", authController.LoginHandler)
 
@@ -20,7 +21,7 @@ func AuthRouter(router *gin.Engine, db *gorm.DB) {
 	protected := router.Group("/auth")
 	protected.Use(middlewares.Auth())
 	{
-		protected.POST("/refresh", authController.RefreshTokenHandler)
+
 		protected.GET("/verify", authController.CurrentUserHandler)
 		protected.POST("/logout", authController.LogoutHandler)
 	}

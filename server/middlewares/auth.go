@@ -34,16 +34,25 @@ func extractToken(c *gin.Context) (string, error) {
 // Функция проверки токена
 func parseToken(tokenString string) (*types.Claims, error) {
 	claims := &types.Claims{}
-	_, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("ACCESS_TOKEN_SECRET")), nil
 	})
-	return claims, err
+
+	// Добавьте явную проверку валидности токена
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("token is not valid")
+	}
+
+	return claims, nil
 }
 
 // Middleware аутентификации
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Извлекаем токен из заголовка или URL
 		tokenString, err := extractToken(c)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})

@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"server/models"
 	"server/models/DTO/userDTO"
 	"server/types"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -92,14 +94,40 @@ func (ac *AuthController) LoginHandler(c *gin.Context) {
 		return
 	}
 
+	// Обработка email с учетом регистра и пробелов
+	email := strings.TrimSpace(strings.ToLower(loginDTO.Email))
+
 	var user models.User
-	if err := ac.DB.Where("email = ?", loginDTO.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверные данные"})
+	result := ac.DB.Where("LOWER(TRIM(email)) = ?", email).First(&user)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// Более информативное сообщение об ошибке
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Пользователь с таким email не найден",
+			})
+			return
+		}
+
+		// Обработка других возможных ошибок
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Ошибка при поиске пользователя",
+		})
 		return
 	}
 
+	// Проверка пароля с более подробной обработкой ошибок
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginDTO.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверные данные"})
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Неверный пароль",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Ошибка проверки пароля",
+				"debug": err.Error(),
+			})
+		}
 		return
 	}
 

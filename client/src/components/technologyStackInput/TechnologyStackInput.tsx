@@ -90,7 +90,7 @@ const TechnologyStackInput = forwardRef<TechnologyStackInputRef, TechnologyStack
                 <div className={classes.inputContainer}>
                     <SearchSelect
                         label={"Выберите технологию"}
-                        url={"/technologies/options"}
+                        url={"/technology/options"}
                         onChange={addTechnology}
                         notFound={<p>Технология не найдена.</p>}
                         placeholder={"Введите название технологии"}
