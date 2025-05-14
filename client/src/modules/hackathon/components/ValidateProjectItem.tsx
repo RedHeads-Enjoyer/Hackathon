@@ -9,7 +9,6 @@ import Modal from "../../../components/modal/Modal.tsx";
 
 type ValidateProjectItemProps = {
     project: ValidateProject;
-    criteria: ValidateCriteria[];
     hackathonId: number;
     onUpdateRatings?: () => void;
     maxScore: number;
@@ -23,17 +22,17 @@ type CriteriaErrors = {
 const ValidateProjectItem = (props: ValidateProjectItemProps) => {
     const [expanded, setExpanded] = useState<boolean>(false);
     const [isRatingLoading, setIsRatingLoading] = useState<boolean>(false);
-    const [localCriteria, setLocalCriteria] = useState<ValidateCriteria[]>([...props.criteria]);
+    const [localCriteria, setLocalCriteria] = useState<ValidateCriteria[]>([...props.project.criteria]);
     const [localSummary, setLocalSummary] = useState<number | null>(props.project.summary);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [errors, setErrors] = useState<CriteriaErrors>({});
 
     // Обновляем локальные данные при изменении props
     useEffect(() => {
-        setLocalCriteria([...props.criteria]);
+        setLocalCriteria([...props.project.criteria]);
         setLocalSummary(props.project.summary);
         setErrors({});
-    }, [props.criteria, props.project.summary]);
+    }, [props.project.criteria, props.project.summary]);
 
     // Обработчик изменения значения критерия
     const handleCriteriaValueChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {

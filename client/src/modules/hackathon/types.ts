@@ -284,7 +284,6 @@ export type ProjectFilterData = {
 
 export type ProjectSearchData = {
     list: ValidateProject[],
-    criteria: ValidateCriteria[]
     maxScore: number;
     total: number
 }
@@ -292,6 +291,7 @@ export type ProjectSearchData = {
 export type ValidateProject = {
     teamId: number,
     teamName: string,
+    criteria: ValidateCriteria[]
     project: FileShort,
     summary: number | null,
 }

@@ -116,7 +116,6 @@ const ValidateSection = () => {
                         <div key={`project_${project.project.id}`}>
                             <ValidateProjectItem
                                 project={project}
-                                criteria={projects.criteria}
                                 hackathonId={hackathonId}
                                 maxScore={projects.maxScore}
                             />
