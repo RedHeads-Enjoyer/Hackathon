@@ -85,6 +85,8 @@ const CreateTechnologyPage: React.FC = () => {
         <div className={classes.page_wrapper}>
             <PageLabel size={'h3'}>Создание технологии</PageLabel>
 
+            <div className={classes.card}>
+
             <div className={classes.text_info}>
                 <Input
                     label="Название"
@@ -121,6 +123,7 @@ const CreateTechnologyPage: React.FC = () => {
             </div>
 
             {publishError && <Error>{publishError}</Error>}
+            </div>
 
             <Modal
                 isOpen={isPublishModalOpen}

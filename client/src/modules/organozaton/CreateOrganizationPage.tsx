@@ -189,7 +189,7 @@ const CreateOrganizationPage: React.FC = () => {
                         onClick={handlePublishClick}
                         loading={publishLoadnig}
                     >
-                        Опубликовать хакатон
+                        Создать организацию
                     </Button>
                 </div>
 

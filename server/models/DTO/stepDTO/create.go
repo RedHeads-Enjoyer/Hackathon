@@ -9,7 +9,7 @@ type Create struct {
 	Name        string    `json:"name" validate:"required,min=3,max=500"`
 	Description string    `json:"description" validate:"max=5000"`
 	StartDate   time.Time `json:"start_date" validate:"required"`
-	EndDate     time.Time `json:"end_date" validate:"required,gtfield=StartDate"`
+	EndDate     time.Time `json:"end_date" validate:"required,gtefield=StartDate"`
 }
 
 func (dto *Create) ToModel(hackathonID uint) *models.HackathonStep {

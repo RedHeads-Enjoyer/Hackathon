@@ -13,9 +13,10 @@ export const ProtectedRoute = ({ roleLevel, children }: ProtectedRouteProps) => 
     const navigate = useNavigate();
 
     useEffect(() => {
+        console.log(user)
         if (!user) {
             navigate('/login');
-        } else if (user.role < roleLevel) {
+        } else if (user.systemRole < roleLevel) {
             navigate('/permission-denied');
         }
     }, [user, roleLevel, navigate]);

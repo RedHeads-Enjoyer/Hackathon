@@ -12,7 +12,7 @@ import TechnologyItem from "./components/TechnologyItem.tsx";
 const Technologies = () => {
     const initialFilterData: TechnologyFilterData = {
         name: "",
-        limit: 20,
+        limit: 2,
         offset: 0,
         total: 0
     }

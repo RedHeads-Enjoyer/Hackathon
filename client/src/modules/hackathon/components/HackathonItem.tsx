@@ -56,7 +56,7 @@ const HackathonItem: React.FC<HackathonItemProps> = ({ hackathon, onClick }) => 
         if (now < regStart) {
             status = 'upcoming';
             statusText = 'Скоро начнется';
-            currentPhase = 'До начала';
+            currentPhase = 'Регистрация не открыта';
             progress = 0;
         } else if (now >= regStart && now <= regEnd) {
             status = 'registration';
