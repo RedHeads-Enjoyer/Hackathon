@@ -79,17 +79,17 @@ function Sidebar() {
                         <>
                             {authState?.user?.systemRole == 1 && (
                                 <>
-                                    <Link to='/organizations/my' onClick={closeMenu}>Мои организации</Link>
+                                    <Link to='/organization/my' onClick={closeMenu}>Мои организации</Link>
                                     <Link to='/organization/create' onClick={closeMenu}>Создать организацию</Link>
                                     <Link to='/hackathon/create' onClick={closeMenu}>Создать хакатон</Link>
-                                    <Link to='/hackathons' onClick={closeMenu}>Хакатоны</Link>
+                                    <Link to='/hackathon/list' onClick={closeMenu}>Хакатоны</Link>
                                     <Link to='/invites/mentor' onClick={closeMenu}>Приглашения менторства</Link>
                                 </>
                             )}
                             {(authState?.user?.systemRole == 2 || authState?.user?.systemRole == 3) && (
                                 <>
-                                    <Link to='/organizations' onClick={closeMenu}>Организации</Link>
-                                    <Link to='/technologies' onClick={closeMenu}>Технологии</Link>
+                                    <Link to='/organization/list' onClick={closeMenu}>Организации</Link>
+                                    <Link to='/technology/list' onClick={closeMenu}>Технологии</Link>
                                     <Link to='/technology/create' onClick={closeMenu}>Создать технологию</Link>
                                 </>
                             )}

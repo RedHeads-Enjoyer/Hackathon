@@ -10,7 +10,7 @@ import (
 func InviteRouter(router *gin.Engine, db *gorm.DB) {
 	inviteController := controllers.NewInviteController(db)
 
-	protected := router.Group("/invites/mentor")
+	protected := router.Group("hackathon/mentor/invite")
 	protected.Use(middlewares.Auth())
 	{
 		protected.GET("", inviteController.GetMyMentorInvites)

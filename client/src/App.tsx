@@ -57,20 +57,20 @@ function App() {
             <Header/>
             <Routes>
                 <Route element={<ProtectedRoute roleLevel={1}><Outlet /></ProtectedRoute>}>
-                    <Route path="/hackathons" element={<HackathonList />}/>
+                    <Route path="/hackathon/list" element={<HackathonList />}/>
                     <Route path="/invites/mentor" element={<MentorInvites />}/>
                     <Route path="/hackathon/create" element={<CreateHackathon />} />
                     <Route path="/hackathon/:id/dashboard" element={<HackathonDashboard />} />
                     <Route path="/hackathon/:id" element={<OpenHackathon />} />
                     <Route path="/hackathon/:id/edit" element={<HackathonEdit />} />
                     <Route path={"/organization/create"} element={<CreateOrganizationPage/>}/>
-                    <Route path={"/organizations/my"} element={<MyOrganizationsPage/>}/>
+                    <Route path={"/organization/my"} element={<MyOrganizationsPage/>}/>
                 </Route>
 
                 <Route element={<ProtectedRoute roleLevel={2}><Outlet /></ProtectedRoute>}>
-                    <Route path="/organizations" element={<Organizations />}/>
-                    <Route path="/technologies" element={<Technologies />}/>
-                    <Route path="//technology/create" element={<CreateTechnologyPage />}/>
+                    <Route path="/organization/list" element={<Organizations />}/>
+                    <Route path="/technology/list" element={<Technologies />}/>
+                    <Route path="/technology/create" element={<CreateTechnologyPage />}/>
                 </Route>
 
                 {/* Авторизация */}

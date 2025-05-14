@@ -26,7 +26,6 @@ const ValidateSection = () => {
     const initialProjectData: ProjectSearchData = {
         total: 0,
         maxScore: 0,
-        criteria: [],
         list: []
     }
 
@@ -44,7 +43,6 @@ const ValidateSection = () => {
                 setProjects(prevState => ({
                     ...prevState,
                     list: data.list,
-                    criteria: data.criteria,
                     maxScore: data.maxScore
                 }));
                 setFilterData(prevState => ({
