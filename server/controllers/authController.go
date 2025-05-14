@@ -2,16 +2,14 @@ package controllers
 
 import (
 	"errors"
+	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"server/models"
 	"server/models/DTO/userDTO"
 	"server/types"
-	"strings"
-
-	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type AuthController struct {
@@ -94,11 +92,8 @@ func (ac *AuthController) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	// Обработка email с учетом регистра и пробелов
-	email := strings.TrimSpace(strings.ToLower(loginDTO.Email))
-
 	var user models.User
-	result := ac.DB.Where("LOWER(TRIM(email)) = ?", email).First(&user)
+	result := ac.DB.Where("email = ?", loginDTO.Email).First(&user)
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {

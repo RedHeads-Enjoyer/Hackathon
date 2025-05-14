@@ -26,6 +26,10 @@ const setupInterceptors = (axiosInstance: AxiosInstance) => {
         (config) => {
             const token = localStorage.getItem('access_token');
 
+            if (config.url?.includes('/auth/login')) {
+                return config;
+            }
+
             if (token && !isRefreshingFailed) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
@@ -44,6 +48,10 @@ const setupInterceptors = (axiosInstance: AxiosInstance) => {
         (response) => response,
         async (error: AxiosError) => {
             const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+
+            if (originalRequest.url?.includes('/auth/login')) {
+                return Promise.reject(error);
+            }
 
             // Обработка 401 ошибки
             if (error.response?.status === 401 && !originalRequest._retry) {
