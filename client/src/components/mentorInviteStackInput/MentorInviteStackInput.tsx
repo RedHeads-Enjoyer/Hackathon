@@ -130,7 +130,7 @@ const MentorInviteStackInput = (({
                 <div className={classes.inputContainer}>
                     <SearchSelect
                         label={"Пригласить ментора"}
-                        url={"/users/options"}
+                        url={"/user/options"}
                         onChange={addMentorInvite}
                         notFound={<p>Пользователь не найден.</p>}
                         placeholder={"Введите логин или email пользователя"}

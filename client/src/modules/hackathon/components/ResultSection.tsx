@@ -47,7 +47,7 @@ const ResultSection = () => {
                 results.list?.length > 0 ? (
                     results.list.map((res, index) => (
                         <div key={`result_${res?.teamName}`}>
-                            <ResultItem result={res} maxScore={results.maxScore} position={index}/>
+                            <ResultItem result={res} maxScore={results.maxScore} position={index + 1}/>
                         </div>
                     ))
                 ) : (
