@@ -2346,12 +2346,37 @@ func (hc *HackathonController) GetValidateProjects(c *gin.Context) {
 		var hasScore bool
 
 		teamScores := scoreByTeam[team.ID]
-		if len(teamScores) > 0 {
-			// Находим сумму всех оценок
+
+		// Создаем персонализированные критерии для проекта
+		var projectCriteria []gin.H
+		for _, criterion := range criteria {
+			// Ищем оценку для конкретного критерия и команды
+			var value int = 0
+			var comment string = ""
+
 			for _, score := range teamScores {
-				summaryScore += score.Score
+				if score.CriteriaID == criterion.ID {
+					value = int(score.Score)
+					comment = score.Comment
+					break
+				}
 			}
-			hasScore = true
+
+			criteriaInfo := gin.H{
+				"name":     criterion.Name,
+				"maxScore": criterion.MaxScore,
+				"minScore": criterion.MinScore,
+				"value":    value,
+				"comment":  comment,
+			}
+
+			projectCriteria = append(projectCriteria, criteriaInfo)
+
+			// Одновременно считаем общую сумму баллов
+			if value > 0 {
+				summaryScore += float64(value)
+				hasScore = true
+			}
 		}
 
 		var summaryValue interface{} = nil
@@ -2370,44 +2395,15 @@ func (hc *HackathonController) GetValidateProjects(c *gin.Context) {
 			"summary":  summaryValue,
 			"teamName": team.Name,
 			"teamId":   team.ID,
+			"criteria": projectCriteria,
 		}
 
 		validateProjects = append(validateProjects, projectInfo)
 	}
 
-	// Создаем карту оценок критериев
-	criteriaScores := make(map[uint]models.Score)
-	for _, score := range allScores {
-		criteriaScores[score.CriteriaID] = score
-	}
-
-	// Создаем объекты ValidateCriteria с заполненными оценками
-	var validateCriteria []gin.H
-	for _, criterion := range criteria {
-		// Получаем оценку для данного критерия, если она есть
-		var value int = 0
-		var comment string = ""
-
-		if score, exists := criteriaScores[criterion.ID]; exists {
-			value = int(score.Score)
-			comment = score.Comment
-		}
-
-		criteriaInfo := gin.H{
-			"name":     criterion.Name,
-			"maxScore": criterion.MaxScore,
-			"minScore": criterion.MinScore,
-			"value":    value,
-			"comment":  comment,
-		}
-
-		validateCriteria = append(validateCriteria, criteriaInfo)
-	}
-
-	// Итоговый ответ с добавлением maxScore
+	// Убираем отдельный блок criteria, так как он теперь входит в каждый проект
 	response := gin.H{
 		"list":     validateProjects,
-		"criteria": validateCriteria,
 		"total":    totalCount,
 		"maxScore": maxScore,
 	}

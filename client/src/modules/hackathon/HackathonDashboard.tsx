@@ -72,7 +72,7 @@ const HackathonDashboard = () => {
                                     Чаты
                                 </button>
                             }
-                            {hackathonInfo.isWork &&
+                            {true &&
                                 <button
                                     className={`${classes.tab_button} ${activeTab === 'projects' ? classes.active : ''}`}
                                     onClick={() => setActiveTab('projects')}
