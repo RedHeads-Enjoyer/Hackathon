@@ -60,7 +60,7 @@ const CreateOrganizationPage: React.FC = () => {
 
         try {
             await OrganizationAPI.create(formData);
-            navigate('/organizations/my');
+            navigate('/organization/my');
         } catch (err) {
             const errorMessage = (err as Error).message || "Ошибка при создании организации";
             setPublishError(errorMessage);

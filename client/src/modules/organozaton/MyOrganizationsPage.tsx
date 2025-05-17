@@ -17,7 +17,7 @@ const MyOrganizationsPage = () => {
         legalName: "",
         status: 0,
         website: "",
-        limit: 20,
+        limit: 2,
         offset: 0,
         total: 0
     }
