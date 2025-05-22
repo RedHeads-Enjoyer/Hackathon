@@ -10,7 +10,8 @@ export default defineConfig({
     },
     allowedHosts: [
       'client',
-      'localhost'
+      'localhost',
+      'hackanton.ru'
     ],
     cors: true,
     headers: {

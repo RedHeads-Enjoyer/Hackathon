@@ -10,10 +10,9 @@ type User struct {
 
 	SystemRole int `gorm:"not null" json:"system_role"`
 
-	Avatar       *File              `gorm:"polymorphic:Owner;polymorphicValue:user"`
-	Hackathons   []BndUserHackathon `gorm:"foreignKey:UserID" json:"-"`
-	Teams        []BndUserTeam      `gorm:"foreignKey:UserID" json:"teams,omitempty"`
-	Technologies []Technology       `gorm:"many2many:user_technologies;" json:"technologies,omitempty"`
+	Avatar     *File              `gorm:"polymorphic:Owner;polymorphicValue:user"`
+	Hackathons []BndUserHackathon `gorm:"foreignKey:UserID" json:"-"`
+	Teams      []BndUserTeam      `gorm:"foreignKey:UserID" json:"teams,omitempty"`
 
 	Messages []ChatMessage `gorm:"foreignKey:UserID" json:"-"`
 
