@@ -125,6 +125,7 @@ const CreateOrganizationPage: React.FC = () => {
                         onChange={handleChange}
                         name="legalName"
                         placeholder="Введите полное название"
+                        maxLength={200}
                         required
                         error={formErrors.legalName}
                     />
@@ -165,6 +166,7 @@ const CreateOrganizationPage: React.FC = () => {
                         value={formData.contactEmail}
                         onChange={handleChange}
                         name="contactEmail"
+                        maxLength={100}
                         placeholder="Введите контактный email"
                         required
                         error={formErrors.contactEmail}
@@ -178,6 +180,7 @@ const CreateOrganizationPage: React.FC = () => {
                         value={formData.website}
                         onChange={handleChange}
                         name="website"
+                        maxLength={100}
                         placeholder="Введите ссылку"
                         required
                         error={formErrors.website}

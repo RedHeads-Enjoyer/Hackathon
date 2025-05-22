@@ -44,6 +44,11 @@
     font-size: 12px;
 }
 
+.warning_message {
+    color: var(--accent-color);
+    font-size: 12px;
+}
+
 
 
 .input_container.error input {

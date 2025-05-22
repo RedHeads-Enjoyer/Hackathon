@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import { useId } from 'react';
 import classes from './styles.module.css';
 
@@ -23,6 +23,7 @@ type InputPropsType = {
 const Input = (props: InputPropsType) => {
     const inputId = useId();
     const isError = props.error;
+    const [warningVisible, setWarningVisible] = useState<boolean>(false)
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -58,6 +59,7 @@ const Input = (props: InputPropsType) => {
 
     // Handle blur to validate against min/max
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        setWarningVisible(false)
         if (props.type === 'number' && e.target.value !== '') {
             const numValue = parseInt(e.target.value);
 
@@ -96,6 +98,14 @@ const Input = (props: InputPropsType) => {
         }
     };
 
+    const handleFocus = () => {
+        setWarningVisible(!!props.maxLength)
+
+        if (props.onFocus) {
+            props.onFocus();
+        }
+    }
+
     return (
         <div className={`${classes.input_container} ${isError ? classes.error : ''}`}>
             {props.label && (
@@ -113,12 +123,15 @@ const Input = (props: InputPropsType) => {
                 onKeyDown={props.onKeyDown}
                 placeholder={props.placeholder}
                 required={props.required}
-                onFocus={props.onFocus}
+                onFocus={handleFocus}
                 onBlur={handleBlur}
                 inputMode={props.type === 'number' ? 'numeric' : undefined}
                 disabled={props.disabled}
                 className={`${props.type === 'number' ? classes.number_input : ''}`}
             />
+            {(warningVisible && props.maxLength && String(props.value).length == props.maxLength) &&
+                <div className={classes.warning_message}>Достигнута максимальная длина</div>
+            }
             {props.error && <div className={classes.error_message}>{props.error}</div>}
         </div>
     );

@@ -58,7 +58,7 @@ function Sidebar() {
 
             <aside className={`${classes.sidebar} ${menuCollapsed ? classes.collapsed : ''} ${menuOpen ? classes.open : ''}`}>
                 <div className={classes.logo}>
-                    <Link to='/' onClick={closeMenu}>ХАКАНТОН</Link>
+                    <Link to='/hackathon/list' onClick={closeMenu}>ХАКАНТОН</Link>
                 </div>
 
                 <button

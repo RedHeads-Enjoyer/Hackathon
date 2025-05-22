@@ -94,6 +94,7 @@ const CreateTechnologyPage: React.FC = () => {
                     value={formData.name}
                     onChange={handleChange}
                     name="name"
+                    maxLength={50}
                     placeholder="Введите название"
                     required
                     error={formErrors.name}
@@ -109,6 +110,7 @@ const CreateTechnologyPage: React.FC = () => {
                     name="description"
                     placeholder="Введите описание"
                     required
+                    maxLength={500}
                     error={formErrors.description}
                 />
             </div>

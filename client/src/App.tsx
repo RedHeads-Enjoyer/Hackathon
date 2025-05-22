@@ -9,7 +9,6 @@ import {authAPI} from "./modules/auth/authAPI.ts";
 import {useEffect, useState} from "react";
 import {useAppDispatch} from "./store/hooks.ts";
 // import StoreDebugger from "./components/storeDebugger/StoreDebugger.tsx";
-import NotFound from "./modules/auth/NotFound.tsx";
 import PermissionDenied from "./modules/auth/PermissionDenied.tsx";
 import CreateHackathon from "./modules/hackathon/CreateHackathon.tsx";
 import {logout} from "./modules/auth/store/authSlice.ts";
@@ -80,7 +79,7 @@ function App() {
 
                 {/* Служебные пути */}
                 <Route path="/permission-denied" element={<PermissionDenied/>}/>
-                <Route path="*" element={<NotFound />} />
+                <Route path="*" element={<HackathonList />} />
             </Routes>
             {/*<StoreDebugger />*/}
         </Router>
