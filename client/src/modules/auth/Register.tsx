@@ -90,7 +90,7 @@ const Register: React.FC = () => {
             localStorage.setItem("access_token", result.access_token);
             const userData = await authAPI.verify();
             dispatch(loginSuccess(userData));
-            navigate("/hackathons");
+            navigate("/hackathon");
         } catch (err) {
             setError((err as Error).message);
         } finally {
