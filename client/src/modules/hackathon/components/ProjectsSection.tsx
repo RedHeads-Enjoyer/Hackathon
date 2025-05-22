@@ -187,7 +187,7 @@ const ProjectSection = () => {
                     value={formData.documents}
                     onChange={handleFilesChange}
                     acceptedFileTypes=".zip"
-                    maxFileSize={1 * 1024 * 1024 * 1024} // 1GB
+                    maxFileSize={100 * 1024 * 1024} // 1GB
                     maxFiles={1}
                     placeholder="Перетащите файлы сюда или нажмите для выбора"
                     error={formDataError.documents}
