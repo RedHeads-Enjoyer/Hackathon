@@ -25,6 +25,7 @@
     margin-bottom: 20px;
     color: var(--default-text-color);
     font-size: 20px;
+    word-wrap: anywhere;
 }
 
 /* Блок 1: Основные данные */
@@ -514,6 +515,7 @@
     font-size: 12px;
     font-weight: 500;
     border: 1px solid rgba(255, 193, 7, 0.2);
+    word-wrap: anywhere;
 }
 
 .moreTechTag {
@@ -2054,6 +2056,7 @@
     display: flex;
     width: 100%;
     flex: 1;
+    gap: 16px;
 }
 
 .chat_wrapper {
@@ -2202,11 +2205,6 @@
 
 /* Адаптивность */
 @media (max-width: 768px) {
-    .chats {
-        flex-direction: column;
-        height: auto;
-    }
-
     .info_block {
         flex: 1 !important;
         margin-right: 0 !important;
@@ -2215,6 +2213,22 @@
 
     .messages_container {
         max-height: 50vh;
+    }
+}
+
+@media (max-width: 1100px) {
+    .chats {
+        flex-direction: column;
+        height: auto;
+        gap: 8px;
+    }
+
+    .chat_wrapper {
+        overflow-y: auto;
+    }
+
+    .info_block {
+        max-height: 100vh;
     }
 }
 

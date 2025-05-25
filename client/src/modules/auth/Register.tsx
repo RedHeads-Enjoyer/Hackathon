@@ -110,6 +110,7 @@ const Register: React.FC = () => {
                     label={"Email"}
                     placeholder={"example@mail.ru"}
                     error={formErrors.email}
+                    maxLength={100}
                 />
                 <Input
                     type={"text"}
@@ -119,6 +120,7 @@ const Register: React.FC = () => {
                     label={"Имя пользователя"}
                     placeholder={"Крутой парень"}
                     error={formErrors.username}
+                    maxLength={20}
                 />
                 <Input
                     type={"password"}
@@ -128,6 +130,7 @@ const Register: React.FC = () => {
                     label={"Пароль"}
                     placeholder={"examplePassword"}
                     error={formErrors.password}
+                    maxLength={20}
                 />
                 <Input
                     type={"password"}
@@ -137,6 +140,7 @@ const Register: React.FC = () => {
                     label={"Повторите пароль"}
                     placeholder={"examplePassword"}
                     error={formErrors.confirmPassword}
+                    maxLength={20}
                 />
                 <Button
                     onClick={handleSubmit}

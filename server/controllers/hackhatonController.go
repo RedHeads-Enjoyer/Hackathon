@@ -1142,7 +1142,7 @@ func (pc *HackathonController) GetParticipants(c *gin.Context) {
 	// Базовый запрос для подсчета
 	countQuery := pc.DB.Model(&models.User{}).
 		Joins("JOIN bnd_user_hackathons ON users.id = bnd_user_hackathons.user_id").
-		Where("bnd_user_hackathons.hackathon_id = ?", hackathonID)
+		Where("bnd_user_hackathons.hackathon_id = ? AND bnd_user_hackathons.hackathon_role = ?", hackathonID, 1)
 
 	// Добавляем фильтр по имени/email
 	if filterData.Name != "" {
@@ -1174,7 +1174,7 @@ func (pc *HackathonController) GetParticipants(c *gin.Context) {
 			"JOIN teams t ON but.team_id = t.id WHERE t.hackathon_id = ?) AS filtered_teams "+
 			"ON users.id = filtered_teams.user_id", hackathonID).
 		Joins("LEFT JOIN teams ON filtered_teams.team_id = teams.id").
-		Where("buh.hackathon_id = ?", hackathonID)
+		Where("buh.hackathon_id = ? AND buh.hackathon_role = ?", hackathonID, 1)
 
 	// Добавляем фильтр по имени/email
 	if filterData.Name != "" {

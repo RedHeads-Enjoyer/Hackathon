@@ -228,6 +228,7 @@ const TeamSection = () => {
                                 placeholder="Введите название команды"
                                 required
                                 error={formErrors.name}
+                                maxLength={20}
                             />
                             <div className={classes.publish_section}>
                                 <Button

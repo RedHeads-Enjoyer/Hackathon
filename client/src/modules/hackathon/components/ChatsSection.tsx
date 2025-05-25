@@ -130,11 +130,6 @@ const ChatSection = () => {
         }
     }, [selectedChat]);
 
-    // Скролл к последнему сообщению при получении новых  
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
-    }, [messages]);
-
     // Отправка сообщения  
     const sendMessage = () => {
         if (!messageText.trim() || !selectedChat || !socketRef.current) {
@@ -166,7 +161,7 @@ const ChatSection = () => {
                 <div className={classes.loading}>Загрузка чатов...</div>
             ) : (
                 <div className={classes.chats}>
-                    <div className={classes.chat_info_block} style={{flex: "0 0 300px", marginRight: "16px"}}>
+                    <div className={classes.chat_info_block} style={{flex: "0 0 300px"}}>
                         <h3 className={classes.block_title}>Чаты - {hackathonName}</h3>
                         <div className={classes.chat_list}>
                             {Array.isArray(chats) && chats.length > 0 ? (
@@ -219,7 +214,6 @@ const ChatSection = () => {
                         </div>
 
                         {/* Ввод сообщения */}
-                        {/* Ввод сообщения */}
                         {selectedChat && chats.find(chat => chat.id === selectedChat)?.writeAccess && (
                             <div className={classes.message_input_container}>
                                 <TextArea
@@ -234,6 +228,7 @@ const ChatSection = () => {
                                     className={classes.message_input}
                                     placeholder="Введите сообщение..."
                                     disabled={!isConnected}
+                                    maxLength={1000}
                                 />
                                 <Button
                                     onClick={sendMessage}
