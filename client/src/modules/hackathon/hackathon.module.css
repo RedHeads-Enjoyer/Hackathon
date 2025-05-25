@@ -1007,6 +1007,7 @@
     font-size: 13px;
     font-weight: 500;
     transition: all 0.2s;
+    word-wrap: anywhere;
 }
 
 .tag:hover {
@@ -1045,7 +1046,7 @@
     line-height: 1.6;
     color: var(--light-text-color);
     white-space: pre-line;
-    word-wrap: break-word;
+    word-wrap: anywhere;
 }
 
 /* Этапы */
@@ -1095,9 +1096,7 @@
     font-weight: 600;
     color: var(--light-text-color);
     flex-grow: 1; /* Позволяет элементу расти в доступном пространстве */
-    overflow-wrap: anywhere; /* Поддержка для переноса слов */
     word-wrap: anywhere; /* Старый стандарт для переносов */
-    white-space: normal; /* Позволяет перенос текста на новую строку */
 }
 
 .stepDates {
@@ -1193,7 +1192,7 @@
     font-size: 15px;
     font-weight: 600;
     color: var(--light-text-color);
-    word-wrap: break-word;
+    word-wrap: anywhere;
 }
 
 .criterionScore {
@@ -1331,6 +1330,12 @@
         flex-direction: column;
         align-items: center;
         text-align: center;
+    }
+
+    .manageButtons {
+        display: flex;
+        gap: 8px;
+        flex-direction: row;
     }
 
     .titleRow {
@@ -1670,7 +1675,7 @@
     }
 
     .stepTitle {
-        word-wrap: break-word;
+        word-wrap: anywhere;
     }
 
     .stepDates {
@@ -1736,6 +1741,13 @@
     .infoLine, .criteriaFilesLine {
         grid-template-columns: 1fr;
         gap: 16px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1116px) {
+    .manageButtons {
+        display: flex;
+        flex-direction: column;
     }
 }
 

@@ -271,21 +271,28 @@ const OpenHackathon = () => {
 
                                     <div className={classes.manageButtons}>
                                         {hackathon.hackathonRole === HackathonRole.OWNER && hackathon.canEdit &&
-                                            <Button
-                                                variant={'secondary'}
-                                                onClick={() => navigate(`/hackathon/${hackathon.id}/edit`)}
-                                            >
-                                                Управление
-                                            </Button>
+                                            <div>
+                                                <Button
+                                                    fullWidth={true}
+                                                    variant={'secondary'}
+                                                    onClick={() => navigate(`/hackathon/${hackathon.id}/edit`)}
+                                                >
+                                                    Управление
+                                                </Button>
+                                            </div>
+
                                         }
 
                                         {hackathon.hackathonRole !== HackathonRole.NOT_PARTICIPANT  &&
-                                            <Button
-                                                variant={'primary'}
-                                                onClick={() => navigate(`/hackathon/${hackathon.id}/dashboard`)}
-                                            >
-                                                Перейти к хакатону
-                                            </Button>
+                                            <div>
+                                                <Button
+                                                    fullWidth={true}
+                                                    variant={'primary'}
+                                                    onClick={() => navigate(`/hackathon/${hackathon.id}/dashboard`)}
+                                                >
+                                                    Перейти к хакатону
+                                                </Button>
+                                            </div>
                                         }
                                     </div>
                                 </div>
