@@ -1,4 +1,4 @@
-import React, {useEffect, useId, useRef} from 'react';
+import React, {useEffect, useId, useRef, useState} from 'react';
 import classes from './style.module.css';
 
 interface TextAreaProps {
@@ -14,6 +14,7 @@ interface TextAreaProps {
     className?: string;
     error?: string;
     required?: boolean;
+    maxLength?: number;
 }
 
 const TextArea: React.FC<TextAreaProps> = ({
@@ -29,9 +30,11 @@ const TextArea: React.FC<TextAreaProps> = ({
                                                className = '',
                                                error = '',
                                                required = false,
+                                               maxLength
                                            }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const id = useId();
+    const [warningVisible, setWarningVisible] = useState<boolean>(false)
 
     useEffect(() => {
         if (textareaRef.current) {
@@ -45,6 +48,27 @@ const TextArea: React.FC<TextAreaProps> = ({
             textareaRef.current.style.height = `${Math.max(newHeight, minHeight)}px`;
         }
     }, [value, minRows, maxRows]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const { value: newValue } = e.target;
+
+        // Check for maxLength and prevent changes if exceeded
+        if (maxLength && newValue.length > maxLength) {
+            return;
+        }
+
+        onChange(e);
+    };
+
+
+    const handleFocus = () => {
+        setWarningVisible(!!maxLength);
+    };
+
+    const handleBlur = () => {
+        setWarningVisible(!maxLength);
+    }
+
 
     return (
         <div className={`${classes.textAreaWrapper} ${className}`}>
@@ -65,14 +89,20 @@ const TextArea: React.FC<TextAreaProps> = ({
                     value={value}
                     placeholder={placeholder}
                     disabled={disabled}
-                    onChange={onChange}
+                    onChange={handleInputChange} // Use new change handler
                     onKeyDown={onKeyDown} // Добавлен обработчик клавиш
                     rows={minRows}
                     aria-invalid={!!error}
                     aria-describedby={error ? `${id}-error` : undefined}
                     required={required}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
                 />
             </div>
+
+            {maxLength && value.length === maxLength && warningVisible && (
+                <div className={classes.warningMessage}>Достигнута максимальная длина</div>
+            )}
 
             {error && (
                 <div id={`${id}-error`} className={classes.errorMessage}>

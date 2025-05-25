@@ -90,6 +90,12 @@
     user-select: none;
 }
 
+.warningMessage {
+    color: var(--accent-color);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
 .errorMessage {
     color: var(--error-text-color);
     font-size: 12px;
