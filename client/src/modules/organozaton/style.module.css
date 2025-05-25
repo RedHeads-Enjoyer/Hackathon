@@ -45,6 +45,7 @@
     font-size: var(--default-font-size);
     font-weight: 500;
     margin-bottom: 0;
+    word-wrap: anywhere;
 }
 
 .expanded {
@@ -59,6 +60,7 @@
     font-size: var(--default-font-size);
     color: var(--light-text-color);
     margin: 4px 0; /* Отступы между строками информации */
+    word-wrap: anywhere;
 }
 
 .expandedFilters {

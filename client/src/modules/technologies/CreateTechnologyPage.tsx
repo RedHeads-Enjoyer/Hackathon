@@ -110,7 +110,7 @@ const CreateTechnologyPage: React.FC = () => {
                     name="description"
                     placeholder="Введите описание"
                     required
-                    maxLength={500}
+                    maxLength={255}
                     error={formErrors.description}
                 />
             </div>
