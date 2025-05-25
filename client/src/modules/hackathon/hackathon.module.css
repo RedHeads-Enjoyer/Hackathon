@@ -1197,6 +1197,13 @@
     word-wrap: anywhere;
 }
 
+.criteriaComment {
+    margin: 0 0 10px;
+    font-size: 14px;
+    color: var(--secondary-text-color);
+    word-wrap: anywhere;
+}
+
 .criterionScore {
     display: inline-block;
     padding: 4px 10px;
@@ -2290,4 +2297,11 @@
     color: var(--secondary-text-color);
     font-size: 14px;
     font-style: italic;
+}
+
+.additionalLabel {
+    color: var(--secondary-text-color);
+    font-size: 14px;
+    font-style: italic;
+    word-wrap: anywhere;
 }

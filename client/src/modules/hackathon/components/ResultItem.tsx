@@ -126,14 +126,12 @@ const ResultItem = (props: ResultItemProps) => {
                             <div className={classes.awardCard}>
                                 {props.result.award.moneyAmount > 0 && (
                                     <div className={classes.moneyAmount}>
-                                        <span className={classes.moneyLabel}>Денежный приз:</span>
-                                        <span className={classes.moneyValue}>{props.result.award.moneyAmount.toLocaleString()} ₽</span>
+                                        <span className={classes.fileDownload}>{props.result.award.moneyAmount.toLocaleString()} ₽</span>
                                     </div>
                                 )}
                                 {props.result.award.additionally && (
                                     <div className={classes.additionalAward}>
-                                        <span className={classes.additionalLabel}>Дополнительно:</span>
-                                        <span className={classes.additionalValue}>{props.result.award.additionally}</span>
+                                        <span className={classes.additionalLabel}>{props.result.award.additionally}</span>
                                     </div>
                                 )}
                             </div>

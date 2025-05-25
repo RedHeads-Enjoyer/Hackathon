@@ -243,6 +243,7 @@ const ValidateProjectItem = (props: ValidateProjectItemProps) => {
                                                 onChange={(e) => handleCriteriaCommentChange(index, e.target.value)}
                                                 placeholder="Комментарий к оценке..."
                                                 error={errors[index]?.comment}
+                                                maxLength={1000}
                                             />
                                         </div>
                                     </div>
