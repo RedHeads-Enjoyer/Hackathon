@@ -1045,6 +1045,7 @@
     line-height: 1.6;
     color: var(--light-text-color);
     white-space: pre-line;
+    word-wrap: break-word;
 }
 
 /* Этапы */
@@ -1093,7 +1094,10 @@
     font-size: 16px;
     font-weight: 600;
     color: var(--light-text-color);
-    flex-grow: 1;
+    flex-grow: 1; /* Позволяет элементу расти в доступном пространстве */
+    overflow-wrap: anywhere; /* Поддержка для переноса слов */
+    word-wrap: anywhere; /* Старый стандарт для переносов */
+    white-space: normal; /* Позволяет перенос текста на новую строку */
 }
 
 .stepDates {
@@ -1109,6 +1113,7 @@
     color: var(--light-text-color);
     margin-top: 8px;
     padding-left: 46px; /* отступ слева, чтобы выровнять с названием */
+    word-wrap: break-word;
 }
 
 /* Остальные секции (критерии, призы, файлы) */
@@ -1160,6 +1165,7 @@
     font-size: 13px;
     color: var(--secondary-text-color);
     line-height: 1.4;
+    word-wrap: break-word;
 }
 
 /* Критерии */
@@ -1187,6 +1193,7 @@
     font-size: 15px;
     font-weight: 600;
     color: var(--light-text-color);
+    word-wrap: break-word;
 }
 
 .criterionScore {
@@ -1663,7 +1670,7 @@
     }
 
     .stepTitle {
-        width: 100%;
+        word-wrap: break-word;
     }
 
     .stepDates {
@@ -1673,6 +1680,7 @@
     .stepDescription {
         padding-left: 0;
         margin-top: 12px;
+        word-wrap: break-word;
     }
 
     /* Более компактные карточки */
