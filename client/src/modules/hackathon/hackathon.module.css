@@ -1244,9 +1244,9 @@
     font-weight: 500;
     margin-bottom: 4px;
     color: var(--light-text-color);
-    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    word-wrap: anywhere;
 }
 
 .fileSize {
