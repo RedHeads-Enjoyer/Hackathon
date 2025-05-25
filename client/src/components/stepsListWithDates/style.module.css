@@ -72,11 +72,13 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    word-wrap: anywhere;
 }
 
-.stageNameText {
+.stageNameText p {
     color: var(--light-text-color);
     font-weight: 500;
+    word-wrap: anywhere;
 }
 
 .stageDatesText {
@@ -138,6 +140,7 @@
 
     .stageTitle {
         white-space: normal;
+        word-wrap: anywhere;
     }
 }
 

@@ -122,11 +122,12 @@ const CriteriaEditor = forwardRef<CriteriaEditorRef, CriteriaEditorProps>(
                 <div className={criteria.length !== 0 ? classes.form : ""}>
                     <div className={classes.input_container}>
                         <label className={classes.label}>Название критерия</label>
-                        <input
-                            className={classes.input}
+                        <Input
+                            type={"text"}
                             value={formData.name}
                             onChange={(e) => handleChange('name', e.target.value)}
                             placeholder="Например, Качество кода"
+                            maxLength={255}
                         />
                     </div>
 
@@ -137,13 +138,13 @@ const CriteriaEditor = forwardRef<CriteriaEditorRef, CriteriaEditorProps>(
                                 type="number"
                                 value={formData.minScore}
                                 onChange={(e) => {
-                                    // Check if it's a valid number before converting
                                     if (e.target.value === '' || e.target.value === '-') {
                                         handleChange('minScore', e.target.value);
                                     } else {
                                         handleChange('minScore', Number(e.target.value));
                                     }
                                 }}
+                                min={0}
                                 max={formData.maxScore - 1}
                             />
                         </div>

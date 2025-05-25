@@ -261,6 +261,7 @@ const AwardsEditor = forwardRef<AwardsEditorRef, AwardsEditorProps>(({
                             disabled={!!editingId && !isLastAward({ ...formData, id: editingId } as Award)}
                             error={formErrors.placeTo}
                             required={!(!!editingId && !isLastAward({ ...formData, id: editingId } as Award))}
+                            max={10000}
                         />
                     </div>
                 </div>
@@ -274,6 +275,7 @@ const AwardsEditor = forwardRef<AwardsEditorRef, AwardsEditorProps>(({
                         min={0}
                         required
                         error={formErrors.moneyAmount}
+                        max={1000000000}
                     />
                 </div>
 
@@ -284,6 +286,7 @@ const AwardsEditor = forwardRef<AwardsEditorRef, AwardsEditorProps>(({
                         value={formData.additionally}
                         onChange={(e) => handleChange('additionally', e.target.value)}
                         placeholder="Например, Бесплатный курс (необязательно)"
+                        maxLength={255}
                     />
                 </div>
 

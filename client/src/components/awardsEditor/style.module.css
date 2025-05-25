@@ -131,6 +131,7 @@
     color: var(--secondary-text-color);
     margin-top: auto; /* Прижимает дополнительный текст к низу карточки */
     padding-top: 8px;
+    word-wrap: anywhere;
 }
 
 /* 4. Состояния */

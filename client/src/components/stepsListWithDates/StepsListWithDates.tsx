@@ -195,7 +195,7 @@ const StepsListWithDates = forwardRef<StepsListWithDatesRef, HackathonStagesProp
         return (
             <>
                 <span className={`${classes.stageNameText} ${hasErrors ? classes.stageError : ''}`}>
-                    {stage.name || 'Новый этап'}
+                    <p>{stage.name || 'Новый этап'}</p>
                 </span>
                 {dates.length > 0 && (
                     <span className={classes.stageDatesText}>
@@ -262,6 +262,7 @@ const StepsListWithDates = forwardRef<StepsListWithDatesRef, HackathonStagesProp
                                         type={"text"}
                                         required
                                         error={stageErrors[stage.id]?.name}
+                                        maxLength={255}
                                     />
 
                                     <TextArea
@@ -272,6 +273,7 @@ const StepsListWithDates = forwardRef<StepsListWithDatesRef, HackathonStagesProp
                                         minRows={2}
                                         required
                                         error={stageErrors[stage.id]?.description}
+                                        maxLength={2000}
                                     />
 
                                     <div className={classes.datesContainer}>

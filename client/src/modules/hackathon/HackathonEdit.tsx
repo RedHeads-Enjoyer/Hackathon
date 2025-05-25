@@ -507,6 +507,17 @@ const HackathonEdit: React.FC = () => {
         );
     }
 
+    const getOffsetDate = (regDateFrom: string, day: number): string | undefined  => {
+        const date = new Date(regDateFrom);
+
+        if (isNaN(date.getTime())) {
+            return undefined;
+        }
+
+        date.setDate(date.getDate() + day);
+        return date.toISOString().split('T')[0];
+    }
+
     return (
         <div className={classes.page_wrapper}>
             <PageLabel size={'h3'}>Редактирование хакатона</PageLabel>
@@ -525,6 +536,7 @@ const HackathonEdit: React.FC = () => {
                             placeholder="Введите название"
                             required
                             error={formErrors.name}
+                            maxLength={255}
                         />
                         <TextArea
                             label="Описание хакатона"
@@ -535,6 +547,7 @@ const HackathonEdit: React.FC = () => {
                             minRows={4}
                             required
                             error={formErrors.description}
+                            maxLength={2000}
                         />
 
                         <SelectSearch
@@ -568,7 +581,9 @@ const HackathonEdit: React.FC = () => {
                         value={formData.regDateFrom}
                         onChange={(value) => handleDateChange('regDateFrom', value)}
                         minDate={new Date().toISOString().split('T')[0]}
-                        maxDate={formData.regDateTo || formData.workDateFrom || formData.workDateTo || formData.evalDateFrom || formData.evalDateTo}
+                        maxDate={getOffsetDate(formData.workDateFrom, -1)
+                            || getOffsetDate(formData.evalDateFrom, -2)
+                            || getOffsetDate(formData.evalDateTo, -3)}
                         error={formErrors.regDateFrom}
                         required
                     />
@@ -579,8 +594,10 @@ const HackathonEdit: React.FC = () => {
                             handleDateChange('regDateTo', value);
                             handleDateChange('workDateFrom', value);
                         }}
-                        minDate={formData.regDateFrom}
-                        maxDate={formData.workDateFrom || formData.workDateTo || formData.evalDateFrom || formData.evalDateTo}
+                        minDate={getOffsetDate(formData.regDateFrom, 1)
+                            || getOffsetDate(new Date().toISOString().split('T')[0], 1)}
+                        maxDate={getOffsetDate(formData.evalDateFrom, -1)
+                            || getOffsetDate(formData.evalDateTo, -2)}
                         error={formErrors.regDateTo}
                         required
                     />
@@ -591,8 +608,10 @@ const HackathonEdit: React.FC = () => {
                             handleDateChange('workDateFrom', value);
                             handleDateChange('regDateTo', value);
                         }}
-                        minDate={formData.regDateTo || formData.regDateFrom}
-                        maxDate={formData.workDateTo || formData.evalDateFrom || formData.evalDateTo}
+                        minDate={getOffsetDate(formData.regDateFrom, 1)
+                            || getOffsetDate(new Date().toISOString().split('T')[0], 1)}
+                        maxDate={getOffsetDate(formData.evalDateFrom, -1)
+                            || getOffsetDate(formData.evalDateTo, -2)}
                         error={formErrors.workDateFrom}
                         required
                     />
@@ -603,8 +622,10 @@ const HackathonEdit: React.FC = () => {
                             handleDateChange('workDateTo', value);
                             handleDateChange('evalDateFrom', value);
                         }}
-                        minDate={formData.workDateFrom || formData.regDateTo || formData.regDateFrom}
-                        maxDate={formData.evalDateFrom || formData.evalDateTo}
+                        minDate={getOffsetDate(formData.workDateFrom, 1)
+                            || getOffsetDate(formData.regDateFrom, 2)
+                            || getOffsetDate(new Date().toISOString().split('T')[0], 2)}
+                        maxDate={getOffsetDate(formData.evalDateTo, -1)}
                         error={formErrors.workDateTo}
                         required
                     />
@@ -615,8 +636,10 @@ const HackathonEdit: React.FC = () => {
                             handleDateChange('workDateTo', value);
                             handleDateChange('evalDateFrom', value);
                         }}
-                        minDate={formData.workDateTo || formData.workDateFrom || formData.regDateTo || formData.regDateFrom}
-                        maxDate={formData.evalDateTo}
+                        minDate={getOffsetDate(formData.workDateFrom, 1)
+                            || getOffsetDate(formData.regDateFrom, 2)
+                            || getOffsetDate(new Date().toISOString().split('T')[0], 2)}
+                        maxDate={getOffsetDate(formData.evalDateTo, -1)}
                         error={formErrors.evalDateFrom}
                         required
                     />
@@ -624,7 +647,10 @@ const HackathonEdit: React.FC = () => {
                         label="Окончание оценки"
                         value={formData.evalDateTo}
                         onChange={(value) => handleDateChange('evalDateTo', value)}
-                        minDate={formData.evalDateFrom || formData.workDateTo || formData.workDateFrom || formData.regDateTo || formData.regDateFrom}
+                        minDate={getOffsetDate(formData.evalDateFrom, 1)
+                            || getOffsetDate(formData.workDateFrom, 2)
+                            || getOffsetDate(formData.regDateFrom, 3)
+                            || getOffsetDate(new Date().toISOString().split('T')[0], 3)}
                         error={formErrors.evalDateTo}
                         required
                     />

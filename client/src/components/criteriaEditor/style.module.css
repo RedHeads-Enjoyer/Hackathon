@@ -131,6 +131,7 @@
 .criterionName {
     font-size: 15px;
     color: var(--default-text-color);
+    word-wrap: anywhere;
 }
 
 /* Модальное окно */

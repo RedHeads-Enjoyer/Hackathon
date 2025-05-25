@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { useId } from 'react';
 import classes from './styles.module.css';
 
@@ -11,9 +11,9 @@ type InputPropsType = {
     placeholder?: string;
     label?: string;
     error?: string;
-    min?: number;
-    max?: number;
-    maxLength?: number,
+    min?: number; // Минимальное значение
+    max?: number; // Максимальное значение
+    maxLength?: number;
     required?: boolean;
     onFocus?: () => void;
     onBlur?: () => void;
@@ -23,7 +23,9 @@ type InputPropsType = {
 const Input = (props: InputPropsType) => {
     const inputId = useId();
     const isError = props.error;
-    const [warningVisible, setWarningVisible] = useState<boolean>(false)
+    const [warningVisible, setWarningVisible] = useState<boolean>(false);
+    const [maxWarningVisible, setMaxWarningVisible] = useState<boolean>(false);
+    const [minWarningVisible, setMinWarningVisible] = useState<boolean>(false);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -32,21 +34,33 @@ const Input = (props: InputPropsType) => {
         }
 
         if (props.type === 'number') {
-            // Для числового поля размера команды разрешаем только положительные целые числа
-            // Удалено '.' из регулярного выражения, т.к. размер команды - целое число
             const isValidInput = value === '' || /^[0-9]*$/.test(value);
+            let numValue = value === '' ? undefined : parseInt(value);
 
             if (isValidInput) {
-                // Проверяем, не выходит ли за пределы min/max при вводе
-                if (value !== '') {
-                    const numValue = parseInt(value);
-                    if ((props.max !== undefined && numValue > props.max) ||
-                        (props.min !== undefined && numValue < props.min)) {
-                        // Просто не обновляем значение, если оно выходит за пределы
-                        return;
-                    }
+                // Ограничение по максимальному значению
+                if (props.max !== undefined && numValue !== undefined && numValue > props.max) {
+                    numValue = props.max;
                 }
-                props.onChange(e);
+                // Ограничение по минимальному значению
+                if (props.min !== undefined && numValue !== undefined && numValue < props.min) {
+                    numValue = props.min; // Применяем min
+                }
+
+                const syntheticEvent = {
+                    ...e,
+                    target: {
+                        ...e.target,
+                        value: numValue !== undefined ? numValue.toString() : '',
+                        name: e.target.name
+                    }
+                } as React.ChangeEvent<HTMLInputElement>;
+
+                props.onChange(syntheticEvent);
+
+                // Обновляем состояния предупреждений
+                setMaxWarningVisible(numValue === props.max);
+                setMinWarningVisible(numValue === props.min);
             }
         } else if (props.type === 'textNumber') {
             if (value === '' || /^\d+$/.test(value)) {
@@ -57,23 +71,45 @@ const Input = (props: InputPropsType) => {
         }
     };
 
-    // Handle blur to validate against min/max
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-        setWarningVisible(false)
-        if (props.type === 'number' && e.target.value !== '') {
+        // Скрываем предупреждения при потере фокуса
+        setWarningVisible(false);
+        setMaxWarningVisible(false);
+        setMinWarningVisible(false);
+
+        if (props.type === 'number') {
             const numValue = parseInt(e.target.value);
 
-            if (!isNaN(numValue)) {
+            if (e.target.value === '') {
+                // Устанавливаем значение в min или max, если они заданы
+                const newValue =
+                    props.min !== undefined ? props.min :
+                        props.max !== undefined ? props.max :
+                            0; // В противном случае устанавливаем 0
+
+                const syntheticEvent = {
+                    ...e,
+                    target: {
+                        ...e.target,
+                        value: newValue.toString(),
+                        name: e.target.name
+                    }
+                } as React.ChangeEvent<HTMLInputElement>;
+
+                props.onChange(syntheticEvent);
+            } else if (!isNaN(numValue)) {
                 let constrainedValue = numValue;
 
                 // Ограничиваем значение нижней границей
                 if (props.min !== undefined && numValue < props.min) {
                     constrainedValue = props.min;
+                    setMinWarningVisible(true); // Показать предупреждение о min
                 }
 
                 // Ограничиваем значение верхней границей
                 if (props.max !== undefined && numValue > props.max) {
                     constrainedValue = props.max;
+                    setMaxWarningVisible(true); // Показать предупреждение о max
                 }
 
                 // Если значение изменилось после ограничений, создаем синтетическое событие
@@ -92,19 +128,20 @@ const Input = (props: InputPropsType) => {
             }
         }
 
-        // Вызываем пользовательский обработчик onBlur, если он существует
         if (props.onBlur) {
             props.onBlur();
         }
     };
 
     const handleFocus = () => {
-        setWarningVisible(!!props.maxLength)
+        setWarningVisible(!!props.maxLength);
+        setMaxWarningVisible(!!props.max && props.value === props.max);
+        setMinWarningVisible(!!props.min && props.value === props.min); // Предупреждение о min при фокусе
 
         if (props.onFocus) {
             props.onFocus();
         }
-    }
+    };
 
     return (
         <div className={`${classes.input_container} ${isError ? classes.error : ''}`}>
@@ -116,7 +153,7 @@ const Input = (props: InputPropsType) => {
             )}
             <input
                 id={inputId}
-                type={props.type === 'number' ? 'text' : props.type}
+                type={props.type === 'number' ? 'text' : props.type} // Используем 'text', чтобы избежать автоматической проверки ввода
                 value={props.value}
                 name={props.name}
                 onChange={handleInputChange}
@@ -129,9 +166,15 @@ const Input = (props: InputPropsType) => {
                 disabled={props.disabled}
                 className={`${props.type === 'number' ? classes.number_input : ''}`}
             />
-            {(warningVisible && props.maxLength && String(props.value).length == props.maxLength) &&
+            {(warningVisible && props.maxLength && String(props.value).length === props.maxLength) &&
                 <div className={classes.warning_message}>Достигнута максимальная длина</div>
             }
+            {maxWarningVisible && (
+                <div className={classes.warning_message}>Достигнуто максимальное значение</div>
+            )}
+            {minWarningVisible && ( // Предупреждение о минимальном значении
+                <div className={classes.warning_message}>Достигнуто минимальное значение</div>
+            )}
             {props.error && <div className={classes.error_message}>{props.error}</div>}
         </div>
     );

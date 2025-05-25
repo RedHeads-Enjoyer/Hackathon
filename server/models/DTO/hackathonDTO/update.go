@@ -9,8 +9,8 @@ import (
 )
 
 type Update struct {
-	Name                  *string              `json:"name,omitempty"`
-	Description           *string              `json:"description,omitempty"`
+	Name                  *string              `json:"name,omitempty,max=255"`
+	Description           *string              `json:"description,omitempty,max=2000"`
 	RegDateFrom           *time.Time           `json:"reg_date_from,omitempty"`
 	RegDateTo             *time.Time           `json:"reg_date_to,omitempty"`
 	WorkDateFrom          *time.Time           `json:"work_date_from,omitempty"`

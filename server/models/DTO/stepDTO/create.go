@@ -6,8 +6,8 @@ import (
 )
 
 type Create struct {
-	Name        string    `json:"name" validate:"required,min=3,max=500"`
-	Description string    `json:"description" validate:"max=5000"`
+	Name        string    `json:"name" validate:"required,max=255"`
+	Description string    `json:"description" validate:"max=2000"`
 	StartDate   time.Time `json:"start_date" validate:"required"`
 	EndDate     time.Time `json:"end_date" validate:"required,gtefield=StartDate"`
 }
