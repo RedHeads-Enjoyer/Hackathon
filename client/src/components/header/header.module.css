@@ -25,6 +25,11 @@
     overflow: hidden;
 }
 
+.info {
+    font-size: 10px;
+    margin-left: 10px;
+}
+
 /* Логотип в боковом меню */
 .logo {
     height: 60px;

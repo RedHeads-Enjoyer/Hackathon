@@ -146,15 +146,12 @@ const CreateHackathon: React.FC = () => {
 
         setCreateHackathonLoading(true);
 
-        try {
-            await HackathonAPI.create(formData);
-            navigate('/');
-        } catch (err) {
+        HackathonAPI.create(formData).then((res) => {
+            navigate(`/hackathon/${res}`)
+        }).catch((err) => {
             const errorMessage = (err as Error).message || "Ошибка при создании хакатона";
             setCreateHackathonError(errorMessage);
-        } finally {
-            setCreateHackathonLoading(false);
-        }
+        }).finally(() =>  setCreateHackathonLoading(false));
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

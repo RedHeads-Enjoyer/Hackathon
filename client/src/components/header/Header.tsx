@@ -103,6 +103,7 @@ function Sidebar() {
                         <Link to='/logout' onClick={closeMenu}>Выход</Link>
                     </div>
                 )}
+                <p className={classes.info}>Сайт сделан в рамках ВКР Лосев Антон Сергеевич ИКБО-02-21</p>
             </aside>
         </div>
     );
