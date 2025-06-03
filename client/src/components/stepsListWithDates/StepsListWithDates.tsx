@@ -282,7 +282,7 @@ const StepsListWithDates = forwardRef<StepsListWithDatesRef, HackathonStagesProp
                                             value={stage.startDate}
                                             onChange={(date) => updateStage(stage.id, 'startDate', date)}
                                             required
-                                            maxDate={stage.startDate}
+                                            maxDate={stage.endDate}
                                             error={stageErrors[stage.id]?.startDate}
                                         />
 
