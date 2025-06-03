@@ -4,6 +4,7 @@ import {Link, useNavigate} from "react-router-dom";
 import classes from './header.module.css';
 import {AuthState, logout} from "../../modules/auth/store/authSlice.ts";
 import {authAPI} from "../../modules/auth/authAPI.ts";
+import Loader from "../loader/Loader.tsx";
 
 function Sidebar() {
     const authState: AuthState = useAppSelector(state => state.auth);
@@ -132,7 +133,7 @@ function Sidebar() {
                             disabled={isLoggingOut}
                             className={classes.logout_button}
                         >
-                            Выход
+                            {isLoggingOut ? <Loader size={"small"}/>: 'Выход'}
                         </button>
                     </div>
                 )}
