@@ -2,7 +2,6 @@ import {BrowserRouter as Router, Routes, Route, Outlet} from 'react-router-dom';
 import Header from "./components/header/Header.tsx";
 import Register from "./modules/auth/Register";
 import Login from "./modules/auth/Login";
-import Logout from "./modules/auth/Logout";
 import {ProtectedRoute} from "./components/protectedRoute/ProtectedRoute";
 import {loginSuccess} from "./modules/auth/store/authSlice.ts";
 import {authAPI} from "./modules/auth/authAPI.ts";
@@ -28,6 +27,7 @@ function App() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        document.body.classList.add('react-loaded');
         const initializeAuth = async () => {
             const token = localStorage.getItem('access_token');
             if (!token) {
@@ -48,7 +48,12 @@ function App() {
     }, [dispatch]);
 
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="app-loading">
+                <div className="spinner"></div>
+                <div className="text">Проверка авторизации...</div>
+            </div>
+        );
     }
 
     return (
@@ -75,7 +80,6 @@ function App() {
                 {/* Авторизация */}
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/logout" element={<Logout />} />
 
                 {/* Служебные пути */}
                 <Route path="/permission-denied" element={<PermissionDenied/>}/>

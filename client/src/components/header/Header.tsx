@@ -1,13 +1,40 @@
 import { useState, useEffect } from "react";
-import { useAppSelector } from "../../store/hooks.ts";
-import { Link } from "react-router-dom";
+import {useAppDispatch, useAppSelector} from "../../store/hooks.ts";
+import {Link, useNavigate} from "react-router-dom";
 import classes from './header.module.css';
-import { AuthState } from "../../modules/auth/store/authSlice.ts";
+import {AuthState, logout} from "../../modules/auth/store/authSlice.ts";
+import {authAPI} from "../../modules/auth/authAPI.ts";
 
 function Sidebar() {
     const authState: AuthState = useAppSelector(state => state.auth);
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const [menuOpen, setMenuOpen] = useState(false);
     const [menuCollapsed, setMenuCollapsed] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const handleLogout = async () => {
+        if (isLoggingOut) return;
+
+        setIsLoggingOut(true);
+
+        try {
+            await authAPI.logout();
+        } catch (error) {
+            console.error("Logout API error:", error);
+        } finally {
+            // Очищаем хранилище
+            localStorage.removeItem('access_token');
+
+            // Сбрасываем состояние
+            dispatch(logout());
+
+            // Перенаправляем
+            navigate('/login', { replace: true });
+
+            setIsLoggingOut(false);
+        }
+    };
 
     // Загружаем состояние меню из localStorage при монтировании
     useEffect(() => {
@@ -100,10 +127,17 @@ function Sidebar() {
                 {authState.user && (
                     <div className={classes.user_block}>
                         <p className={classes.username}>{authState.user.username}</p>
-                        <Link to='/logout' onClick={closeMenu}>Выход</Link>
+                        <button
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                            className={classes.logout_button}
+                        >
+                            Выход
+                        </button>
                     </div>
                 )}
-                <p className={classes.info}>Сайт сделан в рамках ВКР Лосев Антон Сергеевич ИКБО-02-21</p>
+                <p className={classes.info}>Сайт сделан в рамках ВКР</p>
+                <p className={classes.info}>Лосев Антон Сергеевич ИКБО-02-21</p>
             </aside>
         </div>
     );

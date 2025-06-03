@@ -28,6 +28,7 @@
 .info {
     font-size: 10px;
     margin-left: 10px;
+    white-space: nowrap;
 }
 
 /* Логотип в боковом меню */
@@ -236,4 +237,15 @@
     .sidebar.open {
         transform: none;
     }
+}
+
+.logout_button {
+    outline: none;
+    background-color: transparent;
+    color: var(--accent-color);
+    border: 0;
+    text-align: left;
+    padding: 0;
+    width: fit-content;
+    font-size: 14px;
 }
