@@ -71,7 +71,7 @@ const Login: React.FC = () => {
 
             const userData = await authAPI.verify();
             dispatch(loginSuccess(userData));
-            navigate('/hackathon/list');
+            navigate(userData.systemRole == 1 ? '/hackathon/list' : '/organization/list');
         } catch (err) {
             const errorMessage = (err as Error).message || "Ошибка входа";
             setError(errorMessage);
