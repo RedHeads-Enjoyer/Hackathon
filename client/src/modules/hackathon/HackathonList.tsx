@@ -14,7 +14,7 @@ const HackathonList = () => {
     const initialFilterData: HackathonFilterData = {
         name: "",
         organizationId: 0,
-        startDate: "",
+        startDate: new Date().toISOString().split('T')[0],
         endDate: "",
         maxTeamSize: 5,
         minTeamSize: 1,
@@ -107,8 +107,14 @@ const HackathonList = () => {
     }
 
     const handleResetFilters = () => {
-        setFilterData(initialFilterData)
-        searchHackathons(initialFilterData)
+        setFilterData({
+            ...initialFilterData,
+            startDate: ""
+        })
+        searchHackathons({
+            ...initialFilterData,
+            startDate: ""
+        })
     }
 
     const handleSearch = () => {
