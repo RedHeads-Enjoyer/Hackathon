@@ -85,8 +85,18 @@ const HackathonDashboard = () => {
                     ) : (
                         <>
 
-                        {(hackathonInfo.isEvaluation || hackathonInfo.isWork || hackathonInfo.isRegistration) ?
+                        {(hackathonInfo.isWork || hackathonInfo.isRegistration) ?
                             <>
+                                <div className={classes.dashboard_tabs}>
+                                    <button
+                                        className={`${classes.tab_button} ${activeTab === 'chats' ? classes.active : ''}`}
+                                        onClick={() => setActiveTab('chats')}
+                                    >
+                                        Чаты
+                                    </button>
+                                </div>
+                            </>
+                            : hackathonInfo.isEvaluation ?
                                 <div className={classes.dashboard_tabs}>
                                     <button
                                         className={`${classes.tab_button} ${activeTab === 'chats' ? classes.active : ''}`}
@@ -100,16 +110,22 @@ const HackathonDashboard = () => {
                                     >
                                         Оценка проектов
                                     </button>
-
                                 </div>
-                            </>
-                            :
-                            <button
-                                className={`${classes.tab_button} ${activeTab === 'results' ? classes.active : ''}`}
-                                onClick={() => setActiveTab('results')}
-                            >
-                                Итоги
-                            </button>
+                                :
+                                <div className={classes.dashboard_tabs}>
+                                    <button
+                                        className={`${classes.tab_button} ${activeTab === 'chats' ? classes.active : ''}`}
+                                        onClick={() => setActiveTab('chats')}
+                                    >
+                                        Чаты
+                                    </button>
+                                    <button
+                                        className={`${classes.tab_button} ${activeTab === 'results' ? classes.active : ''}`}
+                                        onClick={() => setActiveTab('results')}
+                                    >
+                                        Итоги
+                                    </button>
+                                </div>
                         }
 
                         </>

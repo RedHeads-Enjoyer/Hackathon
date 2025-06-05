@@ -54,7 +54,7 @@ const CreateTechnologyPage: React.FC = () => {
 
         try {
             await technologyAPI.create(formData);
-            navigate('/technologies');
+            navigate('/technology/list');
         } catch (err) {
             const errorMessage = (err as Error).message || "Ошибка при создании технологии";
             setPublishError(errorMessage);
