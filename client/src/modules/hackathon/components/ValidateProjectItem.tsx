@@ -43,8 +43,7 @@ const ValidateProjectItem = (props: ValidateProjectItemProps) => {
             updatedCriteria[index] = {...criterion, value: 0};
         } else {
             const numValue = parseInt(e.target.value);
-            const validValue = Math.min(criterion.maxScore, Math.max(criterion.minScore, numValue));
-            updatedCriteria[index] = {...criterion, value: validValue};
+            updatedCriteria[index] = {...criterion, value: numValue};
         }
 
         setLocalCriteria(updatedCriteria);
@@ -287,7 +286,7 @@ const ValidateProjectItem = (props: ValidateProjectItemProps) => {
                 confirmText="Подтвердить"
             >
                 <p>
-                    Текущая оценка: <strong>{props.project.summary} баллов</strong>. Вы уверены, что хотите изменить свою оценку?
+                    Вы уверены, что хотите изменить свою оценку?
                 </p>
             </Modal>
         </>

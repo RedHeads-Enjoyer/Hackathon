@@ -11,8 +11,8 @@ type InputPropsType = {
     placeholder?: string;
     label?: string;
     error?: string;
-    min?: number; // Минимальное значение
-    max?: number; // Максимальное значение
+    min?: number;
+    max?: number;
     maxLength?: number;
     required?: boolean;
     onFocus?: () => void;
@@ -34,33 +34,11 @@ const Input = (props: InputPropsType) => {
         }
 
         if (props.type === 'number') {
+            // Только проверяем на цифры, без min/max
             const isValidInput = value === '' || /^[0-9]*$/.test(value);
-            let numValue = value === '' ? undefined : parseInt(value);
 
             if (isValidInput) {
-                // Ограничение по максимальному значению
-                if (props.max !== undefined && numValue !== undefined && numValue > props.max) {
-                    numValue = props.max;
-                }
-                // Ограничение по минимальному значению
-                if (props.min !== undefined && numValue !== undefined && numValue < props.min) {
-                    numValue = props.min; // Применяем min
-                }
-
-                const syntheticEvent = {
-                    ...e,
-                    target: {
-                        ...e.target,
-                        value: numValue !== undefined ? numValue.toString() : '',
-                        name: e.target.name
-                    }
-                } as React.ChangeEvent<HTMLInputElement>;
-
-                props.onChange(syntheticEvent);
-
-                // Обновляем состояния предупреждений
-                setMaxWarningVisible(numValue === props.max);
-                setMinWarningVisible(numValue === props.min);
+                props.onChange(e);
             }
         } else if (props.type === 'textNumber') {
             if (value === '' || /^\d+$/.test(value)) {
@@ -72,20 +50,20 @@ const Input = (props: InputPropsType) => {
     };
 
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-        // Скрываем предупреждения при потере фокуса
         setWarningVisible(false);
         setMaxWarningVisible(false);
         setMinWarningVisible(false);
 
         if (props.type === 'number') {
-            const numValue = parseInt(e.target.value);
+            const currentValue = e.target.value;
+            const numValue = parseInt(currentValue);
 
-            if (e.target.value === '') {
-                // Устанавливаем значение в min или max, если они заданы
+            if (currentValue === '') {
+                // Устанавливаем min, если он задан, иначе max, иначе 0
                 const newValue =
                     props.min !== undefined ? props.min :
                         props.max !== undefined ? props.max :
-                            0; // В противном случае устанавливаем 0
+                            0;
 
                 const syntheticEvent = {
                     ...e,
@@ -98,27 +76,30 @@ const Input = (props: InputPropsType) => {
 
                 props.onChange(syntheticEvent);
             } else if (!isNaN(numValue)) {
-                let constrainedValue = numValue;
+                let newValue = numValue;
+                let shouldUpdate = false;
 
-                // Ограничиваем значение нижней границей
+                // Проверка минимального значения
                 if (props.min !== undefined && numValue < props.min) {
-                    constrainedValue = props.min;
-                    setMinWarningVisible(true); // Показать предупреждение о min
+                    newValue = props.min;
+                    shouldUpdate = true;
+                    setMinWarningVisible(true);
                 }
 
-                // Ограничиваем значение верхней границей
+                // Проверка максимального значения
                 if (props.max !== undefined && numValue > props.max) {
-                    constrainedValue = props.max;
-                    setMaxWarningVisible(true); // Показать предупреждение о max
+                    newValue = props.max;
+                    shouldUpdate = true;
+                    setMaxWarningVisible(true);
                 }
 
-                // Если значение изменилось после ограничений, создаем синтетическое событие
-                if (constrainedValue !== numValue) {
+                // Обновляем значение, если нужно
+                if (shouldUpdate) {
                     const syntheticEvent = {
                         ...e,
                         target: {
                             ...e.target,
-                            value: constrainedValue.toString(),
+                            value: newValue.toString(),
                             name: e.target.name
                         }
                     } as React.ChangeEvent<HTMLInputElement>;
@@ -135,8 +116,9 @@ const Input = (props: InputPropsType) => {
 
     const handleFocus = () => {
         setWarningVisible(!!props.maxLength);
+        // Убираем логику min/max отсюда
         setMaxWarningVisible(!!props.max && props.value === props.max);
-        setMinWarningVisible(!!props.min && props.value === props.min); // Предупреждение о min при фокусе
+        setMinWarningVisible(!!props.min && props.value === props.min);
 
         if (props.onFocus) {
             props.onFocus();
@@ -153,7 +135,7 @@ const Input = (props: InputPropsType) => {
             )}
             <input
                 id={inputId}
-                type={props.type === 'number' ? 'text' : props.type} // Используем 'text', чтобы избежать автоматической проверки ввода
+                type={props.type === 'number' ? 'text' : props.type}
                 value={props.value}
                 name={props.name}
                 onChange={handleInputChange}
@@ -172,7 +154,7 @@ const Input = (props: InputPropsType) => {
             {maxWarningVisible && (
                 <div className={classes.warning_message}>Достигнуто максимальное значение</div>
             )}
-            {minWarningVisible && ( // Предупреждение о минимальном значении
+            {minWarningVisible && (
                 <div className={classes.warning_message}>Достигнуто минимальное значение</div>
             )}
             {props.error && <div className={classes.error_message}>{props.error}</div>}

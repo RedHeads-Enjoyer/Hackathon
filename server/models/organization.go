@@ -6,7 +6,7 @@ type Organization struct {
 	gorm.Model
 	LegalName    string `gorm:"unique;not null" json:"legalName"`
 	INN          string `gorm:"unique;size:12" json:"INN"`
-	OGRN         string `gorm:"unique;size:13" json:"OGRN"`
+	OGRN         string `gorm:"unique;size:15" json:"OGRN"`
 	ContactEmail string `gorm:"size:100" json:"contactEmail"`
 	Website      string `gorm:"size:100" json:"website"`
 	Status       int    `gorm:"not null" json:"status"`

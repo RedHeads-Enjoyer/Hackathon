@@ -77,8 +77,8 @@ const CreateOrganizationPage: React.FC = () => {
 
         if (!formData.INN) {
             errors.INN = "ИНН не может быть пустым";
-        } else if(formData.INN.length != 12) {
-            errors.INN = "Длина ИНН должна быть 12 символов";
+        } else if(formData.INN.length != 12 && formData.INN.length != 10) {
+            errors.INN = "Длина ИНН должна быть 10 или 12 символов";
         }
 
         if (!formData.OGRN) {

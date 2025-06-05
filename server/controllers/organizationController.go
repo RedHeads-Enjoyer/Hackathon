@@ -107,9 +107,7 @@ func (oc *OrganizationController) GetAll(c *gin.Context) {
 		if filterData.Website != "" {
 			query = query.Where("website LIKE ?", "%"+filterData.Website+"%")
 		}
-		if filterData.Status != 0 {
-			query = query.Where("status = ?", filterData.Status)
-		}
+		query = query.Where("status = ?", filterData.Status)
 		return query
 	}
 
@@ -322,9 +320,7 @@ func (oc *OrganizationController) GetMy(c *gin.Context) {
 		if filterData.Website != "" {
 			query = query.Where("website LIKE ?", "%"+filterData.Website+"%")
 		}
-		if filterData.Status != 0 {
-			query = query.Where("status = ?", filterData.Status)
-		}
+		query = query.Where("status = ?", filterData.Status)
 		return query
 	}
 
