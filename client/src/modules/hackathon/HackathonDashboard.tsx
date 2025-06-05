@@ -80,6 +80,22 @@ const HackathonDashboard = () => {
                                     Загрузка проектов
                                 </button>
                             }
+                            {!(hackathonInfo.isEvaluation || hackathonInfo.isWork || hackathonInfo.isRegistration) &&
+                                <>
+                                <button
+                                    className={`${classes.tab_button} ${activeTab === 'chats' ? classes.active : ''}`}
+                                    onClick={() => setActiveTab('chats')}
+                                >
+                                    Чаты
+                                </button>
+                                <button
+                                    className={`${classes.tab_button} ${activeTab === 'results' ? classes.active : ''}`}
+                                    onClick={() => setActiveTab('results')}
+                                >
+                                    Итоги
+                                </button>
+                                </>
+                            }
                         </div>
                             </>
                     ) : (
