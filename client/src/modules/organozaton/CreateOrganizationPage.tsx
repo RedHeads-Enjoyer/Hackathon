@@ -83,8 +83,8 @@ const CreateOrganizationPage: React.FC = () => {
 
         if (!formData.OGRN) {
             errors.OGRN = "ОГРН не может быть пустым";
-        } else if(formData.OGRN.length != 13) {
-            errors.OGRN = "Длина ОГРН должна быть 13 символов";
+        } else if(formData.OGRN.length != 13 && formData.OGRN.length != 15) {
+            errors.OGRN = "Длина ОГРН должна быть 13 или 15 символов";
         }
 
         if (!formData.contactEmail) {
@@ -153,7 +153,7 @@ const CreateOrganizationPage: React.FC = () => {
                         onChange={handleChange}
                         name="OGRN"
                         placeholder="Введите ОГРН"
-                        maxLength={13}
+                        maxLength={15}
                         required
                         error={formErrors.OGRN}
                     />

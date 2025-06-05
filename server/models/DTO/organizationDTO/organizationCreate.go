@@ -5,7 +5,7 @@ import "server/models"
 type OrganizationCreate struct {
 	LegalName    string `json:"legalName" validate:"required,max=255"`
 	INN          string `json:"INN" validate:"required,len=12"`
-	OGRN         string `json:"OGRN,required,len=13"`
+	OGRN         string `json:"OGRN,required"`
 	ContactEmail string `json:"contactEmail" validate:"required,email,max=100"`
 	Website      string `json:"website,required,max=100"`
 }
