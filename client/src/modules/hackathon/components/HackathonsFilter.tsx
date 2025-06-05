@@ -89,7 +89,7 @@ const HackathonFilter = ({filterData, setFilterData, onResetFilters, onSearch}: 
                             <SelectSearch
                                 key={`tech-select-${resetCount}`} // Добавляем динамический ключ
                                 label={"Выберите технологию"}
-                                url={"technologies/options"}
+                                url={"technology/options"}
                                 onChange={(value) => setFilterData({
                                     name: 'technologyId',
                                     value: value.value

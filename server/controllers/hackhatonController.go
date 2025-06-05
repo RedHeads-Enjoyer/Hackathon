@@ -318,16 +318,14 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 		if filterData.StartDate != "" {
 			startDate, err := time.Parse("2006-01-02", filterData.StartDate)
 			if err == nil {
-				query = query.Where("hackathons.reg_date_to >= ? OR hackathons.work_date_to >= ? OR hackathons.eval_date_to >= ?",
-					startDate, startDate, startDate)
+				query = query.Where("hackathons.reg_date_from >= ?", startDate)
 			}
 		}
 
 		if filterData.EndDate != "" {
 			endDate, err := time.Parse("2006-01-02", filterData.EndDate)
 			if err == nil {
-				query = query.Where("hackathons.reg_date_from <= ? OR hackathons.work_date_from <= ? OR hackathons.eval_date_from <= ?",
-					endDate, endDate, endDate)
+				query = query.Where("hackathons.eval_date_to <= ?", endDate)
 			}
 		}
 
@@ -352,8 +350,6 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 					Where("buh.user_id = ? AND buh.hackathon_role = ?", userID, filterData.Role)
 			}
 		}
-
-		return query
 
 		return query
 	}
