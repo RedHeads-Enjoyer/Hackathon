@@ -331,7 +331,7 @@ func (hc *HackathonController) GetAll(c *gin.Context) {
 
 		if filterData.TotalAward > 0 {
 			// Подзапрос для суммы наград
-			query = query.Where("(SELECT SUM(money_amount * (place_to - place_from + 1)) FROM awards WHERE hackathon_id = hackathons.id) >= ?", filterData.TotalAward)
+			query = query.Where("COALESCE((SELECT SUM(money_amount * (place_to - place_from + 1)) FROM awards WHERE hackathon_id = hackathons.id AND deleted_at IS NULL), 0) >= ?", filterData.TotalAward)
 		}
 
 		if filterData.TechnologyId > 0 {
